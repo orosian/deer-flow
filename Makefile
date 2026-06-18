@@ -149,6 +149,12 @@ docker-logs-frontend:
 docker-logs-gateway:
 	@$(RUN_WITH_GIT_BASH) ./scripts/docker.sh logs --gateway
 
+
+update-upstream:
+	git checkout main
+	git fetch upstream main
+	git merge upstream/main
+
 # ==========================================
 # Production Docker Commands
 # ==========================================
