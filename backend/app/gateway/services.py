@@ -19,6 +19,7 @@ from fastapi import HTTPException, Request
 from langchain_core.messages import BaseMessage
 from langchain_core.messages.utils import convert_to_messages
 
+from app.gateway.adapters.graph_harness import is_graph_harness_assistant
 from app.gateway.deps import get_run_context, get_run_manager, get_stream_bridge
 from app.gateway.internal_auth import INTERNAL_SYSTEM_ROLE, get_trusted_internal_owner_user_id
 from app.gateway.utils import sanitize_log_param
@@ -135,6 +136,7 @@ _CONTEXT_CONFIGURABLE_KEYS: frozenset[str] = frozenset(
         "max_concurrent_subagents",
         "agent_name",
         "is_bootstrap",
+        "graph_preset",
     }
 )
 
@@ -197,6 +199,10 @@ def resolve_agent_factory(assistant_id: str | None):
     """
     from deerflow.agents.lead_agent.agent import make_lead_agent
 
+    if is_graph_harness_assistant(assistant_id):
+        from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+        return make_graph_harness_agent
     return make_lead_agent
 
 
@@ -396,6 +402,12 @@ async def start_run(
         agent_factory = resolve_agent_factory(body.assistant_id)
         graph_input = normalize_input(body.input)
         config = build_run_config(thread_id, body.config, body.metadata, assistant_id=body.assistant_id)
+        # gh:* assistants: lift `graph_preset` out of body.input into configurable + context.
+        if is_graph_harness_assistant(getattr(body, "assistant_id", None)):
+            graph_preset = (body.input or {}).get("graph_preset")
+            if graph_preset:
+                config.setdefault("configurable", {})["graph_preset"] = graph_preset
+                config.setdefault("context", {})["graph_preset"] = graph_preset
 
         # Merge DeerFlow-specific context overrides into both ``configurable`` and ``context``.
         # The ``context`` field is a custom extension for the langgraph-compat layer
