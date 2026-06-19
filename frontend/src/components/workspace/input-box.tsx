@@ -696,15 +696,6 @@ export function InputBox({
         </PromptInputBody>
         <PromptInputFooter className="flex">
           <PromptInputTools>
-            {/* TODO: Add more connectors here
-          <PromptInputActionMenu>
-            <PromptInputActionMenuTrigger className="px-2!" />
-            <PromptInputActionMenuContent>
-              <PromptInputActionAddAttachments
-                label={t.inputBox.addAttachments}
-              />
-            </PromptInputActionMenuContent>
-          </PromptInputActionMenu> */}
             <AddAttachmentsButton className="px-2!" />
             <PromptInputActionMenu>
               <ModeHoverGuide
