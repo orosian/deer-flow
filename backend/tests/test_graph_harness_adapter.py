@@ -16,7 +16,7 @@ from app.gateway.adapters.graph_harness import (
     _MIN_HOST_API_MAJOR,
     GraphHarnessPresetAccessError,
     _allowed_presets,
-    _check_preset_access,
+    check_preset_access,
     reset_metrics,
     snapshot_metrics,
 )
@@ -88,7 +88,7 @@ def test_make_graph_harness_agent_raises_without_preset() -> None:
 def test_check_preset_access_accepts_default_whitelist_members() -> None:
     """Members of the default whitelist pass the access check (no exception)."""
     for preset in _DEFAULT_ALLOWED_PRESETS:
-        _check_preset_access(preset)  # should not raise
+        check_preset_access(preset)  # should not raise
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ def test_check_preset_access_rejects_pattern_violations(bad_name: str) -> None:
     """Pattern check rejects path traversal, absolute paths, backslashes, uppercase,
     and malformed shapes — surfaces as ``GraphHarnessPresetAccessError(code=400)``."""
     with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
-        _check_preset_access(bad_name)
+        check_preset_access(bad_name)
     assert exc_info.value.code == 400
     assert "invalid preset name format" in str(exc_info.value)
 
@@ -118,7 +118,7 @@ def test_check_preset_access_rejects_pattern_violations(bad_name: str) -> None:
 def test_check_preset_access_rejects_non_whitelisted() -> None:
     """A syntactically valid name that is not on the whitelist raises ``code=403``."""
     with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
-        _check_preset_access("unlisted/preset")
+        check_preset_access("unlisted/preset")
     assert exc_info.value.code == 403
     assert "allow-list" in str(exc_info.value)
 
@@ -132,7 +132,7 @@ def test_check_preset_access_accepts_well_formed_even_if_unlisted() -> None:
     code is 403 not 400, confirming pattern was accepted before whitelist ran.
     """
     with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
-        _check_preset_access("nonexistent/something")
+        check_preset_access("nonexistent/something")
     assert exc_info.value.code == 403, "well-formed but unlisted should be 403, not 400"
 
 
@@ -334,19 +334,19 @@ def test_snapshot_metrics_shape_matches_prometheus() -> None:
 
 
 def test_preset_load_failure_pattern_counter_increments() -> None:
-    """Each ``_check_preset_access`` pattern rejection increments
+    """Each ``check_preset_access`` pattern rejection increments
     ``preset_load_failure_total{reason="pattern"}``."""
     with pytest.raises(GraphHarnessPresetAccessError):
-        _check_preset_access("../../etc/passwd")
+        check_preset_access("../../etc/passwd")
     with pytest.raises(GraphHarnessPresetAccessError):
-        _check_preset_access("/abs/path")
+        check_preset_access("/abs/path")
     assert _METRICS.preset_load_failure_total["pattern"] == 2
 
 
 def test_preset_load_failure_not_allowed_counter_increments() -> None:
     """Well-formed but unlisted preset names bump the ``not_allowed`` counter."""
     with pytest.raises(GraphHarnessPresetAccessError):
-        _check_preset_access("unlisted/preset")
+        check_preset_access("unlisted/preset")
     assert _METRICS.preset_load_failure_total["not_allowed"] == 1
 
 

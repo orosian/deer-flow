@@ -54,7 +54,7 @@ Integration contract (review finding P0-1, SEC-1 contract gap):
       ``GraphHarnessPresetAccessError.code`` is exported as a public
       attribute specifically so this translation is straightforward.
     * **Pre-validate in the HTTP handler.** Call
-      ``_check_preset_access(preset_name)`` (or
+      ``check_preset_access(preset_name)`` (or
       ``is_graph_harness_assistant`` + an explicit access check) in the
       request handler *before* scheduling ``run_agent``, so a rejected
       preset name raises synchronously and can be translated to a real
@@ -167,7 +167,7 @@ class GraphHarnessPresetAccessError(Exception):
     non-HTTP contexts (CLI, tests).
 
     Observability (review finding P0-1): this exception is *synchronously
-    observable* when the gateway calls :func:`_check_preset_access` (or
+    observable* when the gateway calls :func:`check_preset_access` (or
     :func:`make_graph_harness_agent`) on the HTTP request path itself, in
     which case the gateway can translate ``code`` into a real
     ``fastapi.HTTPException`` and the client sees a clean 4xx. It is
@@ -191,7 +191,7 @@ def is_graph_harness_assistant(assistant_id: str | None) -> bool:
     return bool(assistant_id) and assistant_id.startswith(_GRAPH_HARNESS_PREFIX)
 
 
-def _check_preset_access(preset_name: str) -> None:
+def check_preset_access(preset_name: str) -> None:
     """Apply SEC-1 two-layer access control. Raise ``GraphHarnessPresetAccessError`` on failure.
 
     Order matters:
@@ -200,7 +200,7 @@ def _check_preset_access(preset_name: str) -> None:
        if a future operator sets a malformed override).
     2. Whitelist second — explicit authorisation against the configured set.
     3. The library's own validation runs later inside ``load_preset``; that
-       failure surfaces as ``404`` via :func:`_wrap_load_preset_errors`.
+       failure surfaces as ``404`` via :func:`wrap_load_preset_errors`.
 
     MON-1: increments ``preset_load_failure_total{reason}`` on every
     rejection so the gateway can surface the rejection category in metrics.
@@ -385,7 +385,7 @@ def _load_graph_harness():
     return compile_workflow, load_preset
 
 
-def _wrap_load_preset_errors(preset_name: str):
+def wrap_load_preset_errors(preset_name: str):
     """Call ``load_preset`` and translate its library exceptions into SEC-1 access errors.
 
     The graph-harness library raises ``ValueError`` for both "pattern
@@ -516,7 +516,7 @@ def make_graph_harness_agent(config: Any, app_config: Any = None):
     clients* because the request handler has already returned ``200 OK`` +
     ``thread_id`` by the time the error fires. Callers that want true
     HTTP-error semantics for a rejected preset name should pre-validate
-    via :func:`_check_preset_access` (or
+    via :func:`check_preset_access` (or
     :func:`is_graph_harness_assistant` + an explicit access check) on the
     synchronous HTTP request path *before* scheduling ``run_agent`` —
     that way a rejection raises before the response is committed and can
@@ -530,9 +530,9 @@ def make_graph_harness_agent(config: Any, app_config: Any = None):
             "graph-harness assistant requires 'graph_preset' in config['configurable']"
         )
     # SEC-1: pattern + whitelist. Must run before any file system call.
-    _check_preset_access(preset_name)
+    check_preset_access(preset_name)
     # SEC-1: 404 mapping for missing presets via the engine's own validation.
-    dsl = _wrap_load_preset_errors(preset_name)
+    dsl = wrap_load_preset_errors(preset_name)
     compile_workflow, _ = _load_graph_harness()
     # Pass ``produces_keys`` from the manifest so the validator does not
     # flag the entry node for a missing producer (preset declares keys

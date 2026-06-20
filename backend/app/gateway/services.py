@@ -19,7 +19,12 @@ from fastapi import HTTPException, Request
 from langchain_core.messages import BaseMessage
 from langchain_core.messages.utils import convert_to_messages
 
-from app.gateway.adapters.graph_harness import is_graph_harness_assistant
+from app.gateway.adapters.graph_harness import (
+    GraphHarnessPresetAccessError,
+    check_preset_access,
+    is_graph_harness_assistant,
+    wrap_load_preset_errors,
+)
 from app.gateway.deps import get_run_context, get_run_manager, get_stream_bridge
 from app.gateway.internal_auth import INTERNAL_SYSTEM_ROLE, get_trusted_internal_owner_user_id
 from app.gateway.utils import sanitize_log_param
@@ -295,6 +300,43 @@ def build_run_config(
 # ---------------------------------------------------------------------------
 
 
+def _pre_check_graph_harness_preset(body: Any) -> None:
+    """SEC-1: pre-validate ``gh:*`` preset access on the synchronous HTTP path.
+
+    ``make_graph_harness_agent`` (called inside the background ``run_agent``
+    task) raises :class:`GraphHarnessPresetAccessError` with ``code`` set to
+    400 / 403 / 404 when the requested preset name fails pattern / whitelist /
+    load checks.  When the gateway defers that factory call into
+    ``asyncio.create_task(...)`` the HTTP handler has already returned
+    ``200 OK`` + ``thread_id`` by the time the error fires, so the client
+    never observes a 4xx.  This helper mirrors the adapter's access checks
+    on the synchronous request path so a rejection surfaces as a real
+    :class:`fastapi.HTTPException` before ``create_task`` commits the run.
+
+    No-ops when the request does not target a ``gh:*`` assistant or when no
+    ``graph_preset`` is supplied — those cases are routed through the
+    lead-agent path or fail with a different error class inside the
+    background task (left untouched to preserve MON-1 metrics and the
+    existing lead-agent error contract).
+    """
+    if not is_graph_harness_assistant(getattr(body, "assistant_id", None)):
+        return
+    graph_input = getattr(body, "input", None)
+    if not isinstance(graph_input, dict):
+        return
+    graph_preset = graph_input.get("graph_preset")
+    if not graph_preset:
+        return
+    try:
+        check_preset_access(graph_preset)
+        wrap_load_preset_errors(graph_preset)
+    except GraphHarnessPresetAccessError as exc:
+        # SEC-1 contract gap fix (review P0-1): translate ``code`` into a real
+        # HTTP status synchronously, before the run record is created and
+        # before ``asyncio.create_task`` schedules the background agent run.
+        raise HTTPException(status_code=exc.code, detail=str(exc)) from exc
+
+
 async def start_run(
     body: Any,
     thread_id: str,
@@ -417,6 +459,14 @@ async def start_run(
         inject_authenticated_user_context(config, request)
 
         stream_modes = normalize_stream_modes(body.stream_mode)
+
+        # SEC-1 contract gap (review P0-1): run the preset access checks on
+        # the synchronous HTTP path BEFORE scheduling the background agent
+        # task.  ``make_graph_harness_agent`` would otherwise raise
+        # ``GraphHarnessPresetAccessError`` inside the asyncio task — by
+        # that point the response is committed and the client never sees a
+        # 4xx.  Raises ``HTTPException`` for any rejection.
+        _pre_check_graph_harness_preset(body)
 
         task = asyncio.create_task(
             run_agent(
