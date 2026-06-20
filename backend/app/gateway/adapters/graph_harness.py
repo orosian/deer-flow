@@ -32,6 +32,7 @@ Security (SEC-1, v2-integration roadmap):
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import threading
@@ -45,6 +46,19 @@ _GRAPH_HARNESS_PREFIX = "gh:"
 # pattern is relaxed upstream; the adapter is intentionally stricter on the
 # input side.
 _PRESET_NAME_PATTERN = re.compile(r"^[a-z0-9_-]+(/[a-z0-9_-]+)?$")
+
+# MON-1 + P1-1: closed set of ``reason`` labels for
+# ``preset_load_failure_total``. Defining it as a module-level frozenset
+# (1) gives :func:`incr_preset_load_failure` a single source of truth to
+# validate against — any new label must be added here *and* the
+# accumulator's ``__init__`` defaults updated in lockstep, otherwise the
+# caller gets a ``ValueError``; and (2) lets :func:`_MetricsAccumulator.snapshot`
+# derive its dict literal from the constant instead of hard-coding four
+# string keys (DRY). Dashboards expect exactly these four labels; an
+# accidental fifth would silently shift the metric schema.
+_KNOWN_PRESET_FAILURE_REASONS: frozenset[str] = frozenset(
+    {"pattern", "not_allowed", "not_found", "unknown"}
+)
 
 # SEC-1: default whitelist of presets accessible via ``gh:*`` assistants.
 # Override at runtime by setting the ``DEERFLOW_GRAPH_HARNESS_PRESETS``
@@ -67,12 +81,43 @@ def _allowed_presets() -> frozenset[str]:
     around each entry is stripped. An invalid override (no entries after
     parsing) falls back to the default rather than silently locking everyone
     out — this matches the principle of "fail loud, not silent".
+
+    P1-2: each parsed entry is also run through ``_PRESET_NAME_PATTERN``.
+    Invalid entries (typos like ``"Echo/Echo"``, or stray values like
+    ``"../etc/passwd"``) are dropped with a warning so the misconfiguration
+    is visible at startup rather than surfacing as a confusing 400 on every
+    request. If *all* entries fail the pattern check, the entire override
+    is rejected and the default whitelist is used instead — operators who
+    want a tighter trust boundary get an explicit warning instead of
+    silent lockout.
     """
     override = os.environ.get("DEERFLOW_GRAPH_HARNESS_PRESETS", "").strip()
     if not override:
         return _DEFAULT_ALLOWED_PRESETS
     parsed = frozenset(entry.strip() for entry in override.split(",") if entry.strip())
-    return parsed if parsed else _DEFAULT_ALLOWED_PRESETS
+    if not parsed:
+        return _DEFAULT_ALLOWED_PRESETS
+    valid = frozenset(entry for entry in parsed if _PRESET_NAME_PATTERN.match(entry))
+    invalid = parsed - valid
+    if invalid:
+        logger = logging.getLogger(__name__)
+        if valid:
+            logger.warning(
+                "DEERFLOW_GRAPH_HARNESS_PRESETS: dropping invalid entries %s "
+                "(do not match _PRESET_NAME_PATTERN); keeping %s",
+                sorted(invalid),
+                sorted(valid),
+            )
+            return valid
+        # All entries invalid: treat the override as wholly untrustworthy
+        # and fall back to defaults rather than locking everyone out.
+        logger.warning(
+            "DEERFLOW_GRAPH_HARNESS_PRESETS: every entry %s failed "
+            "_PRESET_NAME_PATTERN; falling back to default whitelist",
+            sorted(invalid),
+        )
+        return _DEFAULT_ALLOWED_PRESETS
+    return parsed
 
 
 class GraphHarnessPresetAccessError(Exception):
@@ -159,11 +204,12 @@ class _MetricsAccumulator:
         self._lock = threading.Lock()
         self.bridge_overflow_total = 0
         self.sse_frame_missing_end_total = 0
+        # P1-1: derive default zero-counters from the closed set of known
+        # reasons. Adding a new label requires updating
+        # ``_KNOWN_PRESET_FAILURE_REASONS`` *and* confirming the snapshot
+        # schema (the keys are exposed verbatim to dashboards).
         self.preset_load_failure_total: dict[str, int] = {
-            "pattern": 0,
-            "not_allowed": 0,
-            "not_found": 0,
-            "unknown": 0,
+            reason: 0 for reason in sorted(_KNOWN_PRESET_FAILURE_REASONS)
         }
         self.run_duration_seconds_count = 0
         self.run_duration_seconds_sum = 0.0
@@ -189,6 +235,15 @@ class _MetricsAccumulator:
             self.sse_frame_missing_end_total += 1
 
     def incr_preset_load_failure(self, reason: str) -> None:
+        # P1-1: reject unknown ``reason`` labels so that adding a new
+        # category is a deliberate, two-step change (extend the closed
+        # set *and* confirm dashboard consumers handle the new label)
+        # rather than a silent schema drift.
+        if reason not in _KNOWN_PRESET_FAILURE_REASONS:
+            raise ValueError(
+                f"unknown preset_load_failure reason: {reason!r}; "
+                f"known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}"
+            )
         with self._lock:
             self.preset_load_failure_total[reason] = self.preset_load_failure_total.get(reason, 0) + 1
 

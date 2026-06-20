@@ -504,3 +504,109 @@ def test_run_duration_histogram_records_observation() -> None:
     assert snap["run_duration_seconds"]["sum"] > 0.0
     # 0.01s lands in the 0.1 bucket.
     assert snap["run_duration_seconds"]["buckets"][0.1] == 1
+
+
+# ---------------------------------------------------------------------------
+# P1-1: closed-set validation for preset_load_failure reason labels
+# ---------------------------------------------------------------------------
+
+
+def test_p1_1_incr_preset_load_failure_rejects_unknown_reason() -> None:
+    """P1-1: passing a ``reason`` label outside the closed set raises ``ValueError``
+    instead of silently mutating the counter dict (which would create a 5th
+    key in the snapshot that dashboards do not know how to interpret).
+
+    The error message must name the offending label and list the known
+    reasons so a future maintainer can extend the constant deliberately
+    rather than guessing what values are accepted.
+    """
+    from app.gateway.adapters.graph_harness import (
+        _KNOWN_PRESET_FAILURE_REASONS,
+        _MetricsAccumulator,
+    )
+
+    acc = _MetricsAccumulator()
+    with pytest.raises(ValueError) as exc_info:
+        acc.incr_preset_load_failure("quota_exceeded")
+    msg = str(exc_info.value)
+    assert "quota_exceeded" in msg
+    # All known reasons must be listed in the error message.
+    for known in _KNOWN_PRESET_FAILURE_REASONS:
+        assert known in msg, f"known reason {known!r} should appear in error message"
+    # Internal counter dict is not polluted by the rejected call.
+    assert "quota_exceeded" not in acc.preset_load_failure_total
+
+
+def test_p1_1_incr_preset_load_failure_accepts_all_known_reasons() -> None:
+    """P1-1: every entry in ``_KNOWN_PRESET_FAILURE_REASONS`` is accepted (no
+    regression on the four legitimate labels)."""
+    from app.gateway.adapters.graph_harness import _MetricsAccumulator
+
+    acc = _MetricsAccumulator()
+    for reason in ("pattern", "not_allowed", "not_found", "unknown"):
+        acc.incr_preset_load_failure(reason)
+    # Each reason incremented exactly once.
+    assert all(acc.preset_load_failure_total[r] == 1 for r in ("pattern", "not_allowed", "not_found", "unknown"))
+
+
+# ---------------------------------------------------------------------------
+# P1-2: env-override entries are validated against _PRESET_NAME_PATTERN
+# ---------------------------------------------------------------------------
+
+
+def test_p1_2_env_override_drops_invalid_keeps_valid(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """P1-2: a mixed override (``echo/echo,BadPattern``) drops the invalid
+    entries and keeps the well-formed ones, with a warning naming both.
+
+    Before the fix, ``BadPattern`` (uppercase) would have been loaded into
+    the active whitelist silently and then rejected with a 400 on every
+    request — confusing operators because the env value was accepted at
+    parse time but unusable at runtime.
+    """
+    import logging
+
+    from app.gateway.adapters import graph_harness
+
+    monkeypatch.setenv(
+        "DEERFLOW_GRAPH_HARNESS_PRESETS",
+        "echo/echo,BadPattern",
+    )
+    with caplog.at_level(logging.WARNING, logger=graph_harness.__name__):
+        result = _allowed_presets()
+    assert result == frozenset({"echo/echo"})
+    # Warning must name the dropped entries.
+    warning_text = " ".join(record.getMessage() for record in caplog.records)
+    assert "BadPattern" in warning_text
+    assert "echo/echo" in warning_text
+
+
+def test_p1_2_env_override_all_invalid_falls_back_to_default(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """P1-2: when *every* override entry fails ``_PRESET_NAME_PATTERN`` the
+    override is rejected wholesale and the default whitelist is used.
+
+    A wholesale rejection is preferable to silently installing an empty
+    whitelist (which would 403 every request) — operators get a clear
+    warning instead of a runtime lockout.
+    """
+    import logging
+
+    from app.gateway.adapters import graph_harness
+
+    monkeypatch.setenv(
+        "DEERFLOW_GRAPH_HARNESS_PRESETS",
+        "BadPattern,../etc/passwd",
+    )
+    with caplog.at_level(logging.WARNING, logger=graph_harness.__name__):
+        result = _allowed_presets()
+    assert result == _DEFAULT_ALLOWED_PRESETS
+    # Warning must mention the all-invalid condition.
+    warning_text = " ".join(record.getMessage() for record in caplog.records)
+    assert "falling back to default" in warning_text
+    assert "BadPattern" in warning_text
+    assert "../etc/passwd" in warning_text
