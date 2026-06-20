@@ -34,6 +34,8 @@ from __future__ import annotations
 
 import os
 import re
+import threading
+import time
 from typing import Any
 
 _GRAPH_HARNESS_PREFIX = "gh:"
@@ -104,13 +106,18 @@ def _check_preset_access(preset_name: str) -> None:
     2. Whitelist second — explicit authorisation against the configured set.
     3. The library's own validation runs later inside ``load_preset``; that
        failure surfaces as ``404`` via :func:`_wrap_load_preset_errors`.
+
+    MON-1: increments ``preset_load_failure_total{reason}`` on every
+    rejection so the gateway can surface the rejection category in metrics.
     """
     if not isinstance(preset_name, str) or not _PRESET_NAME_PATTERN.match(preset_name):
+        _METRICS.incr_preset_load_failure("pattern")
         raise GraphHarnessPresetAccessError(
             400,
             f"invalid preset name format: {preset_name!r}",
         )
     if preset_name not in _allowed_presets():
+        _METRICS.incr_preset_load_failure("not_allowed")
         raise GraphHarnessPresetAccessError(
             403,
             f"preset not in allow-list: {preset_name!r}",
@@ -123,6 +130,114 @@ def _check_preset_access(preset_name: str) -> None:
 # caught at the first call into the engine rather than as a cryptic
 # runtime failure later. Bump this in lockstep with the upstream value.
 _EXPECTED_HOST_API_VERSION = "1.0.0"
+
+
+# ---------------------------------------------------------------------------
+# MON-1: lightweight metrics accumulator
+# ---------------------------------------------------------------------------
+#
+# DeerFlow has no Prometheus client today, so we keep an in-process counter
+# / histogram store and expose it via :func:`snapshot_metrics`. A future
+# host-side exporter (Prometheus / OpenTelemetry / StatsD) can pull from
+# this snapshot without the adapter importing the exporter library —
+# preserving the "no new dependency" property of the adapter layer.
+#
+# Counter keys use Prometheus naming convention (snake_case + ``_total``
+# suffix for monotonic counters) so a downstream exporter can map them
+# directly without translation.
+
+
+class _MetricsAccumulator:
+    """Thread-safe in-process metrics store.
+
+    Holds four counters (one with a ``reason`` label) and a histogram
+    (list of observations + derived count/sum/max). All mutations are
+    guarded by ``_lock`` so concurrent runs do not corrupt the counters.
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self.bridge_overflow_total = 0
+        self.sse_frame_missing_end_total = 0
+        self.preset_load_failure_total: dict[str, int] = {
+            "pattern": 0,
+            "not_allowed": 0,
+            "not_found": 0,
+            "unknown": 0,
+        }
+        self.run_duration_seconds_count = 0
+        self.run_duration_seconds_sum = 0.0
+        self.run_duration_seconds_max = 0.0
+        self.run_duration_seconds_buckets: dict[float, int] = {
+            0.1: 0,
+            0.5: 0,
+            1.0: 0,
+            2.0: 0,
+            5.0: 0,
+            10.0: 0,
+            30.0: 0,
+            60.0: 0,
+            300.0: 0,
+        }
+
+    def incr_bridge_overflow(self) -> None:
+        with self._lock:
+            self.bridge_overflow_total += 1
+
+    def incr_sse_frame_missing_end(self) -> None:
+        with self._lock:
+            self.sse_frame_missing_end_total += 1
+
+    def incr_preset_load_failure(self, reason: str) -> None:
+        with self._lock:
+            self.preset_load_failure_total[reason] = self.preset_load_failure_total.get(reason, 0) + 1
+
+    def observe_run_duration(self, seconds: float) -> None:
+        with self._lock:
+            self.run_duration_seconds_count += 1
+            self.run_duration_seconds_sum += seconds
+            if seconds > self.run_duration_seconds_max:
+                self.run_duration_seconds_max = seconds
+            for upper_bound in sorted(self.run_duration_seconds_buckets):
+                if seconds <= upper_bound:
+                    self.run_duration_seconds_buckets[upper_bound] += 1
+
+    def snapshot(self) -> dict:
+        with self._lock:
+            return {
+                "bridge_overflow_total": self.bridge_overflow_total,
+                "sse_frame_missing_end_total": self.sse_frame_missing_end_total,
+                "preset_load_failure_total": dict(self.preset_load_failure_total),
+                "run_duration_seconds": {
+                    "count": self.run_duration_seconds_count,
+                    "sum": self.run_duration_seconds_sum,
+                    "max": self.run_duration_seconds_max,
+                    "buckets": dict(self.run_duration_seconds_buckets),
+                },
+            }
+
+    def reset(self) -> None:
+        with self._lock:
+            self.__init__()
+
+
+_METRICS = _MetricsAccumulator()
+
+
+def snapshot_metrics() -> dict:
+    """Return a point-in-time snapshot of the adapter metrics (MON-1).
+
+    The shape is Prometheus-friendly: counters end in ``_total``, and the
+    histogram follows the standard ``count/sum/max/buckets`` layout. A
+    future host-side exporter can map this directly to a Prometheus
+    scrape without translating field names.
+    """
+    return _METRICS.snapshot()
+
+
+def reset_metrics() -> None:
+    """Reset all metric counters to zero. Intended for tests."""
+    _METRICS.reset()
 
 
 def _load_graph_harness():
@@ -157,6 +272,9 @@ def _wrap_load_preset_errors(preset_name: str):
     almost certainly a 404 (preset not registered in the engine's preset
     directory). Mapping it explicitly lets the gateway distinguish a missing
     preset (user error, 404) from an unknown engine failure (500).
+
+    MON-1: increments ``preset_load_failure_total{reason="not_found"}`` on
+    the ValueError path; unknown errors use ``reason="unknown"``.
     """
     _compile_workflow, load_preset = _load_graph_harness()
 
@@ -164,7 +282,11 @@ def _wrap_load_preset_errors(preset_name: str):
         try:
             return load_preset(preset_name)
         except ValueError as exc:
+            _METRICS.incr_preset_load_failure("not_found")
             raise GraphHarnessPresetAccessError(404, f"preset not found: {preset_name!r}") from exc
+        except Exception:
+            _METRICS.incr_preset_load_failure("unknown")
+            raise
 
     return wrapped()
 
@@ -175,20 +297,53 @@ class _GraphHarnessCompiledProxy:
     Delegates ``ainvoke`` / ``astream`` straight to the compiled LangGraph
     graph so DeerFlow's upstream runtime (checkpointer, interrupts, SSE) is
     reused unchanged.
+
+    MON-1: ``astream`` wraps the upstream async iterator to observe
+    ``BufferError`` (bridge overflow when the upstream queue is full) and
+    to detect runs that completed without yielding an end frame. Both
+    ``ainvoke`` and ``astream`` feed the ``run_duration_seconds`` histogram.
     """
+
+    # Sentinel keys observed inside an astream chunk that indicate the
+    # run has finished. The graph-harness bridge emits one of these as
+    # the last frame; if neither appears before the iterator ends, we
+    # count a missing-end event. Exposed at class level for tests.
+    _STREAM_END_MARKERS = ("end", "__end__")
 
     def __init__(self, compiled: Any, preset_name: str) -> None:
         self._compiled = compiled
         self._preset = preset_name
 
     async def ainvoke(self, input: Any, config: Any):
-        return await self._compiled.ainvoke(input, config)
+        start = time.perf_counter()
+        try:
+            return await self._compiled.ainvoke(input, config)
+        finally:
+            _METRICS.observe_run_duration(time.perf_counter() - start)
 
     async def astream(self, input: Any, config: Any, stream_mode: Any = None):
+        start = time.perf_counter()
         if stream_mode is None:
             stream_mode = ["values"]
-        async for chunk in self._compiled.astream(input, config, stream_mode=stream_mode):
-            yield chunk
+        saw_end = False
+        try:
+            try:
+                async for chunk in self._compiled.astream(input, config, stream_mode=stream_mode):
+                    if isinstance(chunk, dict):
+                        event = chunk.get("event")
+                        if event in self._STREAM_END_MARKERS:
+                            saw_end = True
+                    yield chunk
+            except BufferError:
+                # asyncio.Queue.put_nowait on the bridge raised because the
+                # consumer is too slow. Count and re-raise so the upstream
+                # SSE layer can surface the failure to the client.
+                _METRICS.incr_bridge_overflow()
+                raise
+        finally:
+            if not saw_end:
+                _METRICS.incr_sse_frame_missing_end()
+            _METRICS.observe_run_duration(time.perf_counter() - start)
 
 
 def make_graph_harness_agent(config: Any, app_config: Any = None):

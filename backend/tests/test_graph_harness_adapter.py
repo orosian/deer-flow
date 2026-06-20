@@ -13,9 +13,12 @@ import pytest
 from app.gateway.adapters.graph_harness import (
     _DEFAULT_ALLOWED_PRESETS,
     _EXPECTED_HOST_API_VERSION,
+    _METRICS,
     GraphHarnessPresetAccessError,
     _allowed_presets,
     _check_preset_access,
+    reset_metrics,
+    snapshot_metrics,
 )
 
 
@@ -211,3 +214,213 @@ def test_make_graph_harness_agent_without_harness_package_raises_runtime_error()
     config = {"configurable": {"graph_preset": "echo/echo"}}
     with pytest.raises(RuntimeError, match="graph-harness is required"):
         make_graph_harness_agent(config)
+
+
+# ---------------------------------------------------------------------------
+# MON-1: metrics accumulator
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _reset_metrics_between_tests():
+    """Ensure metric state from one test does not bleed into the next."""
+    reset_metrics()
+    yield
+    reset_metrics()
+
+
+def test_snapshot_metrics_shape_matches_prometheus() -> None:
+    """The snapshot exposes all four MON-1 counters and the run_duration histogram
+    with Prometheus-friendly naming (counters end in ``_total``)."""
+    snap = snapshot_metrics()
+    assert snap["bridge_overflow_total"] == 0
+    assert snap["sse_frame_missing_end_total"] == 0
+    assert snap["preset_load_failure_total"] == {
+        "pattern": 0,
+        "not_allowed": 0,
+        "not_found": 0,
+        "unknown": 0,
+    }
+    histogram = snap["run_duration_seconds"]
+    assert histogram["count"] == 0
+    assert histogram["sum"] == 0.0
+    assert histogram["max"] == 0.0
+    # Buckets match the prometheus_histogram layout from the v2 plan.
+    assert set(histogram["buckets"]) == {0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 300.0}
+
+
+def test_preset_load_failure_pattern_counter_increments() -> None:
+    """Each ``_check_preset_access`` pattern rejection increments
+    ``preset_load_failure_total{reason="pattern"}``."""
+    with pytest.raises(GraphHarnessPresetAccessError):
+        _check_preset_access("../../etc/passwd")
+    with pytest.raises(GraphHarnessPresetAccessError):
+        _check_preset_access("/abs/path")
+    assert _METRICS.preset_load_failure_total["pattern"] == 2
+
+
+def test_preset_load_failure_not_allowed_counter_increments() -> None:
+    """Well-formed but unlisted preset names bump the ``not_allowed`` counter."""
+    with pytest.raises(GraphHarnessPresetAccessError):
+        _check_preset_access("unlisted/preset")
+    assert _METRICS.preset_load_failure_total["not_allowed"] == 1
+
+
+def test_preset_load_failure_unknown_counter_on_load_exception(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Non-ValueError exceptions from ``load_preset`` are counted as ``unknown``."""
+    # Stub harness.host so the adapter can import it for this test.
+    import sys
+    import types
+
+    fake = types.ModuleType("harness")
+    host = types.ModuleType("harness.host")
+
+    def fake_load_preset(_name: str):
+        raise RuntimeError("disk on fire")
+
+    def fake_compile_workflow(_dsl: dict):
+        return object()
+
+    host.load_preset = fake_load_preset
+    host.compile_workflow = fake_compile_workflow
+    host.HOST_API_VERSION = "1.0.0"
+    fake.host = host
+    monkeypatch.setitem(sys.modules, "harness", fake)
+    monkeypatch.setitem(sys.modules, "harness.host", host)
+
+    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+    with pytest.raises(RuntimeError, match="disk on fire"):
+        make_graph_harness_agent({"configurable": {"graph_preset": "echo/echo"}})
+    assert _METRICS.preset_load_failure_total["unknown"] == 1
+
+
+def test_preset_load_failure_not_found_counter_on_value_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """ValueError from ``load_preset`` (preset file missing) is counted as ``not_found``."""
+    import sys
+    import types
+
+    fake = types.ModuleType("harness")
+    host = types.ModuleType("harness.host")
+
+    def fake_load_preset(_name: str):
+        raise ValueError("preset not registered")
+
+    def fake_compile_workflow(_dsl: dict):
+        return object()
+
+    host.load_preset = fake_load_preset
+    host.compile_workflow = fake_compile_workflow
+    host.HOST_API_VERSION = "1.0.0"
+    fake.host = host
+    monkeypatch.setitem(sys.modules, "harness", fake)
+    monkeypatch.setitem(sys.modules, "harness.host", host)
+
+    from app.gateway.adapters.graph_harness import GraphHarnessPresetAccessError, make_graph_harness_agent
+
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
+        make_graph_harness_agent({"configurable": {"graph_preset": "echo/echo"}})
+    assert exc_info.value.code == 404
+    assert _METRICS.preset_load_failure_total["not_found"] == 1
+
+
+def test_bridge_overflow_counter_increments_on_buffer_error() -> None:
+    """An async iterator raising ``BufferError`` increments
+    ``bridge_overflow_total`` and re-raises so the upstream can surface it."""
+
+    async def fake_astream(*_args, **_kwargs):
+        raise BufferError("queue full")
+        yield  # unreachable; makes this an async generator
+
+    class _FakeCompiled:
+        astream = fake_astream
+
+    from app.gateway.adapters.graph_harness import _GraphHarnessCompiledProxy
+
+    proxy = _GraphHarnessCompiledProxy(_FakeCompiled(), "echo/echo")
+
+    async def _drain():
+        async for _ in proxy.astream({}, {}):
+            pass
+
+    import asyncio
+
+    with pytest.raises(BufferError):
+        asyncio.run(_drain())
+    assert _METRICS.bridge_overflow_total == 1
+
+
+def test_sse_frame_missing_end_counter_when_no_end_marker() -> None:
+    """An astream that finishes without yielding an end marker increments
+    ``sse_frame_missing_end_total``."""
+
+    async def fake_astream(*_args, **_kwargs):
+        yield {"event": "values", "data": {"foo": "bar"}}
+        # stream ends without "end" or "__end__"
+
+    class _FakeCompiled:
+        astream = fake_astream
+
+    from app.gateway.adapters.graph_harness import _GraphHarnessCompiledProxy
+
+    proxy = _GraphHarnessCompiledProxy(_FakeCompiled(), "echo/echo")
+
+    async def _drain():
+        async for _ in proxy.astream({}, {}):
+            pass
+
+    import asyncio
+
+    asyncio.run(_drain())
+    assert _METRICS.sse_frame_missing_end_total == 1
+
+
+def test_sse_frame_missing_end_counter_zero_when_end_marker_seen() -> None:
+    """An astream that yields an end marker does not increment the missing-end counter."""
+
+    async def fake_astream(*_args, **_kwargs):
+        yield {"event": "values", "data": {}}
+        yield {"event": "end"}
+
+    class _FakeCompiled:
+        astream = fake_astream
+
+    from app.gateway.adapters.graph_harness import _GraphHarnessCompiledProxy
+
+    proxy = _GraphHarnessCompiledProxy(_FakeCompiled(), "echo/echo")
+
+    async def _drain():
+        async for _ in proxy.astream({}, {}):
+            pass
+
+    import asyncio
+
+    asyncio.run(_drain())
+    assert _METRICS.sse_frame_missing_end_total == 0
+
+
+def test_run_duration_histogram_records_observation() -> None:
+    """``ainvoke`` records an observation in the histogram (count increments, sum > 0)."""
+
+    class _FakeCompiled:
+        async def ainvoke(self, _input, _config):
+            import asyncio
+
+            await asyncio.sleep(0.01)
+            return {"ok": True}
+
+    from app.gateway.adapters.graph_harness import _GraphHarnessCompiledProxy
+
+    proxy = _GraphHarnessCompiledProxy(_FakeCompiled(), "echo/echo")
+
+    async def _run():
+        await proxy.ainvoke({}, {})
+
+    import asyncio
+
+    asyncio.run(_run())
+    snap = snapshot_metrics()
+    assert snap["run_duration_seconds"]["count"] == 1
+    assert snap["run_duration_seconds"]["sum"] > 0.0
+    # 0.01s lands in the 0.1 bucket.
+    assert snap["run_duration_seconds"]["buckets"][0.1] == 1
