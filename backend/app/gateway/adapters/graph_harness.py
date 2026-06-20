@@ -28,6 +28,42 @@ Security (SEC-1, v2-integration roadmap):
        distinguishable ``GraphHarnessPresetAccessError`` with ``code=404``
        (vs. ``500`` for unknown errors). The gateway layer is expected to
        translate ``code`` into ``fastapi.HTTPException``.
+
+Integration contract (review finding P0-1, SEC-1 contract gap):
+    The adapter does *everything* it can on its own side — pattern check,
+    whitelist check, and ``load_preset``-failure mapping — but the final
+    translation of ``GraphHarnessPresetAccessError.code`` into an HTTP
+    status is the **gateway layer's responsibility**, not this adapter's.
+
+    The known gap (as of the v2-integration codebase): if the gateway
+    defers ``agent_factory`` invocation into a background task (i.e.
+    ``resolve_agent_factory`` in ``app.gateway.services`` only returns the
+    callable, and the actual call happens inside
+    ``asyncio.create_task(run_agent(...))``), then by the time the access-
+    control error raises inside ``make_graph_harness_agent`` the HTTP
+    handler has already returned ``200 OK`` plus a ``thread_id``. The
+    client therefore observes a successful run-start followed by a
+    disconnect / never-arriving stream — not a 4xx.
+
+    Two ways to close the gap (gateway-side, not adapter-side):
+
+    * **Surface via SSE error frame.** Catch the
+      ``GraphHarnessPresetAccessError`` raised inside the background task
+      and emit an SSE ``error`` frame carrying ``code`` + ``detail`` so the
+      client can distinguish a 400/403/404 from a real run error.
+      ``GraphHarnessPresetAccessError.code`` is exported as a public
+      attribute specifically so this translation is straightforward.
+    * **Pre-validate in the HTTP handler.** Call
+      ``_check_preset_access(preset_name)`` (or
+      ``is_graph_harness_assistant`` + an explicit access check) in the
+      request handler *before* scheduling ``run_agent``, so a rejected
+      preset name raises synchronously and can be translated to a real
+      ``fastapi.HTTPException`` with the right status code.
+
+    The adapter cannot fix this without changes to ``services.py`` or
+    ``run_agent``, which would violate the "no-invasive DeerFlow
+    changes" rule — the contract gap is documented here so future
+    DeerFlow integrators know the adapter has done its part.
 """
 
 from __future__ import annotations
@@ -129,6 +165,20 @@ class GraphHarnessPresetAccessError(Exception):
     into ``fastapi.HTTPException(code, detail=str(error))`` — this adapter
     intentionally does not import ``fastapi`` so it stays usable from
     non-HTTP contexts (CLI, tests).
+
+    Observability (review finding P0-1): this exception is *synchronously
+    observable* when the gateway calls :func:`_check_preset_access` (or
+    :func:`make_graph_harness_agent`) on the HTTP request path itself, in
+    which case the gateway can translate ``code`` into a real
+    ``fastapi.HTTPException`` and the client sees a clean 4xx. It is
+    *invisibly raised* when the gateway defers ``agent_factory`` invocation
+    into an ``asyncio.create_task(...)`` background task — by the time the
+    exception fires, the HTTP handler has already returned ``200 OK`` +
+    ``thread_id`` and the error cannot reach the client as a status code.
+    See the module-level "Integration contract" section for the two
+    gateway-side remedies (SSE error frame, or pre-validate in the
+    handler). The ``code`` attribute is exposed publicly specifically so
+    the SSE-error-frame path can map it without re-parsing the message.
     """
 
     def __init__(self, code: int, message: str) -> None:
@@ -441,6 +491,20 @@ def make_graph_harness_agent(config: Any, app_config: Any = None):
     when SEC-1 access control rejects the preset name. The gateway layer is
     expected to translate the ``code`` attribute into the corresponding
     ``fastapi.HTTPException``.
+
+    Caller-side pre-validation (review finding P0-1): if the gateway
+    invokes this factory on a background task (e.g. inside
+    ``asyncio.create_task(run_agent(...))``), the
+    ``GraphHarnessPresetAccessError`` raised here is *invisible to HTTP
+    clients* because the request handler has already returned ``200 OK`` +
+    ``thread_id`` by the time the error fires. Callers that want true
+    HTTP-error semantics for a rejected preset name should pre-validate
+    via :func:`_check_preset_access` (or
+    :func:`is_graph_harness_assistant` + an explicit access check) on the
+    synchronous HTTP request path *before* scheduling ``run_agent`` —
+    that way a rejection raises before the response is committed and can
+    be translated to a real ``fastapi.HTTPException``. See the
+    module-level "Integration contract" section for full context.
     """
     configurable = (config or {}).get("configurable") or {}
     preset_name = configurable.get("graph_preset")
