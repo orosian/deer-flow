@@ -350,6 +350,73 @@ def test_bridge_overflow_counter_increments_on_buffer_error() -> None:
     assert _METRICS.bridge_overflow_total == 1
 
 
+def test_p1_3_buffer_error_does_not_double_count_missing_end() -> None:
+    """P1-3: a ``BufferError`` on the bridge must increment only
+    ``bridge_overflow_total``, not also ``sse_frame_missing_end_total``.
+
+    Before the fix, the ``finally`` clause fired unconditionally on any
+    non-end-bearing stream, so a single bridge overflow was double-counted
+    as both observations. This test pins down the corrected behaviour:
+    the missing-end counter stays at zero on the exception path.
+    """
+
+    async def fake_astream(*_args, **_kwargs):
+        # Yield one non-end frame, then raise BufferError before the end
+        # marker ever appears. Pre-fix this would have bumped both counters.
+        yield {"event": "values", "data": {"foo": "bar"}}
+        raise BufferError("queue full")
+
+    class _FakeCompiled:
+        astream = fake_astream
+
+    from app.gateway.adapters.graph_harness import _GraphHarnessCompiledProxy
+
+    proxy = _GraphHarnessCompiledProxy(_FakeCompiled(), "echo/echo")
+
+    async def _drain():
+        async for _ in proxy.astream({}, {}):
+            pass
+
+    import asyncio
+
+    with pytest.raises(BufferError):
+        asyncio.run(_drain())
+    # Bridge overflow IS counted (single observation of one event).
+    assert _METRICS.bridge_overflow_total == 1
+    # Missing-end counter must NOT increment on the exception path —
+    # the failure is already accounted for via bridge_overflow_total.
+    assert _METRICS.sse_frame_missing_end_total == 0
+
+
+def test_p1_3_other_exception_does_not_count_missing_end() -> None:
+    """P1-3: any exception path (not just ``BufferError``) must not
+    increment ``sse_frame_missing_end_total``. The missing-end signal is
+    only meaningful when the stream ran to completion normally.
+    """
+
+    async def fake_astream(*_args, **_kwargs):
+        yield {"event": "values", "data": {}}
+        raise RuntimeError("bridge exploded for unrelated reasons")
+
+    class _FakeCompiled:
+        astream = fake_astream
+
+    from app.gateway.adapters.graph_harness import _GraphHarnessCompiledProxy
+
+    proxy = _GraphHarnessCompiledProxy(_FakeCompiled(), "echo/echo")
+
+    async def _drain():
+        async for _ in proxy.astream({}, {}):
+            pass
+
+    import asyncio
+
+    with pytest.raises(RuntimeError):
+        asyncio.run(_drain())
+    assert _METRICS.bridge_overflow_total == 0
+    assert _METRICS.sse_frame_missing_end_total == 0
+
+
 def test_sse_frame_missing_end_counter_when_no_end_marker() -> None:
     """An astream that finishes without yielding an end marker increments
     ``sse_frame_missing_end_total``."""

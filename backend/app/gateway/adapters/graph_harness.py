@@ -326,6 +326,10 @@ class _GraphHarnessCompiledProxy:
         if stream_mode is None:
             stream_mode = ["values"]
         saw_end = False
+        # P1-3: track whether the inner async-for raised so the finally
+        # block does not double-count a bridge overflow as both
+        # ``bridge_overflow_total`` and ``sse_frame_missing_end_total``.
+        stream_raised = False
         try:
             try:
                 async for chunk in self._compiled.astream(input, config, stream_mode=stream_mode):
@@ -339,9 +343,21 @@ class _GraphHarnessCompiledProxy:
                 # consumer is too slow. Count and re-raise so the upstream
                 # SSE layer can surface the failure to the client.
                 _METRICS.incr_bridge_overflow()
+                stream_raised = True
+                raise
+            except BaseException:
+                # P1-3: any other exception path means the stream did NOT
+                # complete normally, so the missing-end signal is not
+                # meaningful. Mark raised and re-raise unchanged — the
+                # finally block will skip the missing-end counter.
+                stream_raised = True
                 raise
         finally:
-            if not saw_end:
+            # P1-3: only count a missing-end frame when the stream ran to
+            # completion normally. On any exception (BufferError or other)
+            # the missing-end signal is not meaningful — the failure is
+            # already accounted for elsewhere (e.g. bridge_overflow_total).
+            if not saw_end and not stream_raised:
                 _METRICS.incr_sse_frame_missing_end()
             _METRICS.observe_run_duration(time.perf_counter() - start)
 
