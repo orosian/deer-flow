@@ -219,12 +219,13 @@ def _check_preset_access(preset_name: str) -> None:
         )
 
 
-# API-1: host-API version that this adapter has been tested against. The
-# graph-harness library exposes ``harness.host.HOST_API_VERSION`` for hosts
-# to lock against; we re-export the expected version here so a mismatch is
-# caught at the first call into the engine rather than as a cryptic
-# runtime failure later. Bump this in lockstep with the upstream value.
-_EXPECTED_HOST_API_VERSION = "1.0.0"
+# API-1: minimum host-API MAJOR this adapter has been tested against.
+# graph-harness exposes ``harness.host.check_host_api_compatible(expected)``
+# which accepts any same-MAJOR semver (1.x.y vs 1.0.0 → OK). When
+# upstream bumps to 2.x, this string should bump too — the check then
+# forces an explicit, reviewed adapter migration rather than silently
+# invoking a workflow with an incompatible signature.
+_MIN_HOST_API_MAJOR = "1.0.0"
 
 
 # ---------------------------------------------------------------------------
@@ -348,23 +349,39 @@ def reset_metrics() -> None:
 def _load_graph_harness():
     """Lazy import of ``harness.host`` so this module is importable without the package installed.
 
-    API-1: also asserts that ``harness.host.HOST_API_VERSION`` matches the
-    version this adapter was built against. A mismatch raises ImportError so
-    the gateway returns 500 with a clear "host API version mismatch" cause
-    instead of silently invoking a workflow with an incompatible signature.
+    API-1: verifies host-API compatibility via
+    ``harness.host.check_host_api_compatible(_MIN_HOST_API_MAJOR)`` — any
+    same-MAJOR ``HOST_API_VERSION`` (e.g. installed "1.1.0", pinned "1.0.0")
+    is accepted; a MAJOR mismatch raises :class:`HostApiVersionMismatch`,
+    which is re-raised here as ``ImportError`` so the gateway surfaces 500
+    with a clear "host API version mismatch" cause via its existing
+    ``except ImportError`` path rather than silently invoking a workflow
+    with an incompatible signature.
     """
     try:
-        from harness.host import HOST_API_VERSION, compile_workflow, load_preset  # type: ignore[import-not-found]
+        from harness.host import (  # type: ignore[import-not-found]
+            HostApiVersionMismatch,
+            check_host_api_compatible,
+            compile_workflow,
+            load_preset,
+        )
     except ImportError as exc:
         raise RuntimeError(
             "graph-harness is required for gh:* assistants but is not installed (missing 'harness.host')"
         ) from exc
-    if HOST_API_VERSION != _EXPECTED_HOST_API_VERSION:
+    try:
+        check_host_api_compatible(_MIN_HOST_API_MAJOR)
+    except HostApiVersionMismatch as exc:
+        # Re-raise as ImportError so the gateway surfaces 500 with a
+        # version-mismatch message; keep the structured ``.expected`` /
+        # ``.actual`` attributes intact on ``exc.__cause__`` for log
+        # consumers that want to distinguish a major mismatch from a
+        # missing-package failure.
         raise ImportError(
-            f"graph-harness host API version mismatch: installed={HOST_API_VERSION!r}, "
-            f"expected={_EXPECTED_HOST_API_VERSION!r}. Upgrade the adapter or downgrade "
-            f"the graph-harness package to a compatible version."
-        )
+            f"graph-harness host API major version mismatch: "
+            f"installed={exc.actual!r}, this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; "
+            f"upgrade the adapter or downgrade the graph-harness package."
+        ) from exc
     return compile_workflow, load_preset
 
 
@@ -517,5 +534,11 @@ def make_graph_harness_agent(config: Any, app_config: Any = None):
     # SEC-1: 404 mapping for missing presets via the engine's own validation.
     dsl = _wrap_load_preset_errors(preset_name)
     compile_workflow, _ = _load_graph_harness()
-    compiled = compile_workflow(dsl)
+    # Pass ``produces_keys`` from the manifest so the validator does not
+    # flag the entry node for a missing producer (preset declares keys
+    # it pre-seeds on the blackboard at run start; without this the
+    # ``compile_workflow`` validator raises DATAFLOW_PATH_INPUT_MISSING
+    # for action-level presets like ``echo`` / ``multi_step_llm``).
+    produces_keys = set(dsl.get("produces_keys") or ())
+    compiled = compile_workflow(dsl, preset_produces_keys=produces_keys)
     return _GraphHarnessCompiledProxy(compiled, preset_name)

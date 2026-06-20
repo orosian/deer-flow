@@ -12,8 +12,8 @@ import pytest
 
 from app.gateway.adapters.graph_harness import (
     _DEFAULT_ALLOWED_PRESETS,
-    _EXPECTED_HOST_API_VERSION,
     _METRICS,
+    _MIN_HOST_API_MAJOR,
     GraphHarnessPresetAccessError,
     _allowed_presets,
     _check_preset_access,
@@ -191,14 +191,98 @@ def test_make_graph_harness_agent_rejects_unlisted_pattern() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_expected_host_api_version_is_1_0_0() -> None:
-    """Sanity: the adapter's expected host API version is "1.0.0".
+def test_min_host_api_major_is_1_0_0() -> None:
+    """Sanity: the adapter's minimum host-API major is "1.0.0".
 
-    If graph-harness upstream bumps HOST_API_VERSION, this test will
-    fail and force a deliberate adapter update — silent API drift is
-    the failure mode this lock exists to prevent.
+    graph-harness upstream bumped HOST_API_VERSION from "1.0.0" to
+    "1.1.0" — same major, still compatible via
+    ``check_host_api_compatible``. If a future bump crosses into 2.x,
+    this test will fail and force a deliberate adapter update — silent
+    major-version drift is the failure mode this lock exists to
+    prevent.
     """
-    assert _EXPECTED_HOST_API_VERSION == "1.0.0"
+    assert _MIN_HOST_API_MAJOR == "1.0.0"
+
+
+def test_make_graph_harness_agent_passes_preset_produces_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The adapter must thread ``manifest['produces_keys']`` through to
+    ``compile_workflow`` as the ``preset_produces_keys`` keyword. Without
+    this, action-level presets (e.g. ``echo``, ``multi_step_llm``) trigger
+    a spurious ``DATAFLOW_PATH_INPUT_MISSING`` from the validator.
+    """
+    import sys
+    import types
+
+    fake = types.ModuleType("harness")
+    host = types.ModuleType("harness.host")
+
+    # A minimal valid manifest with produces_keys declared.
+    sentinel_compiled = object()
+    captured_kwargs: dict = {}
+
+    def fake_load_preset(_name: str):
+        return {"preset_name": "echo", "produces_keys": ["branch.key", "branch.operator"], "graph": {}}
+
+    def fake_compile_workflow(_dsl, **kwargs):
+        captured_kwargs.update(kwargs)
+        return sentinel_compiled
+
+    def fake_check_compatible(_expected: str) -> None:
+        return None
+
+    host.load_preset = fake_load_preset
+    host.compile_workflow = fake_compile_workflow
+    host.check_host_api_compatible = fake_check_compatible
+    host.HostApiVersionMismatch = type("HostApiVersionMismatch", (Exception,), {})
+    fake.host = host
+    monkeypatch.setitem(sys.modules, "harness", fake)
+    monkeypatch.setitem(sys.modules, "harness.host", host)
+
+    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+    proxy = make_graph_harness_agent({"configurable": {"graph_preset": "echo/echo"}})
+    assert captured_kwargs.get("preset_produces_keys") == {"branch.key", "branch.operator"}
+    # Sanity: returned proxy wraps the sentinel.
+    assert proxy._compiled is sentinel_compiled
+
+
+def test_make_graph_harness_agent_handles_missing_produces_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Manifests without ``produces_keys`` (older presets, custom DSLs)
+    must still compile — the adapter passes an empty set so the validator
+    uses its default ``{user.goal}`` initial_keys.
+    """
+    import sys
+    import types
+
+    fake = types.ModuleType("harness")
+    host = types.ModuleType("harness.host")
+
+    sentinel_compiled = object()
+    captured_kwargs: dict = {}
+
+    def fake_load_preset(_name: str):
+        # Old-style manifest without produces_keys field.
+        return {"preset_name": "old", "graph": {}}
+
+    def fake_compile_workflow(_dsl, **kwargs):
+        captured_kwargs.update(kwargs)
+        return sentinel_compiled
+
+    def fake_check_compatible(_expected: str) -> None:
+        return None
+
+    host.load_preset = fake_load_preset
+    host.compile_workflow = fake_compile_workflow
+    host.check_host_api_compatible = fake_check_compatible
+    host.HostApiVersionMismatch = type("HostApiVersionMismatch", (Exception,), {})
+    fake.host = host
+    monkeypatch.setitem(sys.modules, "harness", fake)
+    monkeypatch.setitem(sys.modules, "harness.host", host)
+
+    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+    make_graph_harness_agent({"configurable": {"graph_preset": "echo/echo"}})
+    assert captured_kwargs.get("preset_produces_keys") == set()
 
 
 def test_make_graph_harness_agent_without_harness_package_raises_runtime_error() -> None:
@@ -283,7 +367,12 @@ def test_preset_load_failure_unknown_counter_on_load_exception(monkeypatch: pyte
 
     host.load_preset = fake_load_preset
     host.compile_workflow = fake_compile_workflow
-    host.HOST_API_VERSION = "1.0.0"
+
+    def fake_check_compatible(_expected: str) -> None:
+        return None  # default: accept
+
+    host.check_host_api_compatible = fake_check_compatible
+    host.HostApiVersionMismatch = type("HostApiVersionMismatch", (Exception,), {})
     fake.host = host
     monkeypatch.setitem(sys.modules, "harness", fake)
     monkeypatch.setitem(sys.modules, "harness.host", host)
@@ -311,7 +400,12 @@ def test_preset_load_failure_not_found_counter_on_value_error(monkeypatch: pytes
 
     host.load_preset = fake_load_preset
     host.compile_workflow = fake_compile_workflow
-    host.HOST_API_VERSION = "1.0.0"
+
+    def fake_check_compatible(_expected: str) -> None:
+        return None  # default: accept
+
+    host.check_host_api_compatible = fake_check_compatible
+    host.HostApiVersionMismatch = type("HostApiVersionMismatch", (Exception,), {})
     fake.host = host
     monkeypatch.setitem(sys.modules, "harness", fake)
     monkeypatch.setitem(sys.modules, "harness.host", host)
