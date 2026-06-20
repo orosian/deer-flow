@@ -10,6 +10,13 @@ from __future__ import annotations
 
 import pytest
 
+from app.gateway.adapters.graph_harness import (
+    _DEFAULT_ALLOWED_PRESETS,
+    GraphHarnessPresetAccessError,
+    _allowed_presets,
+    _check_preset_access,
+)
+
 
 def test_is_graph_harness_assistant_recognizes_prefix() -> None:
     """``gh:`` prefix selects the graph-harness adapter; anything else does not."""
@@ -67,3 +74,109 @@ def test_make_graph_harness_agent_raises_without_preset() -> None:
         make_graph_harness_agent({})
     with pytest.raises(ValueError, match="graph_preset"):
         make_graph_harness_agent({"configurable": {}})
+
+
+# ---------------------------------------------------------------------------
+# SEC-1: preset-name access control (pattern + whitelist + env override)
+# ---------------------------------------------------------------------------
+
+
+def test_check_preset_access_accepts_default_whitelist_members() -> None:
+    """Members of the default whitelist pass the access check (no exception)."""
+    for preset in _DEFAULT_ALLOWED_PRESETS:
+        _check_preset_access(preset)  # should not raise
+
+
+@pytest.mark.parametrize(
+    "bad_name",
+    [
+        "../../etc/passwd",  # path traversal
+        "/etc/passwd",  # absolute path
+        "../foo",  # relative parent traversal
+        "Foo/Bar",  # uppercase
+        "foo\\bar",  # backslash
+        "foo bar",  # whitespace
+        "foo/bar/extra",  # too many segments
+        "foo/",  # trailing slash
+        "/foo",  # leading slash with valid name
+        "",  # empty
+    ],
+)
+def test_check_preset_access_rejects_pattern_violations(bad_name: str) -> None:
+    """Pattern check rejects path traversal, absolute paths, backslashes, uppercase,
+    and malformed shapes — surfaces as ``GraphHarnessPresetAccessError(code=400)``."""
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
+        _check_preset_access(bad_name)
+    assert exc_info.value.code == 400
+    assert "invalid preset name format" in str(exc_info.value)
+
+
+def test_check_preset_access_rejects_non_whitelisted() -> None:
+    """A syntactically valid name that is not on the whitelist raises ``code=403``."""
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
+        _check_preset_access("unlisted/preset")
+    assert exc_info.value.code == 403
+    assert "allow-list" in str(exc_info.value)
+
+
+def test_check_preset_access_accepts_well_formed_even_if_unlisted() -> None:
+    """Pattern check is independent of whitelist: a well-formed name passes the
+    first layer, the second layer then determines authorisation.
+
+    We can't observe the first-layer pass directly (the function raises on
+    the second layer's rejection), but the test below asserts the rejection
+    code is 403 not 400, confirming pattern was accepted before whitelist ran.
+    """
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
+        _check_preset_access("nonexistent/something")
+    assert exc_info.value.code == 403, "well-formed but unlisted should be 403, not 400"
+
+
+def test_allowed_presets_default_when_env_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No env override → default whitelist is used."""
+    monkeypatch.delenv("DEERFLOW_GRAPH_HARNESS_PRESETS", raising=False)
+    assert _allowed_presets() == _DEFAULT_ALLOWED_PRESETS
+
+
+def test_allowed_presets_env_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Env override replaces the default whitelist entirely."""
+    monkeypatch.setenv("DEERFLOW_GRAPH_HARNESS_PRESETS", "echo/echo,coding/coding_pipeline")
+    result = _allowed_presets()
+    assert result == frozenset({"echo/echo", "coding/coding_pipeline"})
+    # multi_step_llm/multi_step_llm is in the default but not in the override → excluded.
+    assert "multi_step_llm/multi_step_llm" not in result
+
+
+def test_allowed_presets_env_override_strips_whitespace(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Whitespace around entries is stripped; empty entries are ignored."""
+    monkeypatch.setenv("DEERFLOW_GRAPH_HARNESS_PRESETS", " echo/echo , , coding/coding_pipeline ")
+    result = _allowed_presets()
+    assert result == frozenset({"echo/echo", "coding/coding_pipeline"})
+
+
+def test_allowed_presets_env_override_empty_falls_back(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An override that parses to empty (e.g. all whitespace, all commas) falls
+    back to the default rather than silently locking everyone out."""
+    monkeypatch.setenv("DEERFLOW_GRAPH_HARNESS_PRESETS", "  ,, , ")
+    assert _allowed_presets() == _DEFAULT_ALLOWED_PRESETS
+
+
+def test_make_graph_harness_agent_rejects_traversal_pattern() -> None:
+    """End-to-end: a path-traversal preset name is rejected at the factory
+    boundary with ``code=400`` — does not reach ``load_preset``."""
+    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+    config = {"configurable": {"graph_preset": "../../etc/passwd"}}
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
+        make_graph_harness_agent(config)
+    assert exc_info.value.code == 400
+
+
+def test_make_graph_harness_agent_rejects_unlisted_pattern() -> None:
+    """End-to-end: a well-formed but unlisted preset name is rejected with ``code=403``."""
+    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+    config = {"configurable": {"graph_preset": "unknown/preset"}}
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
+        make_graph_harness_agent(config)
+    assert exc_info.value.code == 403
