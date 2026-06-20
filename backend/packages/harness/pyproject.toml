@@ -37,12 +37,22 @@ dependencies = [
     "aiosqlite>=0.19",
     "alembic>=1.13",
     "cryptography>=43.0.0",
-    # API-1: lock the graph-harness host API to the 0.x line. Bump to
-    # ``graph-harness>=1.0,<2.0`` once the upstream package hits 1.0.
-    # The adapter additionally checks ``harness.host.HOST_API_VERSION`` at
-    # runtime so a host-API mismatch surfaces as an ImportError rather than
-    # silently breaking the compiled workflow.
-    "graph-harness>=0.1,<1.0",
+    # API-1: graph-harness is tracked on TWO independent version axes.
+    #
+    # 1. The PyPI *package* semver (``graph-harness`` on PyPI / local path).
+    #    Today the upstream package is at 0.1.0; we keep the lower bound at
+    #    0.1 and exclude the 2.x line because a major-version bump there
+    #    is expected to change the public host API contract.
+    #
+    # 2. The runtime *host API* contract, exposed by the library as
+    #    ``harness.host.HOST_API_VERSION`` and re-checked in
+    #    ``app.gateway.adapters.graph_harness`` via
+    #    ``_EXPECTED_HOST_API_VERSION`` (currently "1.0.0"). A package
+    #    version and a host-API version are independent dimensions, so
+    #    e.g. a 0.1.x package may already implement host API 1.0.0.
+    #    Mismatches between the two surface as an ImportError at first
+    #    adapter use rather than silently breaking the compiled workflow.
+    "graph-harness>=0.1,<2.0",
 ]
 
 [project.optional-dependencies]
