@@ -12,6 +12,7 @@ import pytest
 
 from app.gateway.adapters.graph_harness import (
     _DEFAULT_ALLOWED_PRESETS,
+    _EXPECTED_HOST_API_VERSION,
     GraphHarnessPresetAccessError,
     _allowed_presets,
     _check_preset_access,
@@ -180,3 +181,33 @@ def test_make_graph_harness_agent_rejects_unlisted_pattern() -> None:
     with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
         make_graph_harness_agent(config)
     assert exc_info.value.code == 403
+
+
+# ---------------------------------------------------------------------------
+# API-1: host-API version lock + missing-package behaviour
+# ---------------------------------------------------------------------------
+
+
+def test_expected_host_api_version_is_1_0_0() -> None:
+    """Sanity: the adapter's expected host API version is "1.0.0".
+
+    If graph-harness upstream bumps HOST_API_VERSION, this test will
+    fail and force a deliberate adapter update — silent API drift is
+    the failure mode this lock exists to prevent.
+    """
+    assert _EXPECTED_HOST_API_VERSION == "1.0.0"
+
+
+def test_make_graph_harness_agent_without_harness_package_raises_runtime_error() -> None:
+    """When ``harness.host`` is not installed, the factory raises ``RuntimeError``
+    (via :func:`_load_graph_harness`), not ``ImportError`` from a bare
+    ``import harness.host`` at module load time.
+
+    This proves the lazy-import design: the adapter stays importable in
+    test contexts where the upstream package is missing.
+    """
+    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+
+    config = {"configurable": {"graph_preset": "echo/echo"}}
+    with pytest.raises(RuntimeError, match="graph-harness is required"):
+        make_graph_harness_agent(config)

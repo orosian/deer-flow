@@ -117,14 +117,34 @@ def _check_preset_access(preset_name: str) -> None:
         )
 
 
+# API-1: host-API version that this adapter has been tested against. The
+# graph-harness library exposes ``harness.host.HOST_API_VERSION`` for hosts
+# to lock against; we re-export the expected version here so a mismatch is
+# caught at the first call into the engine rather than as a cryptic
+# runtime failure later. Bump this in lockstep with the upstream value.
+_EXPECTED_HOST_API_VERSION = "1.0.0"
+
+
 def _load_graph_harness():
-    """Lazy import of ``harness.host`` so this module is importable without the package installed."""
+    """Lazy import of ``harness.host`` so this module is importable without the package installed.
+
+    API-1: also asserts that ``harness.host.HOST_API_VERSION`` matches the
+    version this adapter was built against. A mismatch raises ImportError so
+    the gateway returns 500 with a clear "host API version mismatch" cause
+    instead of silently invoking a workflow with an incompatible signature.
+    """
     try:
-        from harness.host import compile_workflow, load_preset  # type: ignore[import-not-found]
+        from harness.host import HOST_API_VERSION, compile_workflow, load_preset  # type: ignore[import-not-found]
     except ImportError as exc:
         raise RuntimeError(
             "graph-harness is required for gh:* assistants but is not installed (missing 'harness.host')"
         ) from exc
+    if HOST_API_VERSION != _EXPECTED_HOST_API_VERSION:
+        raise ImportError(
+            f"graph-harness host API version mismatch: installed={HOST_API_VERSION!r}, "
+            f"expected={_EXPECTED_HOST_API_VERSION!r}. Upgrade the adapter or downgrade "
+            f"the graph-harness package to a compatible version."
+        )
     return compile_workflow, load_preset
 
 

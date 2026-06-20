@@ -37,6 +37,12 @@ dependencies = [
     "aiosqlite>=0.19",
     "alembic>=1.13",
     "cryptography>=43.0.0",
+    # API-1: lock the graph-harness host API to the 0.x line. Bump to
+    # ``graph-harness>=1.0,<2.0`` once the upstream package hits 1.0.
+    # The adapter additionally checks ``harness.host.HOST_API_VERSION`` at
+    # runtime so a host-API mismatch surfaces as an ImportError rather than
+    # silently breaking the compiled workflow.
+    "graph-harness>=0.1,<1.0",
 ]
 
 [project.optional-dependencies]
