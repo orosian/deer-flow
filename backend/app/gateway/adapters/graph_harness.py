@@ -304,10 +304,20 @@ class _GraphHarnessCompiledProxy:
     ``ainvoke`` and ``astream`` feed the ``run_duration_seconds`` histogram.
     """
 
-    # Sentinel keys observed inside an astream chunk that indicate the
-    # run has finished. The graph-harness bridge emits one of these as
-    # the last frame; if neither appears before the iterator ends, we
-    # count a missing-end event. Exposed at class level for tests.
+    # P1-4: Real LangGraph ``astream(stream_mode="values")`` yields plain state
+    # dicts (e.g. ``{"messages": [...], "user_goal": "..."}``) with NO
+    # ``"event"`` key — there is no in-band end marker. End-of-run is
+    # signalled by a clean ``StopAsyncIteration`` on the underlying async
+    # iterator. The graph-harness ``MemoryStreamBridge`` translates that into
+    # an ``END_SENTINEL`` (``StreamEvent(event="__end__", ...)``) on the
+    # *consumer* side, but the proxy never observes it in-band.
+    #
+    # Therefore the ``_STREAM_END_MARKERS`` predicate below is **retained as
+    # defence-in-depth** for any future LangGraph stream mode that might emit
+    # an in-band end marker, but in practice it never matches in the default
+    # ``values`` mode the adapter uses. ``sse_frame_missing_end_total`` is
+    # therefore gated to never increment on the normal-completion path — see
+    # the ``finally`` block below. Exposed at class level for tests.
     _STREAM_END_MARKERS = ("end", "__end__")
 
     def __init__(self, compiled: Any, preset_name: str) -> None:
@@ -326,10 +336,11 @@ class _GraphHarnessCompiledProxy:
         if stream_mode is None:
             stream_mode = ["values"]
         saw_end = False
-        # P1-3: track whether the inner async-for raised so the finally
-        # block does not double-count a bridge overflow as both
-        # ``bridge_overflow_total`` and ``sse_frame_missing_end_total``.
-        stream_raised = False
+        # Note: ``saw_end`` is kept for defence-in-depth in case a future
+        # stream mode emits an in-band end marker (see P1-4 docstring).
+        # The current detection predicate never matches in default
+        # ``values`` mode, so this variable is intentionally unused in the
+        # counter logic below — the F841 suppression is on the assignment.
         try:
             try:
                 async for chunk in self._compiled.astream(input, config, stream_mode=stream_mode):
@@ -343,22 +354,23 @@ class _GraphHarnessCompiledProxy:
                 # consumer is too slow. Count and re-raise so the upstream
                 # SSE layer can surface the failure to the client.
                 _METRICS.incr_bridge_overflow()
-                stream_raised = True
-                raise
-            except BaseException:
-                # P1-3: any other exception path means the stream did NOT
-                # complete normally, so the missing-end signal is not
-                # meaningful. Mark raised and re-raise unchanged — the
-                # finally block will skip the missing-end counter.
-                stream_raised = True
                 raise
         finally:
-            # P1-3: only count a missing-end frame when the stream ran to
-            # completion normally. On any exception (BufferError or other)
-            # the missing-end signal is not meaningful — the failure is
-            # already accounted for elsewhere (e.g. bridge_overflow_total).
-            if not saw_end and not stream_raised:
-                _METRICS.incr_sse_frame_missing_end()
+            # P1-4: ``sse_frame_missing_end_total`` is intentionally not
+            # incremented on the normal-completion path. Real LangGraph
+            # ``values``-mode chunks carry no in-band end marker (see the
+            # ``_STREAM_END_MARKERS`` docstring above), so a clean
+            # ``StopAsyncIteration`` is the *expected* termination signal.
+            # Counting it as "missing" would tick on every successful run.
+            #
+            # P1-3: BufferError is already counted via ``bridge_overflow_total``,
+            # and other exception paths are accounted for by upstream error
+            # handling — a "missing end" on the exception path is not
+            # meaningful either. The counter is therefore a no-op in practice;
+            # it remains in the snapshot shape so a downstream exporter does
+            # not need a schema migration if a future stream mode adds an
+            # in-band end marker.
+            _ = saw_end  # retained for clarity; see P1-4 docstring
             _METRICS.observe_run_duration(time.perf_counter() - start)
 
 

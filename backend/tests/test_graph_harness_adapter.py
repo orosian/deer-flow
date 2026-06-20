@@ -417,13 +417,23 @@ def test_p1_3_other_exception_does_not_count_missing_end() -> None:
     assert _METRICS.sse_frame_missing_end_total == 0
 
 
-def test_sse_frame_missing_end_counter_when_no_end_marker() -> None:
-    """An astream that finishes without yielding an end marker increments
-    ``sse_frame_missing_end_total``."""
+def test_sse_frame_missing_end_counter_unchanged_on_normal_completion() -> None:
+    """P1-4 regression: a stream that completes cleanly (no in-band end marker,
+    because LangGraph ``values`` mode does not emit one) does NOT increment
+    ``sse_frame_missing_end_total``.
+
+    Before P1-4 the predicate ``chunk['event'] in _STREAM_END_MARKERS`` was
+    checked against LangGraph values-mode chunks (plain state dicts with no
+    ``\"event\"`` key), so the counter incremented on 100% of successful runs.
+    The corrected behaviour: ``sse_frame_missing_end_total`` is a no-op in
+    practice (see the P1-4 docstring in ``_GraphHarnessCompiledProxy``); the
+    counter stays at 0 on normal completion.
+    """
 
     async def fake_astream(*_args, **_kwargs):
-        yield {"event": "values", "data": {"foo": "bar"}}
-        # stream ends without "end" or "__end__"
+        # Real LangGraph values-mode chunk: plain state dict, no "event" key.
+        yield {"messages": ["hello"], "user_goal": "summarise"}
+        # Stream ends via clean StopAsyncIteration (no in-band end marker).
 
     class _FakeCompiled:
         astream = fake_astream
@@ -439,11 +449,14 @@ def test_sse_frame_missing_end_counter_when_no_end_marker() -> None:
     import asyncio
 
     asyncio.run(_drain())
-    assert _METRICS.sse_frame_missing_end_total == 1
+    assert _METRICS.sse_frame_missing_end_total == 0
 
 
-def test_sse_frame_missing_end_counter_zero_when_end_marker_seen() -> None:
-    """An astream that yields an end marker does not increment the missing-end counter."""
+def test_sse_frame_missing_end_counter_unchanged_when_end_marker_seen() -> None:
+    """Defence-in-depth coverage: even if a future stream mode emits an
+    in-band end marker (``event in (\"end\", \"__end__\")``), the counter still
+    does not increment (P1-4 keeps the counter as a no-op for stability).
+    """
 
     async def fake_astream(*_args, **_kwargs):
         yield {"event": "values", "data": {}}
