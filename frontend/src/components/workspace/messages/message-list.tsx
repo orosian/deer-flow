@@ -1,12 +1,16 @@
 import type { Message } from "@langchain/langgraph-sdk";
 import type { BaseStream } from "@langchain/langgraph-sdk/react";
 import { ChevronUpIcon, Loader2Icon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   Conversation,
   ConversationContent,
 } from "@/components/ai-elements/conversation";
+import {
+  Reasoning,
+  ReasoningTrigger,
+} from "@/components/ai-elements/reasoning";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/core/i18n/hooks";
 import {
@@ -29,7 +33,10 @@ import {
 import { useRehypeSplitWordsIntoSpans } from "@/core/rehype";
 import type { Subtask } from "@/core/tasks";
 import { useUpdateSubtask } from "@/core/tasks/context";
-import { parseSubtaskResult } from "@/core/tasks/subtask-result";
+import {
+  derivePendingSubtaskStatus,
+  parseSubtaskResult,
+} from "@/core/tasks/subtask-result";
 import type { AgentThreadState } from "@/core/threads";
 import { cn } from "@/lib/utils";
 
@@ -176,10 +183,33 @@ export function MessageList({
   isHistoryLoading?: boolean;
 }) {
   const { t } = useI18n();
-  const rehypePlugins = useRehypeSplitWordsIntoSpans(thread.isLoading);
-  const updateSubtask = useUpdateSubtask();
+  const [turnStartTime, setTurnStartTime] = useState<number | null>(null);
+  const prevIsLoading = useRef(thread.isLoading);
+
+  useEffect(() => {
+    if (thread.isLoading && !prevIsLoading.current) {
+      setTurnStartTime(Date.now());
+    }
+    prevIsLoading.current = thread.isLoading;
+  }, [thread.isLoading]);
   const messages = thread.messages;
   const groupedMessages = getMessageGroups(messages);
+  const hasActiveAssistantText = useMemo(() => {
+    let lastHumanIndex = -1;
+    for (let i = groupedMessages.length - 1; i >= 0; i--) {
+      if (groupedMessages[i]?.type === "human") {
+        lastHumanIndex = i;
+        break;
+      }
+    }
+    if (lastHumanIndex === -1) return false;
+    return groupedMessages
+      .slice(lastHumanIndex)
+      .some((g) => g.type === "assistant");
+  }, [groupedMessages]);
+  const rehypePlugins = useRehypeSplitWordsIntoSpans(thread.isLoading);
+  const updateSubtask = useUpdateSubtask();
+  const lastGroupIndex = groupedMessages.length - 1;
   const turnUsageMessagesByGroupIndex =
     getAssistantTurnUsageMessages(groupedMessages);
   const tokenDebugSteps = useMemo(
@@ -275,6 +305,8 @@ export function MessageList({
         />
         {groupedMessages.map((group, groupIndex) => {
           const turnUsageMessages = turnUsageMessagesByGroupIndex[groupIndex];
+          const groupIsLoading =
+            thread.isLoading && groupIndex === lastGroupIndex;
 
           if (group.type === "human" || group.type === "assistant") {
             return (
@@ -290,9 +322,17 @@ export function MessageList({
                     <MessageListItem
                       key={`${group.id}/${msg.id}`}
                       message={msg}
-                      isLoading={thread.isLoading}
+                      isLoading={
+                        thread.isLoading &&
+                        groupIndex === groupedMessages.length - 1
+                      }
                       threadId={threadId}
                       showCopyButton={group.type !== "assistant"}
+                      turnStartTime={
+                        groupIndex === groupedMessages.length - 1
+                          ? turnStartTime
+                          : null
+                      }
                     />
                   );
                 })}
@@ -359,12 +399,24 @@ export function MessageList({
               if (message.type === "ai") {
                 for (const toolCall of message.tool_calls ?? []) {
                   if (toolCall.name === "task") {
+                    const taskId = toolCall.id;
+                    if (!taskId) {
+                      continue;
+                    }
+                    const status = derivePendingSubtaskStatus(
+                      taskId,
+                      group.messages,
+                      groupIsLoading,
+                    );
                     const task: Subtask = {
-                      id: toolCall.id!,
+                      id: taskId,
                       subagent_type: toolCall.args.subagent_type,
                       description: toolCall.args.description,
                       prompt: toolCall.args.prompt,
-                      status: "in_progress",
+                      status,
+                      ...(status === "failed"
+                        ? { error: t.subtasks.failed }
+                        : {}),
                     };
                     updateSubtask(task);
                     tasks.add(task);
@@ -402,7 +454,7 @@ export function MessageList({
                   <MessageGroup
                     key={"thinking-group-" + message.id}
                     messages={[message]}
-                    isLoading={thread.isLoading}
+                    isLoading={groupIsLoading}
                     tokenDebugSteps={tokenDebugSteps.filter(
                       (step) => step.messageId === message.id,
                     )}
@@ -414,15 +466,15 @@ export function MessageList({
               } else if (message.id) {
                 subagentDebugMessageIds.push(message.id);
               }
-              const taskIds = message.tool_calls
-                ?.filter((toolCall) => toolCall.name === "task")
-                .map((toolCall) => toolCall.id);
+              const taskIds = message.tool_calls?.flatMap((toolCall) =>
+                toolCall.name === "task" && toolCall.id ? [toolCall.id] : [],
+              );
               for (const taskId of taskIds ?? []) {
                 results.push(
                   <SubtaskCard
                     key={"task-group-" + taskId}
-                    taskId={taskId!}
-                    isLoading={thread.isLoading}
+                    taskId={taskId}
+                    isLoading={groupIsLoading}
                   />,
                 );
               }
@@ -461,7 +513,13 @@ export function MessageList({
             </div>
           );
         })}
-        {thread.isLoading && <StreamingIndicator className="my-4" />}
+        {thread.isLoading && !hasActiveAssistantText && (
+          <div className="w-full">
+            <Reasoning isStreaming={true} startTimeProp={turnStartTime}>
+              <ReasoningTrigger hasContent={false} />
+            </Reasoning>
+          </div>
+        )}
         <div style={{ height: `${paddingBottom}px` }} />
       </ConversationContent>
     </Conversation>
