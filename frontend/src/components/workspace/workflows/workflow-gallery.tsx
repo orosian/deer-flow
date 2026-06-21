@@ -6,7 +6,6 @@ import { useCallback } from "react";
 
 import { useGraphPresets, type GraphPreset } from "@/core/graph-presets";
 import { useI18n } from "@/core/i18n/hooks";
-import { saveThreadPresetId } from "@/core/settings/local";
 
 import { WorkflowCard } from "./workflow-card";
 
@@ -17,11 +16,17 @@ export function WorkflowGallery() {
 
   const handleStart = useCallback(
     (preset: GraphPreset) => {
-      // Generate a new thread id; chat page reads preset_id from localStorage
-      // and routes useStream(assistantId = `gh:${preset_id}`).
+      // Pre-allocate a threadId so the URL is shareable before the backend
+      // has minted one. The preset id is carried in the query string — NOT
+      // localStorage — because the LangGraph SDK rewrites the URL with the
+      // real backend threadId on first send, and a localStorage write keyed
+      // by the pre-alloc id would be orphaned by that rewrite (Pitfall 16).
+      // The URL is the single source of truth: see useUrlPreset and
+      // ChatPage.onStart which preserves window.location.search.
       const newThreadId = crypto.randomUUID();
-      saveThreadPresetId(newThreadId, preset.id);
-      router.push(`/workspace/chats/${newThreadId}`);
+      router.push(
+        `/workspace/chats/${newThreadId}?preset=${encodeURIComponent(preset.id)}`,
+      );
     },
     [router],
   );

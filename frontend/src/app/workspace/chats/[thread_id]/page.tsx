@@ -27,6 +27,7 @@ import { TodoList } from "@/components/workspace/todo-list";
 import { TokenUsageIndicator } from "@/components/workspace/token-usage-indicator";
 import { Welcome } from "@/components/workspace/welcome";
 import { WorkflowPresetBadge } from "@/components/workspace/workflows/workflow-preset-badge";
+import { useUrlPreset } from "@/core/graph-presets/use-url-preset";
 import { useI18n } from "@/core/i18n/hooks";
 import { useModels } from "@/core/models/hooks";
 import { useNotification } from "@/core/notification/hooks";
@@ -61,6 +62,18 @@ export default function ChatPage() {
     setPresetId(getThreadPresetId(threadId) ?? undefined);
   }, [threadId]);
   const [settings, setSettings] = useThreadSettings(threadId);
+  // The URL `?preset=<id>` query param is the source of truth for the
+  // active graph-harness preset (v1.1 doc §3 — Pitfall 16).  When the
+  // LangGraph SDK mints the real backend threadId, onStart below
+  // rewrites the path while preserving the search string, so this hook
+  // keeps returning the preset id for the lifetime of the chat view.
+  // We DO NOT mutate `settings` itself — localStorage stays as the
+  // legacy source for pre-existing threads, and the URL takes over for
+  // any thread started from /workspace/workflows.
+  const urlPreset = useUrlPreset();
+  const mergedContext = urlPreset
+    ? { ...settings.context, preset_id: urlPreset }
+    : settings.context;
   const [localSettings, setLocalSettings] = useLocalSettings();
   const { tokenUsageEnabled } = useModels();
   const threadTokenUsage = useThreadTokenUsage(
@@ -100,7 +113,7 @@ export default function ChatPage() {
   } = useThreadStream({
     threadId: isNewThread ? undefined : threadId,
     displayThreadId: threadId,
-    context: settings.context,
+    context: mergedContext,
     isMock,
     // onSend only animates the UI; do NOT flip `isNewThread` here — the
     // LangGraph SDK eagerly fetches /history the moment it receives a
@@ -110,7 +123,14 @@ export default function ChatPage() {
     },
     onStart: (createdThreadId) => {
       // ! Important: Never use next.js router for navigation in this case, otherwise it will cause the thread to re-mount and lose all states. Use native history API instead.
-      history.replaceState(null, "", `/workspace/chats/${createdThreadId}`);
+      // Preserve the query string (notably `?preset=<id>`) so the URL
+      // remains the single source of truth for the active preset even
+      // after the path is rewritten to the backend-minted threadId.
+      history.replaceState(
+        null,
+        "",
+        `/workspace/chats/${createdThreadId}${window.location.search}`,
+      );
       setThreadId(createdThreadId);
       setIsNewThread(false);
     },
