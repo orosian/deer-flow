@@ -5,6 +5,47 @@ All notable changes to DeerFlow are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] — 2026-06-22
+
+Adds graph-preset workflow start dialog, `input_ports` passthrough on the
+gateway presets router, and minor lint/format cleanup. No breaking changes
+from 2.0.0.
+
+### Added
+
+- **backend:** `graph_presets` router now passes the preset's declared
+  `input_ports` through to the runtime adapter so the frontend can read the
+  full input contract. (`0062b072`)
+- **frontend:** `WorkflowStartDialog` collects user inputs dynamically based
+  on a preset's `input_ports` (textarea for `text`/`json`, file picker for
+  `file`), with required-field validation. (`634af45f`)
+- **frontend:** `WorkflowCard` / `WorkflowGallery` use the new dialog and
+  surface `input_ports` in the preset listing. (`634af45f`)
+- **frontend i18n:** Added `workflow.startDialog.*` keys to both `en-US`
+  and `zh-CN`. (`634af45f`)
+
+### Tests
+
+- **frontend:** Playwright e2e for `WorkflowStartDialog` (open/close,
+  required-field validation, submission). (`b0eddfb6`)
+- **frontend:** Vitest unit tests for the dialog's exported helpers
+  (`controlKindFor`, `defaultValueFor`, `isJsonValid`, `isRequiredFilled`,
+  `fieldIdFor`). (`b0eddfb6`)
+- **backend:** Updated `test_graph_harness_sec1` and
+  `test_graph_presets_router` to cover the new `input_ports` flow. (`0062b072`)
+
+### Fixed
+
+- **frontend:** Removed a dead TODO block in `input-box.tsx` that referenced
+  an obsolete preset selector. (`29d5914b`)
+- **skills:** Cleared 3 `F841` unused-variable lint errors in
+  `github-deep-research` and `skill-creator` helpers. (`2d778149`)
+
+### Internal
+
+- **backend:** `ruff format` pass; `ruff.toml` now excludes the
+  `frontend/` artifact directory. (`70f35472`)
+
 ## [2.0.0] — 2026-06-15
 
 DeerFlow 2.0 is a ground-up rewrite around a "super agent" harness with
