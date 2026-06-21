@@ -174,6 +174,7 @@ export const enUS: Translations = {
     recentChats: "Recent chats",
     demoChats: "Demo chats",
     agents: "Agents",
+    workflows: "Workflows",
   },
 
   // Agents
@@ -558,5 +559,14 @@ export const enUS: Translations = {
       emptyTitle: "Acknowledgements",
       emptyDescription: "Credits and acknowledgements will show here.",
     },
+  },
+
+  // Workflows
+  workflows: {
+    title: "Workflows",
+    description: "Run prebuilt multi-step workflows on your tasks.",
+    start: "Start",
+    emptyTitle: "No workflows available",
+    emptyDescription: "Check with your administrator to enable graph-harness presets.",
   },
 };

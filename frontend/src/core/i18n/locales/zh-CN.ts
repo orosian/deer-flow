@@ -168,6 +168,7 @@ export const zhCN: Translations = {
     recentChats: "最近的对话",
     demoChats: "演示对话",
     agents: "智能体",
+    workflows: "工作流",
   },
 
   // Agents
@@ -246,6 +247,15 @@ export const zhCN: Translations = {
     loadMoreToSearch: "加载更多以搜索更早的对话",
     loadingMore: "正在加载...",
     loadOlderChats: "加载更早的对话",
+  },
+
+  // Preset Selector
+  presetSelector: {
+    label: "预设",
+    defaultOption: "默认 Lead Agent",
+    lockedTooltip:
+      "预设已锁定到当前对话。创建新对话以使用其他预设。",
+    search: "搜索预设",
   },
 
   // Channels
@@ -528,5 +538,14 @@ export const zhCN: Translations = {
       emptyTitle: "致谢",
       emptyDescription: "相关的致谢信息会展示在这里。",
     },
+  },
+
+  // Workflows
+  workflows: {
+    title: "工作流",
+    description: "在任务上运行预构建的多步工作流。",
+    start: "开始",
+    emptyTitle: "暂无可用工作流",
+    emptyDescription: "请联系管理员以启用 graph-harness 预设。",
   },
 };

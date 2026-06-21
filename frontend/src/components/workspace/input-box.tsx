@@ -208,7 +208,9 @@ export function InputBox({
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
   const [presetDialogOpen, setPresetDialogOpen] = useState(false);
   const { models } = useModels();
-  const { displayName: activePresetName } = useActivePreset(context.preset_id);
+  const { displayName: activePresetName } = useActivePreset(
+    context.preset_id as string | undefined,
+  );
   const presetTriggerLabel = context.preset_id
     ? activePresetName
     : t.presetSelector.defaultOption;

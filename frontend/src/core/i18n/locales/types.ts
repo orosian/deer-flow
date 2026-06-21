@@ -118,6 +118,7 @@ export interface Translations {
     demoChats: string;
     agents: string;
     channels: string;
+    workflows: string;
   };
 
   // Agents
@@ -192,7 +193,7 @@ export interface Translations {
   };
 
   // Preset Selector
-  presetSelector?: {
+  presetSelector: {
     label: string;
     defaultOption: string;
     lockedTooltip: string;
@@ -462,5 +463,14 @@ export interface Translations {
       emptyTitle: string;
       emptyDescription: string;
     };
+  };
+
+  // Workflows
+  workflows: {
+    title: string;
+    description: string;
+    start: string;
+    emptyTitle: string;
+    emptyDescription: string;
   };
 }

@@ -22,6 +22,7 @@ import { ThreadTitle } from "@/components/workspace/thread-title";
 import { TodoList } from "@/components/workspace/todo-list";
 import { TokenUsageIndicator } from "@/components/workspace/token-usage-indicator";
 import { Welcome } from "@/components/workspace/welcome";
+import { WorkflowPresetBadge } from "@/components/workspace/workflows/workflow-preset-badge";
 import { useI18n } from "@/core/i18n/hooks";
 import { useModels } from "@/core/models/hooks";
 import { useNotification } from "@/core/notification/hooks";
@@ -178,8 +179,9 @@ export default function ChatPage() {
             )}
           >
             <SidebarTrigger className="md:hidden" />
-            <div className="flex min-w-0 flex-1 items-center text-sm font-medium">
+            <div className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium">
               <ThreadTitle threadId={threadId} thread={thread} />
+              <WorkflowPresetBadge threadId={threadId} />
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <TokenUsageIndicator
