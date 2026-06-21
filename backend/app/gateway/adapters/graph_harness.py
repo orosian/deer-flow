@@ -92,9 +92,7 @@ _PRESET_NAME_PATTERN = re.compile(r"^[a-z0-9_-]+(/[a-z0-9_-]+)?$")
 # derive its dict literal from the constant instead of hard-coding four
 # string keys (DRY). Dashboards expect exactly these four labels; an
 # accidental fifth would silently shift the metric schema.
-_KNOWN_PRESET_FAILURE_REASONS: frozenset[str] = frozenset(
-    {"pattern", "not_allowed", "not_found", "unknown"}
-)
+_KNOWN_PRESET_FAILURE_REASONS: frozenset[str] = frozenset({"pattern", "not_allowed", "not_found", "unknown"})
 
 # SEC-1: default whitelist of presets accessible via ``gh:*`` assistants.
 # Override at runtime by setting the ``DEERFLOW_GRAPH_HARNESS_PRESETS``
@@ -139,8 +137,7 @@ def _allowed_presets() -> frozenset[str]:
         logger = logging.getLogger(__name__)
         if valid:
             logger.warning(
-                "DEERFLOW_GRAPH_HARNESS_PRESETS: dropping invalid entries %s "
-                "(do not match _PRESET_NAME_PATTERN); keeping %s",
+                "DEERFLOW_GRAPH_HARNESS_PRESETS: dropping invalid entries %s (do not match _PRESET_NAME_PATTERN); keeping %s",
                 sorted(invalid),
                 sorted(valid),
             )
@@ -148,8 +145,7 @@ def _allowed_presets() -> frozenset[str]:
         # All entries invalid: treat the override as wholly untrustworthy
         # and fall back to defaults rather than locking everyone out.
         logger.warning(
-            "DEERFLOW_GRAPH_HARNESS_PRESETS: every entry %s failed "
-            "_PRESET_NAME_PATTERN; falling back to default whitelist",
+            "DEERFLOW_GRAPH_HARNESS_PRESETS: every entry %s failed _PRESET_NAME_PATTERN; falling back to default whitelist",
             sorted(invalid),
         )
         return _DEFAULT_ALLOWED_PRESETS
@@ -259,9 +255,7 @@ class _MetricsAccumulator:
         # reasons. Adding a new label requires updating
         # ``_KNOWN_PRESET_FAILURE_REASONS`` *and* confirming the snapshot
         # schema (the keys are exposed verbatim to dashboards).
-        self.preset_load_failure_total: dict[str, int] = {
-            reason: 0 for reason in sorted(_KNOWN_PRESET_FAILURE_REASONS)
-        }
+        self.preset_load_failure_total: dict[str, int] = {reason: 0 for reason in sorted(_KNOWN_PRESET_FAILURE_REASONS)}
         self.run_duration_seconds_count = 0
         self.run_duration_seconds_sum = 0.0
         self.run_duration_seconds_max = 0.0
@@ -291,10 +285,7 @@ class _MetricsAccumulator:
         # set *and* confirm dashboard consumers handle the new label)
         # rather than a silent schema drift.
         if reason not in _KNOWN_PRESET_FAILURE_REASONS:
-            raise ValueError(
-                f"unknown preset_load_failure reason: {reason!r}; "
-                f"known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}"
-            )
+            raise ValueError(f"unknown preset_load_failure reason: {reason!r}; known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}")
         with self._lock:
             self.preset_load_failure_total[reason] = self.preset_load_failure_total.get(reason, 0) + 1
 
@@ -366,9 +357,7 @@ def _load_graph_harness():
             load_preset,
         )
     except ImportError as exc:
-        raise RuntimeError(
-            "graph-harness is required for gh:* assistants but is not installed (missing 'harness.host')"
-        ) from exc
+        raise RuntimeError("graph-harness is required for gh:* assistants but is not installed (missing 'harness.host')") from exc
     try:
         check_host_api_compatible(_MIN_HOST_API_MAJOR)
     except HostApiVersionMismatch as exc:
@@ -377,11 +366,7 @@ def _load_graph_harness():
         # ``.actual`` attributes intact on ``exc.__cause__`` for log
         # consumers that want to distinguish a major mismatch from a
         # missing-package failure.
-        raise ImportError(
-            f"graph-harness host API major version mismatch: "
-            f"installed={exc.actual!r}, this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; "
-            f"upgrade the adapter or downgrade the graph-harness package."
-        ) from exc
+        raise ImportError(f"graph-harness host API major version mismatch: installed={exc.actual!r}, this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; upgrade the adapter or downgrade the graph-harness package.") from exc
     return compile_workflow, load_preset
 
 
@@ -526,9 +511,7 @@ def make_graph_harness_agent(config: Any, app_config: Any = None):
     configurable = (config or {}).get("configurable") or {}
     preset_name = configurable.get("graph_preset")
     if not preset_name:
-        raise ValueError(
-            "graph-harness assistant requires 'graph_preset' in config['configurable']"
-        )
+        raise ValueError("graph-harness assistant requires 'graph_preset' in config['configurable']")
     # SEC-1: pattern + whitelist. Must run before any file system call.
     check_preset_access(preset_name)
     # SEC-1: 404 mapping for missing presets via the engine's own validation.

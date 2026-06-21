@@ -216,7 +216,4 @@ def test_start_run_invokes_pre_check_before_create_task() -> None:
 
     assert pre_check_idx != -1, "start_run no longer calls _pre_check_graph_harness_preset"
     assert create_task_idx != -1, "start_run no longer calls asyncio.create_task"
-    assert pre_check_idx < create_task_idx, (
-        "SEC-1 contract gap regressed: _pre_check_graph_harness_preset must run "
-        "BEFORE asyncio.create_task so a rejected preset returns 4xx to the client"
-    )
+    assert pre_check_idx < create_task_idx, "SEC-1 contract gap regressed: _pre_check_graph_harness_preset must run BEFORE asyncio.create_task so a rejected preset returns 4xx to the client"

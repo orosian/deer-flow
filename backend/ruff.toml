@@ -1,5 +1,6 @@
 line-length = 240
 target-version = "py312"
+extend-exclude = [".agent"]
 
 [lint]
 select = ["E", "F", "I", "UP"]
