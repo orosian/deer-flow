@@ -196,11 +196,30 @@ def inject_authenticated_user_context(config: dict[str, Any], request: Request) 
 def resolve_agent_factory(assistant_id: str | None):
     """Resolve the agent factory callable from config.
 
-    Custom agents are implemented as ``lead_agent`` + an ``agent_name``
-    injected into ``configurable`` or ``context`` — see
-    :func:`build_run_config`.  All ``assistant_id`` values therefore map to the
-    same factory; the routing happens inside ``make_lead_agent`` when it reads
-    ``cfg["agent_name"]``.
+    Two execution paradigms are exposed as sibling factories, selected by
+    the ``assistant_id`` shape:
+
+    * ``assistant_id="lead_agent"`` (default) or any other identifier that
+      is *not* prefixed with ``gh:`` → :func:`make_lead_agent`. Custom
+      lead-agent variants are implemented as ``lead_agent`` + an
+      ``agent_name`` injected into ``configurable`` or ``context`` — see
+      :func:`build_run_config`. Routing between lead-agent variants
+      happens *inside* ``make_lead_agent`` when it reads
+      ``cfg["agent_name"]``.
+    * ``assistant_id="gh:<preset>"`` (e.g. ``gh:echo``) →
+      :func:`make_graph_harness_agent`. This path **bypasses the lead
+      agent entirely** — there is no LLM-driven super-agent loop. The
+      preset manifest is compiled by ``graph-harness`` into a LangGraph
+      ``CompiledGraph`` and executed as a deterministic workflow. See
+      :mod:`app.gateway.adapters.graph_harness` for the security policy
+      (preset name pattern check, whitelist, error-code mapping) applied
+      before any compilation runs.
+
+    Both factories return a thin proxy exposing ``ainvoke`` / ``astream``
+    that feeds DeerFlow's existing ``RunManager`` +
+    ``MemoryStreamBridge`` + ``sse_consumer`` plumbing without
+    modification — the SSE wire format is byte-identical between the
+    two paths.
     """
     from deerflow.agents.lead_agent.agent import make_lead_agent
 

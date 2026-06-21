@@ -1,0 +1,299 @@
+---
+title: Graph Harness v1.1 — Agent Implementation Guide
+description: Step-by-step playbook for the next agent to close the v1.1 gap (sidebar preset picker + thread metadata persistence). Includes three design options and a recommended path.
+---
+
+import { Callout, Steps, Tabs, TabItem } from "nextra/components";
+
+# Graph Harness v1.1 — Agent Implementation Guide
+
+<Callout type="warning" emoji="🚧">
+  This guide is for the agent (human or AI) that picks up v1.1. Read
+  it fully before touching code. v1 was closed on 2026-06-21; v1.1
+  owns the **write-side** of the preset integration.
+</Callout>
+
+## What You Are Building
+
+v1 made the frontend read-aware: a `<PresetSelector>` exists, it
+shows "Lead Agent" by default, and `hooks.ts` already sends
+`assistantId = "gh:<id>"` to the backend whenever
+`context.preset_id` is set.
+
+v1.1 needs to:
+
+1. **Make the sidebar "New chat" entry prompt for a preset** before
+   navigating to the chat page.
+2. **Persist the chosen preset into the new thread's metadata** so a
+   page reload restores the locked state.
+3. **Handle the threadId stability problem** (described in §3 below).
+4. Add zh-CN translation of `presetSelector.*`.
+
+If any step fails acceptance, see §5 ("Failure Recovery").
+
+---
+
+## 1. Background Reading (read in order)
+
+1. `graph-harness-integration.mdx` — design contract
+2. `graph-harness-integration-v1-report.mdx` — what v1 did and why
+3. `backend/app/gateway/adapters/graph_harness.py` (lines 99-150) —
+   the SEC-1 whitelist that the backend enforces
+4. `frontend/src/components/workspace/chats/use-thread-chat.ts` —
+   how `threadId` behaves across the new/existing boundary
+5. `frontend/src/app/workspace/chats/[thread_id]/page.tsx` —
+   the page that owns `onSend`, `onStart`, `onCreated`
+6. `frontend/src/core/threads/hooks.ts` lines 526-567 — `useStream`
+   and its `onCreated` callback where metadata is written today
+   (the `agent_name` pattern you must mirror)
+
+---
+
+## 2. Acceptance Criteria
+
+| # | Criterion                                                                                              | Verifies                            |
+| - | ------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| 1 | Sidebar "New chat" click opens a popover with a list of presets from `useGraphPresets()`               | UX entry point                      |
+| 2 | The first popover item is "Default Lead Agent" (id = `null`)                                           | Backwards compatibility             |
+| 3 | Selecting a preset navigates to `/workspace/chats/<uuid>` with the preset stored somewhere durable    | Persistence round-trip               |
+| 4 | After page reload on the new thread, the PresetSelector still shows the chosen preset                  | Acceptance #1 of v1 design (locked)  |
+| 5 | The first message sent in the new thread reaches `make_graph_harness_agent` (not `make_lead_agent`)     | Backend routing E2E                 |
+| 6 | `tests/e2e/graph_harness_preset_selection.spec.ts` exists and passes                                   | Regression                          |
+| 7 | `pnpm test:e2e` shows no regressions vs the v1 baseline                                                | No collateral damage                |
+
+---
+
+## 3. The Thread-id Stability Problem (mandatory reading)
+
+The `settings` store keys everything on `threadId`. From
+`use-thread-chat.ts:33-46`:
+
+```
+newThreadIdRef.current = threadIdFromPath === "new" ? uuid() : null;
+```
+
+For `/workspace/chats/new`, `threadId` is a **client-side
+pre-allocated UUID**. On first message send, `onStart` calls
+`setThreadId(backendThreadId)` which **changes** the value. Any
+per-thread setting stored under the temp UUID is **lost** because
+`useThreadSettings` reads from
+`localStorage["deerflow.thread-preset." + threadId]`.
+
+**Pick one of the three options** (in order of recommendation):
+
+### Option A (recommended): URL-lock pattern
+
+Store the preset in the URL query string, not in settings.
+
+* Sidebar popover navigates to
+  `/workspace/chats/new?preset=echo` (or to a stub
+  `/workspace/chats/new` with a `?preset=` query).
+* `page.tsx` reads `searchParams.get("preset")` on every render and
+  passes it into the `useThreadStream` `context` argument via the
+  existing `applyThreadPresetOverride`-equivalent (you will need a
+  new local hook — see `useUrlPreset` sketch below).
+* Persistence into thread metadata is a **separate write** in
+  `onCreated` (the existing `agent_name` pattern at `hooks.ts:561-567`).
+
+```ts
+// src/core/graph-presets/use-url-preset.ts (sketch)
+export function useUrlPreset(): string | undefined {
+  const searchParams = useSearchParams();
+  return searchParams.get("preset") ?? undefined;
+}
+```
+
+**Pros**: simplest, no settings-store changes, no UUID churn. The
+URL is the source of truth — refresh preserves it.
+
+**Cons**: long URLs if the preset id is long (it isn't — current
+ids are `echo/echo`, `coding/coding_pipeline`).
+
+### Option B: Two-stage settings
+
+Add a `pendingPresetId` field to global `LocalSettings.context`.
+On `onCreated`, copy it into the backend thread's metadata AND into
+the now-stable `useThreadSettings(backendThreadId)`.
+
+**Pros**: matches existing per-thread-settings pattern. URL stays
+clean.
+
+**Cons**: requires a new global setting type + a migration when
+`pendingPresetId` is consumed. Two writes per thread creation.
+
+### Option C: Backend-eager thread creation
+
+Change `client.threads.create(...)` to accept `metadata: { preset_id }`
+at creation time. Backend adapter reads `metadata.preset_id` in
+`make_graph_harness_agent` and uses it for routing (instead of
+deriving from `assistant_id`).
+
+**Pros**: most correct. Preset is part of the thread from t=0.
+
+**Cons**: requires backend work. Must coordinate with
+`backend/app/gateway/services.py:444-465` where thread creation is
+already plumbed. Out of scope for "frontend-only v1.1".
+
+**Pick A** unless you have a strong reason not to.
+
+---
+
+## 4. Recommended Implementation Order
+
+<Steps>
+
+### Step 1: Sidebar popover entry (no persistence yet)
+
+1. Read `frontend/src/components/workspace/workspace-header.tsx:55-65`
+   — the "New chat" `<Link>` is hardcoded to `/workspace/chats/new`.
+2. Replace the `<Link>` with a `<DropdownMenu>` whose items come from
+   `useGraphPresets()`. First item = "Default Lead Agent"
+   (`onSelect: () => router.push("/workspace/chats/new")`); remaining
+   items = `onSelect: () => router.push(\`/workspace/chats/new?preset=${p.id}\`)`.
+3. **Acceptance**: manual smoke — clicking the new popover shows a
+   list; picking one navigates to `/workspace/chats/new?preset=<id>`.
+
+### Step 2: `useUrlPreset` + inject into context
+
+1. Create `src/core/graph-presets/use-url-preset.ts` per Option A
+   sketch above.
+2. In `src/app/workspace/chats/[thread_id]/page.tsx`, call
+   `useUrlPreset()` and merge into `settings.context` before passing
+   it to `useThreadStream({ ..., context: mergedContext })`.
+3. **Critical**: do NOT mutate `settings` itself — build a new
+   object: `const mergedContext = { ...settings.context, preset_id: urlPreset ?? settings.context.preset_id };`
+4. **Acceptance**: `InputBox` PresetSelector now shows the preset
+   name (no longer "Lead Agent"). Hovering it shows the locked
+   tooltip.
+
+### Step 3: Persist preset to backend thread metadata
+
+1. In `hooks.ts`'s `onCreated` callback (the same place `agent_name`
+   is written at lines 561-567), add a parallel branch:
+   ```ts
+   if (context.preset_id && !isMock) {
+     void getAPIClient()
+       .threads.update(meta.thread_id, {
+         metadata: { preset_id: context.preset_id },
+       })
+       .catch(() => ({}));
+   }
+   ```
+2. **Acceptance**: open a new thread with `?preset=echo`, send a
+   message, then `curl http://localhost:8001/api/threads/<id>` —
+   the response `metadata.preset_id` should equal `"echo"`.
+
+### Step 4: E2E test
+
+Add `tests/e2e/graph_harness_preset_selection.spec.ts` (Playwright)
+covering Acceptance #1, #3, #5 from §2.
+
+### Step 5: zh-CN translation
+
+Add the Chinese stub to `src/core/i18n/locales/zh-CN.ts` matching
+the English block. **Then** flip `Translations.presetSelector?` from
+optional to required in `core/i18n/locales/types.ts`. Run
+`pnpm typecheck` and fix any consumers that used the `?.` defensive
+guard.
+
+</Steps>
+
+---
+
+## 5. Failure Recovery
+
+### Symptom: `useStream` reconnects in a loop after the page reloads
+
+**Cause**: you put `preset_id` into the `useStream` `context` argument,
+which is part of the `useStream` config. When the context object
+identity changes (URL navigation, settings re-render), `useStream`
+sees a new config and reconnects.
+
+**Fix**: derive `preset_id` **inside** the `onCreated` callback, not
+in the `useStream` config. Only the wire-level `assistantId` should
+change; `context.preset_id` is consumed at message-send time, not at
+stream-init time.
+
+### Symptom: backend logs show `make_lead_agent` instead of `make_graph_harness_agent`
+
+**Cause 1**: `context.preset_id` is undefined at `useStream` time
+because the `useUrlPreset` hook is not yet read by `page.tsx`.
+Fix: ensure `page.tsx` reads `useUrlPreset()` and forwards it.
+
+**Cause 2**: `metadata.preset_id` is being read by the backend but
+`assistant_id` is not "gh:<preset>". Fix: `hooks.ts:528` already
+maps `context.preset_id → "gh:<id>"`. Verify `context.preset_id` is
+populated when the message is sent (add a temporary `console.log`).
+
+### Symptom: Page reload loses the preset
+
+You picked Option B or C but the URL doesn't carry `?preset=`.
+Either switch to Option A, or migrate the preset into URL at
+`onStart` time via `history.replaceState`.
+
+### Symptom: Subagent (Claude Code) keeps hitting `Reached max turns`
+
+**Cause**: prompt is too long / too many tasks. Subagent prompt must
+fit in ≤ 50 lines for this work. Cut each Step above into its own
+subagent run.
+
+---
+
+## 6. Subagent Dispatch Recipe (verified pattern from v1)
+
+Use `terminal(command="... claude -p ...", background=true, notify_on_complete=true, timeout=600)`.
+Pipe the prompt via stdin: `cat /tmp/prompt.md | claude -p ...`.
+
+**Pre-flight before launching any subagent**:
+
+```bash
+timeout 5 claude --version
+cd /tmp && timeout 15 claude -p "say OK" 2>&1 | tail -3
+```
+
+**Prompt template** (≤ 50 lines, single responsibility):
+
+```markdown
+# Task: [one thing]
+
+## Spec
+Read `src/content/en/harness/graph-harness-integration-v1-report.mdx`
+section "[the section relevant to you]" first. Then [the one thing].
+
+## Files to modify (only these)
+- `path/to/file-a.tsx` — [precise change]
+- `path/to/file-b.ts` — [precise change]
+
+## Files NOT to modify (the next agent owns these)
+- [list]
+
+## Acceptance
+- [ ] [criterion 1]
+- [ ] [criterion 2]
+
+## Out of scope
+- Do not commit. Do not run typecheck/tests.
+- Do not touch files outside the list.
+- If a precondition is missing, report it and stop — do not improvise.
+
+## Report
+1. Files changed (absolute paths)
+2. Key diff (5-15 lines per file)
+3. Anything you could not do
+```
+
+---
+
+## 7. Reference: Files To Touch in v1.1
+
+```
+frontend/src/components/workspace/workspace-header.tsx       # Step 1
+frontend/src/core/graph-presets/use-url-preset.ts (NEW)      # Step 2
+frontend/src/app/workspace/chats/[thread_id]/page.tsx        # Step 2 + 3
+frontend/src/core/threads/hooks.ts (line 561 region)         # Step 3
+frontend/tests/e2e/graph_harness_preset_selection.spec.ts (NEW) # Step 4
+frontend/src/core/i18n/locales/zh-CN.ts                      # Step 5
+frontend/src/core/i18n/locales/types.ts                      # Step 5
+```
+
+Do not touch backend unless you pick Option C.

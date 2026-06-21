@@ -1,0 +1,247 @@
+---
+title: Graph Harness Integration (Frontend)
+description: How the DeerFlow frontend exposes the graph-harness `gh:` preset path alongside the default lead-agent execution path.
+---
+
+import { Callout, Cards, Steps, Tabs, TabItem } from "nextra/components";
+
+# Graph Harness Integration (Frontend)
+
+<Callout type="info" emoji="🧩">
+  This document describes every frontend change that participates in the
+  graph-harness integration. Backend routing and security policy live in
+  `deer-flow/backend/app/gateway/adapters/graph_harness.py` — the frontend
+  only mirrors the contract the backend already implements.
+</Callout>
+
+## Background
+
+The DeerFlow backend exposes **two sibling execution paradigms**, selected by
+the `assistant_id` shape sent on every LangGraph run:
+
+| `assistant_id` value          | Backend factory              | Paradigm                              |
+| ----------------------------- | ---------------------------- | ------------------------------------- |
+| `"lead_agent"` (default)      | `make_lead_agent`            | LLM-driven super agent + subagents    |
+| `"gh:<preset>"` (e.g. `gh:echo`) | `make_graph_harness_agent`   | Compiled preset graph (deterministic) |
+
+Both factories return a thin proxy that feeds the same `RunManager` +
+`MemoryStreamBridge` + `sse_consumer` plumbing. The SSE wire format is
+byte-identical between the two paths, so the frontend does not need a separate
+stream decoder — only a different `assistantId` parameter on the LangGraph SDK
+call.
+
+The frontend's job in this integration is therefore narrow:
+
+1. **Let the user pick a preset** before starting a new thread.
+2. **Translate the selection** into `assistantId = "gh:<preset>"` on every run
+   inside that thread.
+3. **Lock the preset per thread** — it cannot be changed mid-thread (see
+   "Per-thread locking" below).
+
+## Per-thread locking (Design Decision)
+
+<Callout type="warning" emoji="🔒">
+  Once a thread has been created with a preset, **the preset cannot be
+  changed** for that thread. Switching presets opens a new thread.
+</Callout>
+
+**Why.** A `gh:<preset>` run executes a compiled, deterministic graph that
+loads preset manifests, validates port contracts, and expects a specific
+blackboard schema. Re-targeting an in-flight thread to a different preset (or
+back to `lead_agent`) would mix two execution paradigms inside the same
+LangGraph checkpoint history and is not supported by the backend adapter. The
+same constraint already exists for the `agent_name` dimension — switching the
+custom agent on an existing thread is not supported either.
+
+**Implementation.** `preset_id` is stored in `AgentThreadContext` and mirrored
+to LangGraph thread `metadata.preset_id` on creation (mirroring the existing
+`agent_name` pattern at `src/core/threads/hooks.ts:539`). Reads of the context
+prefer the thread metadata when present, falling back to the local default.
+Writes that would change the preset on an existing thread are rejected with
+a toast.
+
+## Architecture (Frontend Side)
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│ User opens workspace                                               │
+│     │                                                              │
+│     ▼                                                              │
+│ Sidebar "New chat"  ──►  [ preset dropdown? lead_agent | gh:echo ] │
+│                                  │                                 │
+│                                  ▼                                 │
+│              POST /api/graph-presets  (NEW router)                 │
+│                                  │                                 │
+│                                  ▼                                 │
+│        POST /threads  { metadata: { preset_id: "echo" } }          │
+│                                  │                                 │
+│                                  ▼                                 │
+│   ┌──────────────────────────────────────────────────────────┐     │
+│   │ Chat page (src/app/workspace/chats/[thread_id]/page.tsx) │     │
+│   │   • useThreadSettings(threadId)  ◄── preset_id from meta  │     │
+│   │   • <PresetSelector>            ◄── read-only / disabled  │     │
+│   └──────────────────────────────────────────────────────────┘     │
+│                                  │                                 │
+│                                  ▼                                 │
+│   useThreadStream() in hooks.ts:528                                │
+│     assistantId = preset_id ? `gh:${preset_id}` : "lead_agent"      │
+│                                  │                                 │
+│                                  ▼                                 │
+│   LangGraph SDK client.runs.stream(threadId, assistantId, …)        │
+│                                  │                                 │
+│                                  ▼                                 │
+│   Backend: resolve_agent_factory(assistant_id)                     │
+│     ├── "gh:*"   → make_graph_harness_agent                        │
+│     └── default  → make_lead_agent                                 │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+## Files Changed
+
+| # | File                                                                                | Change                                                                                   |
+| - | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 1 | `src/core/threads/types.ts`                                                          | Add `preset_id?: string` to `AgentThreadContext`                                         |
+| 2 | `src/core/graph-presets/types.ts` (NEW)                                             | `GraphPreset`, `GraphPresetsResponse` TypeScript types                                   |
+| 3 | `src/core/graph-presets/api.ts` (NEW)                                               | `loadGraphPresets()` mirroring `src/core/models/api.ts`                                  |
+| 4 | `src/core/graph-presets/hooks.ts` (NEW)                                             | `useGraphPresets()` mirroring `useModels()`                                              |
+| 5 | `src/core/graph-presets/index.ts` (NEW)                                             | Re-export module                                                                         |
+| 6 | `src/core/threads/hooks.ts`                                                          | `assistantId` derived from `context.preset_id` (line 528); persist to thread metadata     |
+| 7 | `src/core/settings/store.ts`                                                         | Add `preset_id` key to `LocalSettings` shape + per-thread override                       |
+| 8 | `src/core/settings/local.ts`                                                        | Add `defaultPresetId` to `DEFAULT_LOCAL_SETTINGS`                                        |
+| 9 | `src/components/ai-elements/preset-selector.tsx` (NEW)                              | `PresetSelector` component mirroring `model-selector.tsx`                               |
+| 10 | `src/components/workspace/input-box.tsx`                                            | Mount `<PresetSelector>` next to `<ModelSelector>`; read-only when thread has preset      |
+| 11 | `src/app/workspace/chats/[thread_id]/page.tsx`                                     | Default `preset_id` only when creating a *new* thread; lock on existing threads          |
+| 12 | `src/components/workspace/sidebar/new-chat-button.tsx` (or equivalent)             | Open preset picker modal before navigating to new thread                                 |
+| 13 | `src/core/i18n/locales/en-US.json` (and `zh-CN.json`)                              | New i18n keys: `presetSelector.*`, `preset.*`                                             |
+| 14 | `src/content/en/harness/graph-harness-integration.mdx` (this doc)                  | The design + change inventory you are reading                                            |
+
+The corresponding **backend** change is a single new router:
+
+| # | File                                            | Change                                                                                  |
+| - | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
+| B1 | `deer-flow/backend/app/gateway/routers/graph_presets.py` (NEW) | `GET /api/graph-presets` returning `{ presets: [{id, display_name, description, category}] }` |
+| B2 | `deer-flow/backend/app/gateway/app.py`          | Register the new router                                                                 |
+
+<Callout type="info" emoji="📦">
+  Backend security (preset name pattern check, whitelist, error-code mapping)
+  is already implemented in
+  `deer-flow/backend/app/gateway/adapters/graph_harness.py` and is **not**
+  duplicated on the frontend. The frontend trusts whatever the backend
+  whitelist returns.
+</Callout>
+
+## Data Contracts
+
+### `AgentThreadContext` (extended)
+
+```ts
+export interface AgentThreadContext extends Record<string, unknown> {
+  thread_id: string;
+  model_name: string | undefined;
+  thinking_enabled: boolean;
+  is_plan_mode: boolean;
+  subagent_enabled: boolean;
+  reasoning_effort?: "minimal" | "low" | "medium" | "high";
+  agent_name?: string;
+  preset_id?: string;   // NEW — null/absent means default lead_agent path
+}
+```
+
+### Backend response: `GET /api/graph-presets`
+
+```ts
+export interface GraphPreset {
+  id: string;             // e.g. "echo" — combined with "gh:" by the frontend
+  display_name: string;   // e.g. "Echo"
+  description: string;
+  category: string;       // e.g. "utility"
+}
+
+export interface GraphPresetsResponse {
+  presets: GraphPreset[];
+}
+```
+
+### LangGraph thread metadata
+
+The `preset_id` is mirrored to LangGraph `Thread.metadata.preset_id` so it
+survives page reloads and is visible to the backend adapter. This mirrors the
+existing `agent_name` field (see `hooks.ts:539-567`).
+
+## Routing Logic in `hooks.ts`
+
+```ts
+// src/core/threads/hooks.ts — line 528
+const thread = useStream<AgentThreadState>({
+  client: getAPIClient(isMock),
+  assistantId: context.preset_id ? `gh:${context.preset_id}` : "lead_agent",
+  // … unchanged
+});
+```
+
+The `context` object is read from `useThreadSettings(threadId)` (which now
+honours a per-thread `preset_id` override). The mapping is intentionally
+pure: empty / undefined `preset_id` keeps the historical `lead_agent`
+default, so any thread created before this change continues to work.
+
+## `PresetSelector` UI Behaviour
+
+<Steps>
+
+### New thread (no thread id yet)
+
+The sidebar "New chat" button opens a small popover with a list of presets
+sourced from `useGraphPresets()`. The first item is **"Default Lead Agent"**
+(id = `undefined`), which preserves today's behaviour. Selecting a preset
+navigates to `/workspace/chats/<new-uuid>` with the preset pre-selected and
+the selector displayed as a read-only chip ("Preset: gh:echo").
+
+### Existing thread
+
+`<PresetSelector>` is rendered next to `<ModelSelector>` but is **disabled**
+and shows the locked preset id (or "Lead Agent"). Hovering the chip shows a
+tooltip: *"Preset is locked to this thread. Create a new thread to use a
+different preset."*
+
+### Switching back to lead agent
+
+There is no "switch" path. The user must click "New chat" → choose "Default
+Lead Agent" — which creates a brand-new thread with `preset_id = undefined`.
+
+</Steps>
+
+## Error Handling
+
+The backend adapter distinguishes three error codes:
+
+| Code | Meaning                                | Frontend behaviour                              |
+| ---- | -------------------------------------- | ----------------------------------------------- |
+| 400  | Pattern violation on preset name       | (cannot happen — preset is selected from a list, not typed) |
+| 403  | Preset not in whitelist                | Hide the preset from the dropdown (filter on response)        |
+| 404  | Preset not found                       | Hide the preset from the dropdown (filter on response)        |
+
+The frontend never sends an arbitrary preset name to the backend — it only
+sends ids it received from `GET /api/graph-presets`. The 403/404 paths are
+defence-in-depth only.
+
+## Acceptance
+
+- [x] Document exists and lists every frontend change (this file).
+- [ ] `pnpm typecheck` passes.
+- [ ] `pnpm test:e2e -- tests/e2e/graph-harness-preset-selection.spec.ts`
+      passes.
+- [ ] Manual smoke test:
+  1. Open `/workspace/chats/new` → default selector shows "Lead Agent".
+  2. Pick `gh:echo` → thread is created with `metadata.preset_id = "echo"`.
+  3. Send any message → backend `make_graph_harness_agent` is invoked.
+  4. Open existing thread → `<PresetSelector>` is disabled.
+  5. Open new chat → can pick "Default Lead Agent" again.
+
+## References
+
+- Backend adapter: `deer-flow/backend/app/gateway/adapters/graph_harness.py`
+- Backend router (NEW): `deer-flow/backend/app/gateway/routers/graph_presets.py`
+- LangGraph SDK call site: `frontend/src/core/threads/hooks.ts:528`
+- Existing thread-metadata pattern: `frontend/src/core/threads/hooks.ts:539-567`
+  (the `agent_name` field, which `preset_id` mirrors)
+- `ModelSelector` template: `frontend/src/components/ai-elements/model-selector.tsx`

@@ -43,6 +43,15 @@ const meta: MetaRecord = {
   "integration-guide": {
     title: "Integration Guide",
   },
+  "graph-harness-integration": {
+    title: "Graph Harness Integration",
+  },
+  "graph-harness-integration-v1-report": {
+    title: "v1 Implementation Report",
+  },
+  "graph-harness-v1.1-agent-guide": {
+    title: "v1.1 Agent Guide",
+  },
 };
 
 export default meta;

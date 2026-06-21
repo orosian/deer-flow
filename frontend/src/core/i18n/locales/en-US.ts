@@ -260,6 +260,15 @@ export const enUS: Translations = {
     loadOlderChats: "Load older chats",
   },
 
+  // Preset Selector
+  presetSelector: {
+    label: "Preset",
+    defaultOption: "Default Lead Agent",
+    lockedTooltip:
+      "Preset is locked to this thread. Create a new thread to use a different preset.",
+    search: "Search presets",
+  },
+
   // Channels
   channels: {
     title: "Channels",

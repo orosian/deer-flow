@@ -13,11 +13,13 @@ export const DEFAULT_LOCAL_SETTINGS: LocalSettings = {
     model_name: undefined,
     mode: undefined,
     reasoning_effort: undefined,
+    preset_id: undefined,
   },
 };
 
 export const LOCAL_SETTINGS_KEY = "deerflow.local-settings";
 export const THREAD_MODEL_KEY_PREFIX = "deerflow.thread-model.";
+export const THREAD_PRESET_KEY_PREFIX = "deerflow.thread-preset.";
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -39,10 +41,12 @@ export interface LocalSettings {
     | "subagent_enabled"
     | "model_name"
     | "reasoning_effort"
+    | "preset_id"
   > & {
     model_name?: string | undefined;
     mode: "flash" | "thinking" | "pro" | "ultra" | undefined;
     reasoning_effort?: "minimal" | "low" | "medium" | "high";
+    preset_id?: string;
   };
 }
 
@@ -90,6 +94,32 @@ export function saveThreadModelName(
   localStorage.setItem(key, modelName);
 }
 
+function getThreadPresetStorageKey(threadId: string): string {
+  return `${THREAD_PRESET_KEY_PREFIX}${threadId}`;
+}
+
+export function getThreadPresetId(threadId: string): string | undefined {
+  if (!isBrowser()) {
+    return undefined;
+  }
+  return localStorage.getItem(getThreadPresetStorageKey(threadId)) ?? undefined;
+}
+
+export function saveThreadPresetId(
+  threadId: string,
+  presetId: string | undefined,
+) {
+  if (!isBrowser()) {
+    return;
+  }
+  const key = getThreadPresetStorageKey(threadId);
+  if (!presetId) {
+    localStorage.removeItem(key);
+    return;
+  }
+  localStorage.setItem(key, presetId);
+}
+
 export function applyThreadModelOverride(
   settings: LocalSettings,
   threadModelName: string | undefined,
@@ -102,6 +132,22 @@ export function applyThreadModelOverride(
     context: {
       ...settings.context,
       model_name: threadModelName,
+    },
+  };
+}
+
+export function applyThreadPresetOverride(
+  settings: LocalSettings,
+  threadPresetId: string | undefined,
+): LocalSettings {
+  if (!threadPresetId) {
+    return settings;
+  }
+  return {
+    ...settings,
+    context: {
+      ...settings.context,
+      preset_id: threadPresetId,
     },
   };
 }

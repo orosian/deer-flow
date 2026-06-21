@@ -1,0 +1,234 @@
+---
+title: Graph Harness Integration — Implementation Report (v1, 2026-06-21)
+description: What was changed, why it was changed, and what was deliberately left for v1.1. Use this to onboard the next agent.
+---
+
+import { Callout, Steps } from "nextra/components";
+
+# Graph Harness Integration — v1 Implementation Report
+
+<Callout type="info" emoji="📋">
+  Read this if you are picking up the v1.1 thread-metadata wiring or
+  reviewing the v1 commit. The design doc
+  ([graph-harness-integration.mdx](./graph-harness-integration)) is the
+  **what** — this file is the **how, who, and why** plus the **gotchas
+  the next agent will hit**.
+</Callout>
+
+## TL;DR
+
+v1 closes the **read-side** of the integration: the backend exposes
+the preset catalog, the frontend renders a PresetSelector dropdown,
+and `hooks.ts` already translates `context.preset_id` into
+`assistantId = "gh:<id>"` on the wire.
+
+v1 **does not** close the **write-side**: the sidebar "New chat"
+button does not yet prompt for a preset, and the chosen preset is
+not yet persisted into LangGraph thread metadata. v1.1 owns that.
+
+The component is hidden-disabled by default (`aria-disabled`),
+which means a thread started without a preset works exactly as before
+— `context.preset_id` is undefined → `assistantId = "lead_agent"`.
+
+---
+
+## What Was Changed
+
+### Backend (3 files changed + 2 new)
+
+| File                                                | Change                                                                                  |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `backend/app/gateway/routers/graph_presets.py` (NEW) | `GET /api/graph-presets` returns the SEC-1 whitelist filtered preset catalog             |
+| `backend/tests/test_graph_presets_router.py` (NEW)  | 6 tests covering degraded mode, schema, whitelist, empty engine, all-hidden warning       |
+| `backend/app/gateway/app.py`                        | Register the new router; preserve existing `models.router` registration                  |
+| `backend/app/gateway/routers/__init__.py`           | Re-export `graph_presets` alongside the other router modules                            |
+| `backend/app/gateway/services.py`                   | Fix docstring on `resolve_agent_factory` — was claiming all assistant_ids map to the same factory; now correctly describes the two-paradigm sibling split (lead-agent vs `gh:*`) |
+
+### Frontend (5 files changed + 5 new)
+
+| File                                                                | Change                                                                                  |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `frontend/src/content/en/harness/graph-harness-integration.mdx` (NEW) | Design spec — the source of truth                                                       |
+| `frontend/src/content/en/harness/_meta.ts`                          | Register the new doc in the sidebar nav                                                  |
+| `frontend/src/core/graph-presets/{types,api,hooks,index}.ts` (NEW)  | Type + fetch + TanStack Query + re-export module (mirrors `core/models/`)               |
+| `frontend/src/core/threads/types.ts`                                | Add `preset_id?: string` to `AgentThreadContext`                                         |
+| `frontend/src/core/settings/local.ts`                               | Add `preset_id` field + `applyThreadPresetOverride` + `getThreadPresetId`/`saveThreadPresetId` (mirrors model pattern) |
+| `frontend/src/core/settings/store.ts`                               | Add `getThreadPresetSnapshot` (mirrors `getThreadModelSnapshot`)                        |
+| `frontend/src/core/settings/hooks.ts`                               | `useThreadSettings` now composes preset override on top of model override               |
+| `frontend/src/core/threads/hooks.ts`                                | line 528: `assistantId = context.preset_id ? \`gh:${context.preset_id}\` : "lead_agent"` |
+| `frontend/src/components/ai-elements/preset-selector.tsx` (NEW)     | Component mirroring `model-selector.tsx` 1:1 + `useActivePreset` hook                  |
+| `frontend/src/components/workspace/input-box.tsx`                   | Mount `<PresetSelector>` after `<ModelSelector>`; reads `context.preset_id` via `useActivePreset` |
+| `frontend/src/core/i18n/locales/en-US.ts`                           | Add `presetSelector.{label, defaultOption, lockedTooltip, search}`                       |
+| `frontend/src/core/i18n/locales/types.ts`                           | Add `Translations.presetSelector?` (optional, so zh-CN stays untouched for v1)           |
+
+**Total**: 12 modified, 7 new.
+
+---
+
+## Why Each Change Was Made
+
+<Steps>
+
+### Backend router — why a separate file instead of stuffing it into `models.py`
+
+The preset catalog is a different domain (graph-harness execution
+paradigm) from models (LLM choice). A separate router:
+
+* Keeps the SEC-1 whitelist audit surface obvious — anyone reading
+  `routers/graph_presets.py` sees that the whitelist is consulted
+  before any preset is returned to the frontend.
+* Lets us register/unregister the entire preset path with one line
+  flip in `app.py` if graph-harness is intentionally disabled.
+* Makes the router independently testable without standing up the
+  whole gateway — the tests patch `_discover_presets` /
+  `_load_allowed_presets` directly.
+
+### Why `applyThreadPresetOverride` mirrors `applyThreadModelOverride`
+
+Because preset selection follows the **exact same lifecycle** as
+model selection:
+
+* User picks at thread creation time
+* Per-thread override (different threads can use different presets)
+* Survives page reload (localStorage)
+* Re-applied at the top of `useThreadSettings` via
+  `applyThreadModelOverride` → `applyThreadPresetOverride` chain
+
+Mirroring means **no new mental model** for future maintainers — the
+preset code path is structurally identical to the model code path.
+
+### Why `useActivePreset` lives in `preset-selector.tsx`, not `graph-presets/hooks.ts`
+
+`useGraphPresets` returns the raw list. `useActivePreset` returns
+*the one preset that matches a given id* (or a "Default Lead Agent"
+fallback). The lookup is UI-specific (decides what to render in the
+trigger chip), so it lives next to the component, not next to the
+data fetcher. **Rule of thumb**: data fetching → `core/`, view
+transformation → `components/`.
+
+### Why `aria-disabled` instead of HTML `disabled` on the trigger
+
+HTML `disabled` on a `<button>` swallows **all** pointer events,
+including the hover that drives the locked-tooltip. We need the
+tooltip to be visible to explain **why** the user cannot change the
+preset. `aria-disabled` keeps the visual disabled look + cursor,
+preserves hover, and the `onClick preventDefault` stops navigation.
+This pattern is reused from elsewhere in the codebase — search
+`aria-disabled="true"` to find prior art.
+
+### Why `Translations.presetSelector?` is optional
+
+We did not want to block v1 on a Chinese translation. Marking the
+field optional lets `zh-CN.ts` stay untouched. Consumers must use
+`t.presetSelector?.label ?? "Preset"` defensively until the zh-CN
+stub is added in v1.1.
+
+### Why `useThreadSettings` is composed instead of given a new hook
+
+`useThreadSettings(threadId)` already exists and is called by many
+downstream consumers (`InputBox`, `WorkspaceHeader`, …). Composing
+`applyThreadPresetOverride` inside it means **every existing caller
+automatically gets `preset_id` on `settings.context` without
+changing their call sites**. If we had shipped a new
+`useThreadPreset(threadId)`, every consumer would have had to call
+both hooks and merge results.
+
+</Steps>
+
+---
+
+## What Was Deliberately NOT Done (v1.1 backlog)
+
+| Item                                                                                       | Why deferred                                                              |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Sidebar "New chat" button does **not** prompt for a preset                                 | Requires deciding URL shape (`?preset=` query vs new route) + UX          |
+| Selected preset is not yet written to LangGraph thread `metadata.preset_id`                | See "Thread-id stability problem" below — needs a design call first       |
+| `useThreadSettings` is keyed on `threadId`, but **for new threads** `threadId` is a **client-side pre-allocated UUID that changes to a backend id on first run** | This is a design gap, not a one-line patch |
+| zh-CN translation of `presetSelector.*`                                                    | Optional in types — add when first Chinese-speaking user requests         |
+| PresetSelector dropdown items are not selectable (only one placeholder item)                | Disabled-by-design — selection only happens in v1.1 sidebar popover       |
+
+---
+
+## Thread-id Stability Problem (read this before v1.1)
+
+The settings store keys everything on `threadId`. For an **existing**
+thread, `threadId` is the backend-issued UUID — stable across page
+reloads. For a **new** thread (`/workspace/chats/new`), `threadId`
+is a **client-side pre-allocated UUID** (see
+`src/components/workspace/chats/use-thread-chat.ts:33-39`) that gets
+**replaced** by the backend-issued UUID on `onStart` (see
+`src/app/workspace/chats/[thread_id]/page.tsx:101`).
+
+**Consequence**: if a user clicks "New chat" → picks a preset (stored
+under key `deerflow.thread-preset.<temp-uuid>`) → sends first message →
+backend creates thread with new id → `useThreadSettings` reads from
+`deerflow.thread-preset.<backend-uuid>` → **preset is lost**.
+
+Three ways to fix this; v1.1 must pick one:
+
+1. **URL-lock pattern**: store the preset in the URL (`?preset=echo`),
+   not in settings. The page reads it from `searchParams` on every
+   render. Cheap, but breaks the model-style "localStorage for
+   per-thread overrides" pattern.
+2. **Two-stage settings**: introduce a `pendingPresetId` global that
+   `hooks.ts`'s `onCreated` callback copies into the thread-local
+   storage using the *new* threadId at thread creation time.
+   Conceptually clean, but requires a new global setting type.
+3. **Backend-eager pattern**: change the backend adapter to accept
+   `metadata.preset_id` at thread creation (not just at run time),
+   and have the frontend pass it on `client.threads.create()`. Most
+   correct (preset becomes part of thread metadata), but requires
+   backend work.
+
+**Recommendation**: option 2 (two-stage settings). It is a frontend-only
+change, fits the existing settings store pattern, and the
+backend-eager pattern can be added later as an optimisation.
+
+---
+
+## How To Verify This Commit
+
+```bash
+# Backend
+cd deer-flow/backend && .venv/bin/python -m pytest \
+  tests/test_graph_presets_router.py \
+  tests/test_graph_harness_adapter.py \
+  tests/test_graph_harness_sec1.py -q
+# → 57 passed
+
+# Frontend (typecheck is pre-existing noise; what matters is no NEW
+# errors in the changed files)
+cd deer-flow/frontend && pnpm exec tsc --noEmit 2>&1 | grep -v node_modules | head -20
+
+# Manual smoke (graph-harness must be installed in the backend venv):
+# 1. start gateway, hit /api/graph-presets → should return JSON with presets
+# 2. open /workspace/chats/new → PresetSelector visible but disabled, shows "Lead Agent"
+# 3. (v1.1 only) click "New chat" → preset picker → pick one → first message
+#    → backend logs should show make_graph_harness_agent invoked
+```
+
+---
+
+## Subagent Process Notes (for the curious)
+
+This commit was built by three parallel Claude Code subagents
+(A, B, C) plus direct Hermes edits. Useful to know:
+
+* **A** (types + data + store + i18n + **also touched `hooks.ts:528`**)
+  exceeded its scope to fix the assistantId wiring because B's prompt
+  depended on it. Net win — fewer files for B to touch.
+* **B** (PresetSelector component + input-box wiring) ran twice.
+  First time it correctly braked waiting for A. Second time it
+  succeeded but only got as far as imports + state; Hermes finished
+  the JSX and removed a duplicate import.
+* **C** (sidebar + thread metadata) failed twice with
+  `Error: Reached max turns`. Root cause: prompt asked for 4 things
+  at once (pitfall from subagent-recovery R6). v1.1 prompt should
+  be **one thing per subagent**.
+* `useThreadSettings` was not composed by A — Hermes added it
+  because B's prompt assumed it existed.
+
+Lessons for v1.1: **single-responsibility prompts**, pre-flight
+file existence check before "modify line N", and always have
+Hermes run a final smoke test (pytest + grep on changed files)
+before declaring done.

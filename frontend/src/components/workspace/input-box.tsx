@@ -76,6 +76,16 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "../ai-elements/model-selector";
+import {
+  PresetSelector,
+  PresetSelectorContent,
+  PresetSelectorInput,
+  PresetSelectorItem,
+  PresetSelectorList,
+  PresetSelectorName,
+  PresetSelectorTrigger,
+  useActivePreset,
+} from "../ai-elements/preset-selector";
 import { Suggestion, Suggestions } from "../ai-elements/suggestion";
 import {
   DropdownMenu,
@@ -196,7 +206,12 @@ export function InputBox({
   const { t } = useI18n();
   const searchParams = useSearchParams();
   const [modelDialogOpen, setModelDialogOpen] = useState(false);
+  const [presetDialogOpen, setPresetDialogOpen] = useState(false);
   const { models } = useModels();
+  const { displayName: activePresetName } = useActivePreset(context.preset_id);
+  const presetTriggerLabel = context.preset_id
+    ? activePresetName
+    : t.presetSelector.defaultOption;
   const { thread, isMock } = useThread();
   const { textInput } = usePromptInputController();
   const { skills } = useSkills();
@@ -1050,6 +1065,34 @@ export function InputBox({
                 </ModelSelectorList>
               </ModelSelectorContent>
             </ModelSelector>
+            <PresetSelector
+              open={presetDialogOpen}
+              onOpenChange={setPresetDialogOpen}
+            >
+              <Tooltip content={t.presetSelector.lockedTooltip}>
+                <PresetSelectorTrigger asChild>
+                  <PromptInputButton
+                    className="max-w-40 min-w-0 cursor-not-allowed sm:max-w-56"
+                    aria-disabled="true"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <div className="flex min-w-0 flex-col items-start text-left">
+                      <PresetSelectorName className="text-xs font-normal">
+                        {presetTriggerLabel}
+                      </PresetSelectorName>
+                    </div>
+                  </PromptInputButton>
+                </PresetSelectorTrigger>
+              </Tooltip>
+              <PresetSelectorContent>
+                <PresetSelectorInput placeholder={t.presetSelector.search} />
+                <PresetSelectorList>
+                  <PresetSelectorItem value="" disabled>
+                    {t.presetSelector.lockedTooltip}
+                  </PresetSelectorItem>
+                </PresetSelectorList>
+              </PresetSelectorContent>
+            </PresetSelector>
             <PromptInputSubmit
               className="rounded-full"
               disabled={disabled}

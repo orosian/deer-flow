@@ -19,6 +19,7 @@ from app.gateway.routers import (
     channel_connections,
     channels,
     feedback,
+    graph_presets,
     mcp,
     memory,
     models,
@@ -360,6 +361,10 @@ This gateway provides runtime endpoints for agent runs plus custom endpoints for
     # Include routers
     # Models API is mounted at /api/models
     app.include_router(models.router)
+    # Graph-harness preset catalog (SEC-1 whitelist filtered). Mounted at
+    # /api/graph-presets. See ``routers/graph_presets.py`` for the deferred
+    # import rationale.
+    app.include_router(graph_presets.router)
 
     # MCP API is mounted at /api/mcp
     app.include_router(mcp.router)

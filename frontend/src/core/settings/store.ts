@@ -2,10 +2,13 @@ import {
   DEFAULT_LOCAL_SETTINGS,
   LOCAL_SETTINGS_KEY,
   THREAD_MODEL_KEY_PREFIX,
+  THREAD_PRESET_KEY_PREFIX,
   getLocalSettings,
   getThreadModelName,
+  getThreadPresetId,
   saveLocalSettings,
   saveThreadModelName,
+  saveThreadPresetId,
   type LocalSettings,
 } from "./local";
 
@@ -18,6 +21,7 @@ export type LocalSettingsSetter = <K extends keyof LocalSettings>(
 
 const listeners = new Set<Listener>();
 const threadModelNames = new Map<string, string | undefined>();
+const threadPresetIds = new Map<string, string | undefined>();
 
 let baseSettings: LocalSettings = DEFAULT_LOCAL_SETTINGS;
 let baseSettingsLoaded = false;
@@ -71,6 +75,7 @@ function handleStorage(event: StorageEvent) {
   if (event.key === null) {
     baseSettings = getLocalSettings();
     threadModelNames.clear();
+    threadPresetIds.clear();
     emitChange();
     return;
   }
@@ -81,13 +86,19 @@ function handleStorage(event: StorageEvent) {
     return;
   }
 
-  if (!event.key.startsWith(THREAD_MODEL_KEY_PREFIX)) {
+  if (event.key.startsWith(THREAD_MODEL_KEY_PREFIX)) {
+    const threadId = event.key.slice(THREAD_MODEL_KEY_PREFIX.length);
+    threadModelNames.set(threadId, getThreadModelName(threadId));
+    emitChange();
     return;
   }
 
-  const threadId = event.key.slice(THREAD_MODEL_KEY_PREFIX.length);
-  threadModelNames.set(threadId, getThreadModelName(threadId));
-  emitChange();
+  if (event.key.startsWith(THREAD_PRESET_KEY_PREFIX)) {
+    const threadId = event.key.slice(THREAD_PRESET_KEY_PREFIX.length);
+    threadPresetIds.set(threadId, getThreadPresetId(threadId));
+    emitChange();
+    return;
+  }
 }
 
 export function subscribe(listener: Listener): () => void {
@@ -115,6 +126,16 @@ export function getThreadModelSnapshot(threadId: string): string | undefined {
   return threadModelNames.get(threadId);
 }
 
+export function getThreadPresetSnapshot(threadId: string): string | undefined {
+  ensureBaseSettingsLoaded();
+
+  if (!threadPresetIds.has(threadId)) {
+    threadPresetIds.set(threadId, getThreadPresetId(threadId));
+  }
+
+  return threadPresetIds.get(threadId);
+}
+
 export const updateLocalSettings: LocalSettingsSetter = (key, value) => {
   ensureBaseSettingsLoaded();
   ensureStorageListenerRegistered();
@@ -136,14 +157,18 @@ export function updateThreadSettings<K extends keyof LocalSettings>(
   baseSettings = nextBaseSettings;
   saveLocalSettings(baseSettings);
 
-  if (
-    key === "context" &&
-    Object.prototype.hasOwnProperty.call(value, "model_name")
-  ) {
+  if (key === "context") {
     const contextValue = value as Partial<LocalSettings["context"]>;
-    const threadModelName = contextValue.model_name;
-    threadModelNames.set(threadId, threadModelName);
-    saveThreadModelName(threadId, threadModelName);
+    if (Object.prototype.hasOwnProperty.call(value, "model_name")) {
+      const threadModelName = contextValue.model_name;
+      threadModelNames.set(threadId, threadModelName);
+      saveThreadModelName(threadId, threadModelName);
+    }
+    if (Object.prototype.hasOwnProperty.call(value, "preset_id")) {
+      const threadPresetId = contextValue.preset_id;
+      threadPresetIds.set(threadId, threadPresetId);
+      saveThreadPresetId(threadId, threadPresetId);
+    }
   }
 
   emitChange();

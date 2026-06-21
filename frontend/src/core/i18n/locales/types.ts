@@ -191,6 +191,14 @@ export interface Translations {
     loadOlderChats: string;
   };
 
+  // Preset Selector
+  presetSelector?: {
+    label: string;
+    defaultOption: string;
+    lockedTooltip: string;
+    search: string;
+  };
+
   // Channels
   channels: {
     title: string;
