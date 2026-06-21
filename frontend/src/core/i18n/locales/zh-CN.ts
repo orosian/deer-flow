@@ -253,8 +253,7 @@ export const zhCN: Translations = {
   presetSelector: {
     label: "预设",
     defaultOption: "默认 Lead Agent",
-    lockedTooltip:
-      "预设已锁定到当前对话。创建新对话以使用其他预设。",
+    lockedTooltip: "预设已锁定到当前对话。创建新对话以使用其他预设。",
     search: "搜索预设",
   },
 

@@ -567,6 +567,7 @@ export const enUS: Translations = {
     description: "Run prebuilt multi-step workflows on your tasks.",
     start: "Start",
     emptyTitle: "No workflows available",
-    emptyDescription: "Check with your administrator to enable graph-harness presets.",
+    emptyDescription:
+      "Check with your administrator to enable graph-harness presets.",
   },
 };

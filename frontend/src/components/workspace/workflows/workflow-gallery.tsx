@@ -6,7 +6,14 @@ import { useCallback } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useGraphPresets, type GraphPreset } from "@/core/graph-presets";
 import { useI18n } from "@/core/i18n/hooks";
 import { saveThreadPresetId } from "@/core/settings/local";
@@ -60,7 +67,11 @@ export function WorkflowGallery() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {presets.map((preset) => (
-              <WorkflowCard key={preset.id} preset={preset} onStart={handleStart} />
+              <WorkflowCard
+                key={preset.id}
+                preset={preset}
+                onStart={handleStart}
+              />
             ))}
           </div>
         )}
@@ -81,7 +92,9 @@ function WorkflowCard({
     <Card className="flex flex-col">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="line-clamp-2 text-base">{preset.display_name}</CardTitle>
+          <CardTitle className="line-clamp-2 text-base">
+            {preset.display_name}
+          </CardTitle>
           <Badge variant="secondary" className="shrink-0">
             v{preset.version}
           </Badge>
