@@ -15,6 +15,12 @@ import { useI18n } from "@/core/i18n/hooks";
 
 interface WorkflowCardProps {
   preset: GraphPreset;
+  /**
+   * Fired when the user clicks "Start".  The parent (`WorkflowGallery`) owns
+   * the dialog state — it inspects `preset.input_ports` and either opens
+   * `WorkflowStartDialog` (when ports exist) or routes directly to the
+   * chat (v1 behaviour).
+   */
   onStart: (preset: GraphPreset) => void;
 }
 

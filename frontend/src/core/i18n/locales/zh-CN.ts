@@ -565,4 +565,16 @@ export const zhCN: Translations = {
     trigger: "图状态",
     triggerTooltip: "显示此工作流的图状态",
   },
+
+  // Workflow Start Dialog (v2.2)
+  workflowStart: {
+    title: "启动工作流",
+    description: "为 {{presetName}} 配置输入参数",
+    required: "必填",
+    optional: "可选",
+    confirm: "启动",
+    cancel: "取消",
+    invalidJson: "无效的 JSON",
+    unknownType: "不支持的类型，已降级为文本",
+  },
 };

@@ -491,4 +491,16 @@ export interface Translations {
     trigger: string;
     triggerTooltip: string;
   };
+
+  // Workflow Start Dialog (v2.2)
+  workflowStart: {
+    title: string;
+    description: string;
+    required: string;
+    optional: string;
+    confirm: string;
+    cancel: string;
+    invalidJson: string;
+    unknownType: string;
+  };
 }

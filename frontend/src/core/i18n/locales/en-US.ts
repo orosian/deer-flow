@@ -588,4 +588,16 @@ export const enUS: Translations = {
     trigger: "Graph",
     triggerTooltip: "Show graph status of this workflow",
   },
+
+  // Workflow Start Dialog (v2.2)
+  workflowStart: {
+    title: "Start workflow",
+    description: "Configure inputs for {{presetName}}",
+    required: "Required",
+    optional: "Optional",
+    confirm: "Start",
+    cancel: "Cancel",
+    invalidJson: "Invalid JSON",
+    unknownType: "Unsupported type — using text",
+  },
 };

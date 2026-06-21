@@ -2,34 +2,100 @@
 
 import { WorkflowIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { useGraphPresets, type GraphPreset } from "@/core/graph-presets";
 import { useI18n } from "@/core/i18n/hooks";
 
 import { WorkflowCard } from "./workflow-card";
+import { WorkflowStartDialog } from "./workflow-start-dialog";
+
+/**
+ * Build the search-param string for the chat page.
+ *
+ * Format: `?preset=<id>&input.<key>=<value>` — the LangGraph SDK rewrites the
+ * URL with the real backend threadId on first send and preserves
+ * `window.location.search` (Pitfall 16).  Booleans serialize as `"true"` /
+ * `"false"`; everything else is coerced to string via `String()` so numbers
+ * don't appear as `NaN` in the URL.
+ */
+function buildSearchParams(preset: GraphPreset, values: Record<string, unknown>): string {
+  const params = new URLSearchParams();
+  params.set("preset", preset.id);
+  for (const [key, raw] of Object.entries(values)) {
+    if (raw === undefined || raw === null) continue;
+    // Booleans → "true"/"false"; numbers → string; plain strings → as-is.
+    // Objects/arrays → JSON so they don't render as "[object Object]".
+    let stringified: string;
+    if (typeof raw === "boolean") {
+      stringified = raw ? "true" : "false";
+    } else if (typeof raw === "string") {
+      stringified = raw;
+    } else if (typeof raw === "number" && Number.isFinite(raw)) {
+      stringified = String(raw);
+    } else if (typeof raw === "object") {
+      stringified = JSON.stringify(raw);
+    } else {
+      stringified = String(raw);
+    }
+    if (stringified === "") continue;
+    params.set(`input.${key}`, stringified);
+  }
+  return params.toString();
+}
 
 export function WorkflowGallery() {
   const { t } = useI18n();
   const { presets, isLoading } = useGraphPresets();
   const router = useRouter();
 
-  const handleStart = useCallback(
-    (preset: GraphPreset) => {
+  const [dialogPreset, setDialogPreset] = useState<GraphPreset | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const navigateToChat = useCallback(
+    (preset: GraphPreset, extraSearch?: string) => {
       // Pre-allocate a threadId so the URL is shareable before the backend
-      // has minted one. The preset id is carried in the query string — NOT
-      // localStorage — because the LangGraph SDK rewrites the URL with the
-      // real backend threadId on first send, and a localStorage write keyed
-      // by the pre-alloc id would be orphaned by that rewrite (Pitfall 16).
-      // The URL is the single source of truth: see useUrlPreset and
-      // ChatPage.onStart which preserves window.location.search.
+      // has minted one.  The preset id and any input port values are carried
+      // in the query string — NOT localStorage — because the LangGraph SDK
+      // rewrites the URL with the real backend threadId on first send, and a
+      // localStorage write keyed by the pre-alloc id would be orphaned by
+      // that rewrite (Pitfall 16).
       const newThreadId = crypto.randomUUID();
-      router.push(
-        `/workspace/chats/${newThreadId}?preset=${encodeURIComponent(preset.id)}`,
-      );
+      const search = extraSearch ? `?${extraSearch}` : `?preset=${encodeURIComponent(preset.id)}`;
+      router.push(`/workspace/chats/${newThreadId}${search}`);
     },
     [router],
   );
+
+  const handleStart = useCallback((preset: GraphPreset) => {
+    const hasPorts = (preset.input_ports ?? []).length > 0;
+    if (!hasPorts) {
+      // v1 behaviour — no inputs to configure, route directly to the chat.
+      setDialogPreset(null);
+      setDialogOpen(false);
+      // Defer navigation to the next tick so the gallery's click handler can
+      // complete without side-effects from a synchronous push.
+      queueMicrotask(() => navigateToChat(preset));
+      return;
+    }
+    setDialogPreset(preset);
+    setDialogOpen(true);
+  }, [navigateToChat]);
+
+  const handleConfirm = useCallback(
+    (preset: GraphPreset, values: Record<string, unknown>) => {
+      const search = buildSearchParams(preset, values);
+      setDialogOpen(false);
+      setDialogPreset(null);
+      queueMicrotask(() => navigateToChat(preset, search));
+    },
+    [navigateToChat],
+  );
+
+  const handleDialogOpenChange = useCallback((next: boolean) => {
+    setDialogOpen(next);
+    if (!next) setDialogPreset(null);
+  }, []);
 
   return (
     <div className="flex size-full flex-col">
@@ -73,6 +139,16 @@ export function WorkflowGallery() {
           </div>
         )}
       </div>
+
+      <WorkflowStartDialog
+        preset={dialogPreset}
+        open={dialogOpen}
+        onOpenChange={handleDialogOpenChange}
+        onConfirm={handleConfirm}
+        onCancel={() => {
+          /* nothing to clean up — dialog state is reset in onOpenChange */
+        }}
+      />
     </div>
   );
 }
