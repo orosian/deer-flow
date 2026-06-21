@@ -17,7 +17,7 @@ import { Callout, Steps, Tabs, TabItem } from "nextra/components";
 
 v1 made the frontend read-aware: a `<PresetSelector>` exists, it
 shows "Lead Agent" by default, and `hooks.ts` already sends
-`assistantId = "gh:<id>"` to the backend whenever
+`assistantId = "gh:\{id\}"` to the backend whenever
 `context.preset_id` is set.
 
 v1.1 needs to:
@@ -221,8 +221,8 @@ because the `useUrlPreset` hook is not yet read by `page.tsx`.
 Fix: ensure `page.tsx` reads `useUrlPreset()` and forwards it.
 
 **Cause 2**: `metadata.preset_id` is being read by the backend but
-`assistant_id` is not "gh:<preset>". Fix: `hooks.ts:528` already
-maps `context.preset_id → "gh:<id>"`. Verify `context.preset_id` is
+`assistant_id` is not "gh:\{preset\}". Fix: `hooks.ts:528` already
+maps `context.preset_id → "gh:\{id\}"`. Verify `context.preset_id` is
 populated when the message is sent (add a temporary `console.log`).
 
 ### Symptom: Page reload loses the preset
