@@ -547,4 +547,22 @@ export const zhCN: Translations = {
     emptyTitle: "暂无可用工作流",
     emptyDescription: "请联系管理员以启用 graph-harness 预设。",
   },
+
+  // Graph Status Panel (v2.1)
+  graphStatus: {
+    title: "图状态",
+    subtitle: "实时工作流执行情况",
+    emptyHint: "开始一个工作流以查看图状态",
+    waitingForNodes: "等待图启动...",
+    pending: "等待中",
+    running: "运行中",
+    done: "已完成",
+    error: "错误",
+  },
+
+  // Graph Panel Trigger (v2.1)
+  graphPanel: {
+    trigger: "图状态",
+    triggerTooltip: "显示此工作流的图状态",
+  },
 };

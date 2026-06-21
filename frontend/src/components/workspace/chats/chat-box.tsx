@@ -10,6 +10,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { getThreadPresetId } from "@/core/settings/local";
 import { env } from "@/env";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +20,14 @@ import {
   useArtifacts,
 } from "../artifacts";
 import { useThread } from "../messages/context";
+import { GraphStatusPanel, useGraphPanel } from "../run-detail";
 
-const CLOSE_MODE = { chat: 100, artifacts: 0 };
-const OPEN_MODE = { chat: 60, artifacts: 40 };
+// Layout presets — percentages must sum to 100 in every variant so the
+// `react-resizable-panels` Group never throws on setLayout.
+const CLOSED_LAYOUT = { chat: 100, artifacts: 0, graph: 0 };
+const ARTIFACTS_ONLY_LAYOUT = { chat: 60, artifacts: 40, graph: 0 };
+const GRAPH_ONLY_LAYOUT = { chat: 60, artifacts: 0, graph: 40 };
+const BOTH_OPEN_LAYOUT = { chat: 50, artifacts: 25, graph: 25 };
 
 const ChatBox: React.FC<{ children: React.ReactNode; threadId: string }> = ({
   children,
@@ -41,6 +47,17 @@ const ChatBox: React.FC<{ children: React.ReactNode; threadId: string }> = ({
     deselect,
     selectedArtifact,
   } = useArtifacts();
+
+  const { open: graphOpen } = useGraphPanel();
+
+  // Read the preset id from localStorage so the graph panel knows whether to
+  // render real nodes or the empty state. The lookup mirrors
+  // `WorkflowPresetBadge` — localStorage is browser-only, so we defer to an
+  // effect to avoid an SSR hydration mismatch.
+  const [presetId, setPresetId] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    setPresetId(getThreadPresetId(threadId) ?? undefined);
+  }, [threadId]);
 
   const [autoSelectFirstArtifact, setAutoSelectFirstArtifact] = useState(true);
   useEffect(() => {
@@ -91,27 +108,30 @@ const ChatBox: React.FC<{ children: React.ReactNode; threadId: string }> = ({
   }, [pathname]);
 
   useEffect(() => {
-    if (layoutRef.current) {
-      if (artifactPanelOpen) {
-        layoutRef.current.setLayout(OPEN_MODE);
-      } else {
-        layoutRef.current.setLayout(CLOSE_MODE);
-      }
+    if (!layoutRef.current) return;
+    if (artifactPanelOpen && graphOpen) {
+      layoutRef.current.setLayout(BOTH_OPEN_LAYOUT);
+    } else if (artifactPanelOpen) {
+      layoutRef.current.setLayout(ARTIFACTS_ONLY_LAYOUT);
+    } else if (graphOpen) {
+      layoutRef.current.setLayout(GRAPH_ONLY_LAYOUT);
+    } else {
+      layoutRef.current.setLayout(CLOSED_LAYOUT);
     }
-  }, [artifactPanelOpen]);
+  }, [artifactPanelOpen, graphOpen]);
 
   return (
     <ResizablePanelGroup
       id={`${resizableIdBase}-panels`}
       orientation="horizontal"
-      defaultLayout={{ chat: 100, artifacts: 0 }}
+      defaultLayout={{ chat: 100, artifacts: 0, graph: 0 }}
       groupRef={layoutRef}
     >
       <ResizablePanel className="relative" defaultSize={100} id="chat">
         {children}
       </ResizablePanel>
       <ResizableHandle
-        id={`${resizableIdBase}-separator`}
+        id={`${resizableIdBase}-separator-chat-artifacts`}
         className={cn(
           "opacity-33 hover:opacity-100",
           !artifactPanelOpen && "pointer-events-none opacity-0",
@@ -171,6 +191,29 @@ const ChatBox: React.FC<{ children: React.ReactNode; threadId: string }> = ({
               )}
             </div>
           )}
+        </div>
+      </ResizablePanel>
+      <ResizableHandle
+        id={`${resizableIdBase}-separator-artifacts-graph`}
+        className={cn(
+          "opacity-33 hover:opacity-100",
+          !graphOpen && "pointer-events-none opacity-0",
+        )}
+      />
+      <ResizablePanel
+        className={cn(
+          "transition-all duration-300 ease-in-out",
+          !graphOpen && "opacity-0",
+        )}
+        id="graph"
+      >
+        <div
+          className={cn(
+            "h-full transition-transform duration-300 ease-in-out",
+            graphOpen ? "translate-x-0" : "translate-x-full",
+          )}
+        >
+          <GraphStatusPanel threadId={threadId} presetId={presetId} />
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>

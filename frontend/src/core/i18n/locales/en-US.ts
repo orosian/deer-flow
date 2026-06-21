@@ -570,4 +570,22 @@ export const enUS: Translations = {
     emptyDescription:
       "Check with your administrator to enable graph-harness presets.",
   },
+
+  // Graph Status Panel (v2.1)
+  graphStatus: {
+    title: "Graph status",
+    subtitle: "Real-time workflow execution",
+    emptyHint: "Start a workflow to see graph status",
+    waitingForNodes: "Waiting for the graph to start...",
+    pending: "Pending",
+    running: "Running",
+    done: "Done",
+    error: "Error",
+  },
+
+  // Graph Panel Trigger (v2.1)
+  graphPanel: {
+    trigger: "Graph",
+    triggerTooltip: "Show graph status of this workflow",
+  },
 };

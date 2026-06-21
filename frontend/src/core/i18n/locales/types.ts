@@ -473,4 +473,22 @@ export interface Translations {
     emptyTitle: string;
     emptyDescription: string;
   };
+
+  // Graph Status Panel (v2.1)
+  graphStatus: {
+    title: string;
+    subtitle: string;
+    emptyHint: string;
+    waitingForNodes: string;
+    pending: string;
+    running: string;
+    done: string;
+    error: string;
+  };
+
+  // Graph Panel Trigger (v2.1)
+  graphPanel: {
+    trigger: string;
+    triggerTooltip: string;
+  };
 }
