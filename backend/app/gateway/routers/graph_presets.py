@@ -41,6 +41,27 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["graph-presets"])
 
 
+class InputPortSpecOut(BaseModel):
+    """Public-facing input port metadata (one row of the form generator).
+
+    Mirrors :class:`harness.composer.preset_manifest.InputPortSpec` —
+    fields are flattened so the frontend form builder can read them
+    without needing to know the upstream dataclass shape.
+
+    ``default`` is intentionally ``Any``: graph-harness permits JSON-
+    serialisable literals here (``str``, ``int``, ``float``, ``bool``,
+    ``None``, ``list``, ``dict``). Anything non-JSON-serialisable
+    surfaces as ``None`` so the wire contract stays safe.
+    """
+
+    key: str = Field(..., description="Port key (e.g. 'user.goal')")
+    type: str = Field(..., description="Coarse type tag (e.g. 'text', 'enum', 'number', 'bool')")
+    required: bool = Field(default=True, description="Whether the port must be supplied before run")
+    description: str = Field(default="", description="Human-readable hint shown next to the input")
+    enum_values: list[str] | None = Field(default=None, description="Allowed values when type='enum', else null")
+    default: Any | None = Field(default=None, description="JSON-serialisable default value, else null")
+
+
 class GraphPresetResponse(BaseModel):
     """Public-facing preset metadata (one row of the dropdown).
 
@@ -48,6 +69,11 @@ class GraphPresetResponse(BaseModel):
     compose into ``assistant_id = "gh:" + id`` when creating a thread.
     It is the same value passed to ``harness.workflows.presets.load_preset``
     on the backend, so the contract is symmetric.
+
+    ``input_ports`` is a passthrough of the preset manifest's
+    ``InputPortSpec`` rows — defaults to an empty list so older
+    graph-harness releases (0.1.x) that do not yet declare input ports
+    degrade gracefully without a schema bump.
     """
 
     id: str = Field(..., description="Canonical preset key, used in `assistant_id = gh:<id>`")
@@ -55,6 +81,10 @@ class GraphPresetResponse(BaseModel):
     description: str = Field(..., description="One-line description shown in the dropdown")
     category: str = Field(..., description="Coarse bucket (e.g. 'utility', 'coding')")
     version: str = Field(..., description="Preset manifest version")
+    input_ports: list[InputPortSpecOut] = Field(
+        default_factory=list,
+        description="Input port specs (Stage 1+) — empty for presets that declare none",
+    )
 
 
 class GraphPresetsListResponse(BaseModel):
@@ -90,6 +120,12 @@ def _discover_presets() -> list[dict[str, Any]]:
     Returns an empty list (with a logged warning) when the package is
     not installed. Callers MUST treat an empty list as "preset path
     disabled" — never as a 5xx.
+
+    Each row also carries an ``input_ports`` field, a list of dicts
+    that mirror the upstream :class:`InputPortSpec` dataclass. We use
+    :func:`getattr` with a default so older graph-harness releases
+    (0.1.x) that pre-date Stage 1 still produce a valid row — those
+    presets simply advertise an empty input-port list.
     """
     try:
         from harness.application.preset_catalog import list_presets  # type: ignore[import-not-found]
@@ -101,16 +137,35 @@ def _discover_presets() -> list[dict[str, Any]]:
         return []
 
     entries = list_presets()
-    return [
-        {
-            "key": entry.key,
-            "display_name": entry.preset_name.replace("_", " ").title() or entry.key,
-            "description": entry.description,
-            "category": entry.scenario,
-            "version": entry.version,
-        }
-        for entry in entries
-    ]
+    rows: list[dict[str, Any]] = []
+    for entry in entries:
+        # ``entry.input_ports`` is ``tuple[InputPortSpec, ...]`` on
+        # graph-harness >= Stage 1; older releases raise AttributeError,
+        # which we swallow to an empty list so the row is still usable.
+        raw_ports = getattr(entry, "input_ports", ())
+        input_ports: list[dict[str, Any]] = []
+        for port in raw_ports:
+            input_ports.append(
+                {
+                    "key": getattr(port, "key", ""),
+                    "type": getattr(port, "type", "text"),
+                    "required": getattr(port, "required", True),
+                    "description": getattr(port, "description", "") or "",
+                    "enum_values": getattr(port, "enum_values", None),
+                    "default": getattr(port, "default", None),
+                }
+            )
+        rows.append(
+            {
+                "key": entry.key,
+                "display_name": entry.preset_name.replace("_", " ").title() or entry.key,
+                "description": entry.description,
+                "category": entry.scenario,
+                "version": entry.version,
+                "input_ports": input_ports,
+            }
+        )
+    return rows
 
 
 @router.get(
@@ -146,6 +201,7 @@ async def list_graph_presets() -> GraphPresetsListResponse:
             description=row["description"],
             category=row["category"],
             version=row["version"],
+            input_ports=[InputPortSpecOut(**port) for port in row.get("input_ports", [])],
         )
         for row in shipped
         if row["key"] in allowed

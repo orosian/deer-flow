@@ -37,10 +37,10 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from _router_auth_helpers import make_authed_test_app
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from _router_auth_helpers import make_authed_test_app
 from app.gateway.routers import graph_presets as router_module
 
 
@@ -61,7 +61,12 @@ def shipped_presets() -> list[dict[str, Any]]:
     """Shape returned by :func:`_discover_presets` in production.
 
     Each dict mirrors the keys the router constructs from
-    ``harness.application.preset_catalog.PresetEntry``.
+    ``harness.application.preset_catalog.PresetEntry``. The
+    ``input_ports`` list mirrors the upstream
+    :class:`InputPortSpec` dataclass; ``coding/coding_pipeline``
+    advertises a single ``user.goal`` text port so the passthrough is
+    exercised end-to-end, while the others stay empty (the most common
+    preset shape today).
     """
     return [
         {
@@ -70,6 +75,7 @@ def shipped_presets() -> list[dict[str, Any]]:
             "description": "Echoes the input back as the output.",
             "category": "utility",
             "version": "1.0.0",
+            "input_ports": [],
         },
         {
             "key": "multi_step_llm/multi_step_llm",
@@ -77,6 +83,7 @@ def shipped_presets() -> list[dict[str, Any]]:
             "description": "Two-step LLM pipeline.",
             "category": "utility",
             "version": "1.0.0",
+            "input_ports": [],
         },
         {
             "key": "coding/coding_pipeline",
@@ -84,6 +91,16 @@ def shipped_presets() -> list[dict[str, Any]]:
             "description": "End-to-end coding workflow.",
             "category": "coding",
             "version": "0.2.0",
+            "input_ports": [
+                {
+                    "key": "user.goal",
+                    "type": "text",
+                    "required": True,
+                    "description": "What the user wants the pipeline to build.",
+                    "enum_values": None,
+                    "default": None,
+                },
+            ],
         },
         {
             "key": "secret/internal_only",
@@ -91,6 +108,7 @@ def shipped_presets() -> list[dict[str, Any]]:
             "description": "Not on the SEC-1 whitelist — must be filtered out.",
             "category": "internal",
             "version": "1.0.0",
+            "input_ports": [],
         },
     ]
 
@@ -145,10 +163,59 @@ def test_response_shape_matches_frontend_contract(client: TestClient, stubbed_en
     assert set(body.keys()) == {"presets"}
     assert isinstance(body["presets"], list)
 
-    # Each row has exactly the five fields the frontend renders.
+    # Each row has exactly the six fields the frontend renders:
+    # the original five + ``input_ports`` (Stage 1+ passthrough).
     assert body["presets"], "fixture should expose at least one preset"
     sample = body["presets"][0]
-    assert set(sample.keys()) == {"id", "display_name", "description", "category", "version"}
+    assert set(sample.keys()) == {
+        "id",
+        "display_name",
+        "description",
+        "category",
+        "version",
+        "input_ports",
+    }
+    # ``input_ports`` is always a list (possibly empty).
+    assert isinstance(sample["input_ports"], list)
+
+
+def test_input_ports_passthrough_for_coding_pipeline(client: TestClient, stubbed_engine: None) -> None:
+    """``coding/coding_pipeline`` advertises a single ``user.goal`` text port.
+
+    Pins the Stage 1 passthrough: a preset that declares input ports
+    surfaces them verbatim on the wire, with every
+    :class:`InputPortSpecOut` field intact (key, type, required,
+    description, enum_values, default).
+    """
+    response = client.get("/api/graph-presets")
+    assert response.status_code == 200
+
+    by_id = {p["id"]: p for p in response.json()["presets"]}
+    assert "coding/coding_pipeline" in by_id
+    ports = by_id["coding/coding_pipeline"]["input_ports"]
+    assert len(ports) == 1
+    port = ports[0]
+    # Every declared field is preserved end-to-end.
+    assert set(port.keys()) == {"key", "type", "required", "description", "enum_values", "default"}
+    assert port["key"] == "user.goal"
+    assert port["type"] == "text"
+    assert port["required"] is True
+
+
+def test_input_ports_empty_for_presets_without_ports(client: TestClient, stubbed_engine: None) -> None:
+    """Presets that declare no input ports surface an empty ``input_ports`` list.
+
+    Confirms the fallback path (no ports on the upstream entry) renders
+    as ``[]`` rather than ``null`` or a missing field — the frontend
+    form builder iterates this field unconditionally.
+    """
+    response = client.get("/api/graph-presets")
+    assert response.status_code == 200
+
+    by_id = {p["id"]: p for p in response.json()["presets"]}
+    for pid in ("echo/echo", "multi_step_llm/multi_step_llm"):
+        assert pid in by_id
+        assert by_id[pid]["input_ports"] == []
 
 
 def test_whitelist_filters_out_off_whitelist_presets(client: TestClient, stubbed_engine: None) -> None:
