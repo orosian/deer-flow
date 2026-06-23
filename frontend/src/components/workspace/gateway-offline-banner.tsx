@@ -61,14 +61,18 @@ export function GatewayOfflineBanner({
             const parsed = userSchema.safeParse(data);
             if (parsed.success) parsedUser = parsed.data;
           } catch (err) {
-            console.warn(
-              "[gateway-offline-banner] probe body parse failed:",
-              err,
-            );
+            if (process.env.NODE_ENV !== "production") {
+              console.warn(
+                "[gateway-offline-banner] probe body parse failed:",
+                err,
+              );
+            }
           }
         }
       } catch (err) {
-        console.warn("[gateway-offline-banner] probe failed:", err);
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[gateway-offline-banner] probe failed:", err);
+        }
         errored = true;
       } finally {
         inFlightRef.current = false;

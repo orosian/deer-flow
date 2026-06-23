@@ -103,7 +103,9 @@ async function StarCounter() {
       stars = data.stargazers_count ?? stars; // Update stars if API response is valid
     }
   } catch (error) {
-    console.error("Error fetching GitHub stars:", error);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Error fetching GitHub stars:", error);
+    }
   }
   return (
     <>

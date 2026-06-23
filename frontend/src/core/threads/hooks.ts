@@ -1150,9 +1150,11 @@ export function useThreadHistory(
           runBeforeSeqRef.current.set(run.run_id, nextBeforeSeq);
           pendingLoadRef.current = true;
         } else if (nextBeforeSeq === undefined) {
-          console.warn(
-            `Run ${run.run_id} returned has_more without message seq values; leaving it pending for retry.`,
-          );
+          if (process.env.NODE_ENV !== "production") {
+            console.warn(
+              `Run ${run.run_id} returned has_more without message seq values; leaving it pending for retry.`,
+            );
+          }
         } else {
           runBeforeSeqRef.current.delete(run.run_id);
           loadedRunIdsRef.current.add(run.run_id);
@@ -1174,7 +1176,9 @@ export function useThreadHistory(
         );
       } while (pendingLoadRef.current);
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error(err);
+      }
     } finally {
       if (loadGenerationRef.current === loadGeneration) {
         loadingRef.current = false;
