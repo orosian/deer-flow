@@ -1,10 +1,18 @@
 """Configuration for stream bridge."""
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
-StreamBridgeType = Literal["memory", "redis"]
+# Runtime-supported stream bridge backends.
+#
+# The ``"redis"`` backend is *planned* for Phase 2 but has not been implemented
+# yet — see :func:`deerflow.runtime.stream_bridge.async_provider.make_stream_bridge`,
+# which raises ``NotImplementedError`` if the redis branch is reached.  Keeping
+# the Literal narrow so misconfiguration fails at Pydantic validation time
+# (immediately on ``AppConfig.from_file()``) rather than only when the bridge
+# is first used at runtime.
+StreamBridgeType = Literal["memory"]
 
 
 class StreamBridgeConfig(BaseModel):
@@ -12,16 +20,42 @@ class StreamBridgeConfig(BaseModel):
 
     type: StreamBridgeType = Field(
         default="memory",
-        description="Stream bridge backend type. 'memory' uses in-process asyncio.Queue (single-process only). 'redis' uses Redis Streams (planned for Phase 2, not yet implemented).",
+        description="Stream bridge backend type. 'memory' uses in-process asyncio.Queue (single-process only). The 'redis' backend is planned for Phase 2 and is not yet implemented.",
     )
     redis_url: str | None = Field(
         default=None,
-        description="Redis URL for the redis stream bridge type. Example: 'redis://localhost:6379/0'.",
+        description="Reserved for the planned Redis Streams backend (Phase 2, not yet implemented).",
     )
     queue_maxsize: int = Field(
         default=256,
         description="Maximum number of events buffered per run in the memory bridge.",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_planned_backends(cls, data: Any) -> Any:
+        """Reject ``type`` values reserved for planned-but-unimplemented backends.
+
+        Without this hook, configuring ``type: redis`` would surface as the
+        generic Pydantic error ``Input should be 'memory'`` from the narrowed
+        ``StreamBridgeType`` Literal — accurate but unhelpful, since users have
+        historically hit this late (only when the bridge is actually used at
+        runtime) and have no idea why ``redis`` is no longer accepted.  Fail
+        fast with a clear, actionable message at config-load time.
+        """
+        if isinstance(data, dict):
+            requested = data.get("type")
+            # ``None`` and the only currently-supported value are accepted
+            # without commentary; everything else is reserved for a backend
+            # that is not yet implemented.
+            if requested is not None and requested != "memory":
+                raise ValueError(
+                    f"stream_bridge.type={requested!r} is not implemented; "
+                    "only 'memory' is currently supported. "
+                    "The 'redis' backend is planned for Phase 2 — "
+                    "see runtime/stream_bridge/async_provider.py."
+                )
+        return data
 
 
 # Global configuration instance — None means no stream bridge is configured

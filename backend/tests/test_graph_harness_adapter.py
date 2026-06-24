@@ -351,7 +351,7 @@ def test_preset_load_failure_not_allowed_counter_increments() -> None:
 
 
 def test_preset_load_failure_unknown_counter_on_load_exception(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Non-ValueError exceptions from ``load_preset`` are counted as ``unknown``."""
+    """Non-ValueError exceptions from ``load_preset`` are counted as ``unknown`` and rewrapped as ``GraphHarnessPresetAccessError(code=500)`` with the original exception preserved on ``__cause__`` (P1-5)."""
     # Stub harness.host so the adapter can import it for this test.
     import sys
     import types
@@ -377,10 +377,16 @@ def test_preset_load_failure_unknown_counter_on_load_exception(monkeypatch: pyte
     monkeypatch.setitem(sys.modules, "harness", fake)
     monkeypatch.setitem(sys.modules, "harness.host", host)
 
-    from app.gateway.adapters.graph_harness import make_graph_harness_agent
+    from app.gateway.adapters.graph_harness import GraphHarnessPresetAccessError, make_graph_harness_agent
 
-    with pytest.raises(RuntimeError, match="disk on fire"):
+    with pytest.raises(GraphHarnessPresetAccessError) as exc_info:
         make_graph_harness_agent({"configurable": {"graph_preset": "echo/echo"}})
+    assert exc_info.value.code == 500
+    # P1-5: the original RuntimeError must be chained on __cause__ so
+    # log consumers and observability hooks see the actual failure cause
+    # instead of a bare ``None``/unknown.
+    assert isinstance(exc_info.value.__cause__, RuntimeError)
+    assert "disk on fire" in str(exc_info.value.__cause__)
     assert _METRICS.preset_load_failure_total["unknown"] == 1
 
 

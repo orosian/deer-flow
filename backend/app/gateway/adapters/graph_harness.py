@@ -391,9 +391,14 @@ def wrap_load_preset_errors(preset_name: str):
         except ValueError as exc:
             _METRICS.incr_preset_load_failure("not_found")
             raise GraphHarnessPresetAccessError(404, f"preset not found: {preset_name!r}") from exc
-        except Exception:
+        except Exception as exc:
             _METRICS.incr_preset_load_failure("unknown")
-            raise
+            # P1-5: wrap + `from exc` so the original exception's traceback
+            # and type are preserved on ``__cause__`` for log consumers and
+            # the gateway's 500 path. The bare ``raise`` that used to live
+            # here lost the original frame chain and surfaced the failure
+            # as a generic ``None``/unknown in observability.
+            raise GraphHarnessPresetAccessError(500, f"preset load failed: {preset_name!r}") from exc
 
     return wrapped()
 
