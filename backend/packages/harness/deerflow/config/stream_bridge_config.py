@@ -49,12 +49,7 @@ class StreamBridgeConfig(BaseModel):
             # without commentary; everything else is reserved for a backend
             # that is not yet implemented.
             if requested is not None and requested != "memory":
-                raise ValueError(
-                    f"stream_bridge.type={requested!r} is not implemented; "
-                    "only 'memory' is currently supported. "
-                    "The 'redis' backend is planned for Phase 2 — "
-                    "see runtime/stream_bridge/async_provider.py."
-                )
+                raise ValueError(f"stream_bridge.type={requested!r} is not implemented; only 'memory' is currently supported. The 'redis' backend is planned for Phase 2 — see runtime/stream_bridge/async_provider.py.")
         return data
 
 
