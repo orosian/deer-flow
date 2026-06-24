@@ -87,7 +87,9 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
         }
       }
     } catch (err) {
-      console.error("Failed to refresh user:", err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Failed to refresh user:", err);
+      }
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -122,7 +124,9 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
       });
       if (!res.ok) logoutFailed = true;
     } catch (err) {
-      console.error("Logout request failed:", err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Logout request failed:", err);
+      }
       logoutFailed = true;
     }
 

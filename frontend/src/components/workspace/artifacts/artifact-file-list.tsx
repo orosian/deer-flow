@@ -62,9 +62,6 @@ export function ArtifactFileList({
           toast.error(result.message || "Failed to install skill");
         }
       } catch (error) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Failed to install skill:", error);
-        }
         toast.error("Failed to install skill");
       } finally {
         setInstallingFile(null);

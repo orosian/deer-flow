@@ -60,19 +60,9 @@ export function GatewayOfflineBanner({
             const data = await res.json();
             const parsed = userSchema.safeParse(data);
             if (parsed.success) parsedUser = parsed.data;
-          } catch (err) {
-            if (process.env.NODE_ENV !== "production") {
-              console.warn(
-                "[gateway-offline-banner] probe body parse failed:",
-                err,
-              );
-            }
-          }
+          } catch (err) {}
         }
       } catch (err) {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("[gateway-offline-banner] probe failed:", err);
-        }
         errored = true;
       } finally {
         inFlightRef.current = false;

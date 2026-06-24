@@ -81,7 +81,12 @@ export async function getServerSideUser(): Promise<AuthResult> {
     if (res.ok) {
       const parsed = userSchema.safeParse(await res.json());
       if (!parsed.success) {
-        console.error("[SSR auth] Malformed /auth/me response:", parsed.error);
+        if (process.env.NODE_ENV !== "production") {
+          console.error(
+            "[SSR auth] Malformed /auth/me response:",
+            parsed.error,
+          );
+        }
         return { tag: "gateway_unavailable" };
       }
       if (parsed.data.needs_setup) {
@@ -92,11 +97,15 @@ export async function getServerSideUser(): Promise<AuthResult> {
     if (res.status === 401 || res.status === 403) {
       return { tag: "unauthenticated" };
     }
-    console.error(`[SSR auth] /api/v1/auth/me responded ${res.status}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.error(`[SSR auth] /api/v1/auth/me responded ${res.status}`);
+    }
     return { tag: "gateway_unavailable" };
   } catch (err) {
     clearTimeout(timeout);
-    console.error("[SSR auth] Failed to reach gateway:", err);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[SSR auth] Failed to reach gateway:", err);
+    }
     return { tag: "gateway_unavailable" };
   }
 }
