@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Patched
 - Remove production console.error/warn in 5 frontend components (PII / stack-trace leakage)
+- fix(adapter): preserve preset load failure traceback + preset_name (98099b7c)
+- fix(gateway): narrow bare except in lifespan/admin paths (684903cd)
 
 ## [2.1.0] — 2026-06-22
 
