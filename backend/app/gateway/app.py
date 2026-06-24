@@ -119,7 +119,7 @@ async def _ensure_admin_user(app: FastAPI) -> None:
             migrated = await _migrate_orphaned_threads(store, admin_id)
             if migrated:
                 logger.info("Migrated %d orphan LangGraph thread(s) to admin", migrated)
-        except Exception:
+        except (OSError, RuntimeError, AttributeError, TypeError, KeyError, ValueError):
             logger.exception("LangGraph thread migration failed (non-fatal)")
 
 
@@ -205,7 +205,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 logger.warning("tiktoken encoding cache warm-up failed; token counting will use character-based fallback until tiktoken loads successfully")
         except TimeoutError:
             logger.warning("tiktoken encoding cache warm-up timed out; token counting will use character-based fallback until tiktoken loads successfully")
-        except Exception:
+        except (ImportError, OSError, RuntimeError, ValueError, AttributeError):
             logger.warning("tiktoken warm-up skipped", exc_info=True)
 
     # Initialize LangGraph runtime components (StreamBridge, RunManager, checkpointer, store)
@@ -222,7 +222,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
             channel_service = await start_channel_service(startup_config)
             logger.info("Channel service started: %s", channel_service.get_status())
-        except Exception:
+        except (ImportError, OSError, RuntimeError, ValueError, AttributeError, TypeError):
             logger.exception("No IM channels configured or channel service failed to start")
 
         yield
@@ -240,7 +240,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 "Channel service shutdown exceeded %.1fs; proceeding with worker exit.",
                 _SHUTDOWN_HOOK_TIMEOUT_SECONDS,
             )
-        except Exception:
+        except (OSError, RuntimeError, AttributeError):
             logger.exception("Failed to stop channel service")
 
     logger.info("Shutting down API Gateway")
