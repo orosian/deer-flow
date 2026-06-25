@@ -10,6 +10,7 @@ import threading
 import time
 from typing import Any, Literal
 
+from app.channels import async_open
 from app.channels.base import Channel
 from app.channels.commands import is_known_channel_command
 from app.channels.connection_identity import attach_connection_identity
@@ -283,7 +284,7 @@ class FeishuChannel(Channel):
 
     async def _upload_image(self, path) -> str:
         """Upload an image to Feishu and return the image_key."""
-        with open(str(path), "rb") as f:
+        async with await async_open(str(path), "rb") as f:
             request = self._CreateImageRequest.builder().request_body(self._CreateImageRequestBody.builder().image_type("message").image(f).build()).build()
             response = await asyncio.to_thread(self._api_client.im.v1.image.create, request)
         if not response.success():
@@ -304,7 +305,7 @@ class FeishuChannel(Channel):
         else:
             file_type = "stream"
 
-        with open(str(path), "rb") as f:
+        async with await async_open(str(path), "rb") as f:
             request = self._CreateFileRequest.builder().request_body(self._CreateFileRequestBody.builder().file_type(file_type).file_name(filename).file(f).build()).build()
             response = await asyncio.to_thread(self._api_client.im.v1.file.create, request)
         if not response.success():
