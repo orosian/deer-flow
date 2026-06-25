@@ -8,6 +8,7 @@ import threading
 import time
 from typing import Any
 
+from app.channels import async_open
 from app.channels.base import Channel
 from app.channels.connection_identity import attach_connection_identity
 from app.channels.message_bus import InboundMessage, InboundMessageType, MessageBus, OutboundMessage, ResolvedAttachment
@@ -270,7 +271,7 @@ class TelegramChannel(Channel):
 
         try:
             if attachment.is_image and attachment.size <= 10 * 1024 * 1024:
-                with open(attachment.actual_path, "rb") as f:
+                async with await async_open(str(attachment.actual_path), "rb") as f:
                     kwargs: dict[str, Any] = {"chat_id": chat_id, "photo": f}
                     if reply_to:
                         kwargs["reply_to_message_id"] = reply_to
@@ -278,7 +279,7 @@ class TelegramChannel(Channel):
             else:
                 from telegram import InputFile
 
-                with open(attachment.actual_path, "rb") as f:
+                async with await async_open(str(attachment.actual_path), "rb") as f:
                     input_file = InputFile(f, filename=attachment.filename)
                     kwargs = {"chat_id": chat_id, "document": input_file}
                     if reply_to:

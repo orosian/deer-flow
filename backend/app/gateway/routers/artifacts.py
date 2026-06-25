@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import mimetypes
 import zipfile
@@ -7,6 +8,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 
+from app.channels import async_open
 from app.gateway.authz import require_permission
 from app.gateway.path_utils import resolve_thread_virtual_path
 
@@ -36,11 +38,11 @@ def _build_attachment_headers(filename: str, extra_headers: dict[str, str] | Non
     return headers
 
 
-def is_text_file_by_content(path: Path, sample_size: int = 8192) -> bool:
+async def is_text_file_by_content(path: Path, sample_size: int = 8192) -> bool:
     """Check if file is text by examining content for null bytes."""
     try:
-        with open(path, "rb") as f:
-            chunk = f.read(sample_size)
+        async with await async_open(str(path), "rb") as f:
+            chunk = await asyncio.to_thread(f.read, sample_size)
             # Text files shouldn't contain null bytes
             return b"\x00" not in chunk
     except Exception:
@@ -196,7 +198,7 @@ async def get_artifact(thread_id: str, path: str, request: Request, download: bo
     if mime_type and mime_type.startswith("text/"):
         return PlainTextResponse(content=actual_path.read_text(encoding="utf-8"), media_type=mime_type)
 
-    if is_text_file_by_content(actual_path):
+    if await is_text_file_by_content(actual_path):
         return PlainTextResponse(content=actual_path.read_text(encoding="utf-8"), media_type=mime_type)
 
     return Response(content=actual_path.read_bytes(), media_type=mime_type, headers={"Content-Disposition": _build_content_disposition("inline", actual_path.name)})
