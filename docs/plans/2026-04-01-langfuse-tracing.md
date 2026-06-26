@@ -1,3 +1,12 @@
+---
+status: completed
+completed_at: 2026-04-02
+implementation_pr: 1717
+follow_up_prs:
+  - 2944
+  - 3611
+---
+
 # Langfuse Tracing Implementation Plan
 
 **Goal:** Add optional Langfuse observability support to DeerFlow while preserving existing LangSmith tracing and allowing both providers to be enabled at the same time.
@@ -103,3 +112,7 @@ Run: `cd backend && uv run ruff check packages/harness/deerflow/config/tracing_c
 **Step 3: Review diff**
 
 Run: `git diff -- backend/packages/harness backend/tests README.md backend/README.md`
+
+---
+
+> **审计闭包**: 2026-06-27, 已落地 0/0 checkbox (plan 用 Task/Step 描述, 无 checkbox), 主落地 commit `2d1f90d5` feat(tracing): add optional Langfuse support (#1717)。Files matched plan 全部引用: tracing_config.py / tracing/factory.py (新增) / models/factory.py / pyproject.toml / README.md / backend/README.md / test_tracing_config.py / test_model_factory.py / test_tracing_factory.py (新增)。后续延伸 commits: `df951542` fix(tracing): propagate session_id and user_id into Langfuse traces (#2944), `a72af8ea` feat(subagents): attribute subagent spans to parent thread's Langfuse session (#3611)。CHANGELOG 2.0.0 段 "trace: Set the LangGraph trace name to `lead_agent` (or the custom agent's `agent_name`) for cleaner Langfuse/LangSmith traces. (#3101)" 与 "trace: Attribute subagent spans to the parent thread's Langfuse trace. (#3611)" 已声明。Plan 状态: completed (frontmatter 已加 status: completed)。

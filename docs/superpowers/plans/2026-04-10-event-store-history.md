@@ -57,7 +57,7 @@ A shared helper that loads the **full** message stream from the event store, pat
 - Modify: `backend/app/gateway/routers/threads.py`
 - Test: `backend/tests/test_thread_state_event_store.py`
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test** — `229c8095`
 
 Create `backend/tests/test_thread_state_event_store.py`:
 
@@ -196,11 +196,11 @@ class TestGetEventStoreMessages:
         assert tool["status"] == "success"
 ```
 
-- [ ] **Step 2: Run tests to verify they pass**
+- [x] **Step 2: Run tests to verify they pass** — `229c8095` (18 tests, see commit body)
 
 Run: `cd backend && PYTHONPATH=. uv run pytest tests/test_thread_state_event_store.py -v`
 
-- [ ] **Step 3: Add the helper function and modify `get_thread_history`**
+- [x] **Step 3: Add the helper function and modify `get_thread_history`** — `229c8095`
 
 In `backend/app/gateway/routers/threads.py`:
 
@@ -337,7 +337,7 @@ Also add `import re` at the top of the file if it isn't already imported.
             is_latest_checkpoint = False
 ```
 
-- [ ] **Step 4: Modify `get_thread_state` similarly**
+- [x] **Step 4: Modify `get_thread_state` similarly** — `229c8095`
 
 In `get_thread_state` (around line 443-444), replace:
 
@@ -360,11 +360,11 @@ In `get_thread_state` (around line 443-444), replace:
         values=values,
 ```
 
-- [ ] **Step 5: Run all backend tests**
+- [x] **Step 5: Run all backend tests** — `229c8095`
 
 Run: `cd backend && PYTHONPATH=. uv run pytest tests/ -v --timeout=30 -x`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit** — `229c8095`
 
 ```bash
 git add backend/app/gateway/routers/threads.py backend/tests/test_thread_state_event_store.py
@@ -392,7 +392,7 @@ Once `/history` returns the full event-store-backed message stream, the frontend
 **Files:**
 - Modify: `frontend/src/core/threads/hooks.ts` (around line 679)
 
-- [ ] **Step 1: Replace the fixed `?limit=200` with full pagination**
+- [ ] **Step 1: Replace the fixed `?limit=200` with full pagination** — TODO 2026-Q3, 未排期 owner. 前端 `useThreadFeedback` hook 在当前 main 不存在 (`frontend/src` 无 `useThreadFeedback` 引用); 229c8095 已记录该 follow-up, 但未拆 PR
 
 Change:
 
@@ -404,21 +404,21 @@ const res = await fetchWithAuth(
 
 to a loop that pages via `after_seq` (or an equivalent query param exposed by the `/messages` endpoint — check `backend/app/gateway/routers/thread_runs.py:285-323` for the actual parameter names before writing the TS code). Accumulate `messages` until a page returns fewer than the page size.
 
-- [ ] **Step 2: Defensive index guard**
+- [ ] **Step 2: Defensive index guard** — TODO 2026-Q3, 与 Step 1 同步处理
 
 `runIdByAiIndex[aiMessageIndex]` can still be `undefined` when the frontend renders optimistic state before the messages query refreshes. The current `?? undefined` in `message-list.tsx:71` already handles this; do not remove it.
 
-- [ ] **Step 3: Invalidate `["thread-feedback", threadId]` after a new run**
+- [ ] **Step 3: Invalidate `["thread-feedback", threadId]` after a new run** — TODO 2026-Q3, 与 Step 1 同步处理
 
 In `useThreadStream` (or wherever stream-end is handled), call `queryClient.invalidateQueries({ queryKey: ["thread-feedback", threadId] })` when the stream closes so the runIdByAiIndex picks up the new run's AI message immediately.
 
-- [ ] **Step 4: Run `pnpm check`**
+- [ ] **Step 4: Run `pnpm check`** — TODO 2026-Q3, 与 Step 1 同步处理
 
 ```bash
 cd frontend && pnpm check
 ```
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit** — TODO 2026-Q3, 与 Step 1 同步处理
 
 ```bash
 git add frontend/src/core/threads/hooks.ts
@@ -434,7 +434,7 @@ Add a regression test that exercises the exact bug class we are fixing: a summar
 **Files:**
 - Modify: `backend/tests/test_thread_state_event_store.py`
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test** — `229c8095` (test_thread_state_event_store.py 包含 summarize regression + multi-run feedback attachment 测试, 见 commit body)
 
 Seed a `MemoryRunEventStore` with two runs worth of messages (`r1`: human + ai + human + ai, `r2`: human + ai), then simulate a summarized checkpoint state that drops the `r1` messages. Call `_get_event_store_messages` and assert:
 
@@ -444,13 +444,13 @@ Seed a `MemoryRunEventStore` with two runs worth of messages (`r1`: human + ai +
 - Any `id=None` messages get a stable `uuid5(...)` id
 - A legacy `str(Command(update=...))` content field in a tool_result is sanitized to the inner text
 
-- [ ] **Step 2: Run the new test**
+- [x] **Step 2: Run the new test** — `229c8095`
 
 ```bash
 cd backend && PYTHONPATH=. uv run pytest tests/test_thread_state_event_store.py -v
 ```
 
-- [ ] **Step 3: Commit with Tasks 1, 3 changes**
+- [x] **Step 3: Commit with Tasks 1, 3 changes** — `229c8095` (实际只 bundle 了 Task 1 + Task 4 测试; Task 3 前端 useThreadFeedback 未完成, 未进入本次 commit)
 
 Bundle with the Task 1 commit so tests always land alongside the implementation.
 
@@ -463,9 +463,13 @@ Standard mode (`make dev`) hits LangGraph Server directly for `/threads/{id}/his
 **Files:**
 - Modify: this plan (add follow-up section at the bottom, see below) OR create a separate tracking issue
 
-- [ ] **Step 1: Record the gap**
+- [ ] **Step 1: Record the gap** — 未落地。229c8095 commit body 提到 "Standard-mode follow-up noted", 但 plan 文档未追加 follow-up section, 也未开 GitHub issue
 
 Append to the bottom of this plan (or open a GitHub issue and link it):
 
 > **Follow-up — Standard mode summarize bug**
 > `get_thread_history` in `backend/app/gateway/routers/threads.py` is only hit in Gateway mode. Standard mode proxies `/api/langgraph/*` directly to the LangGraph Server (see `backend/CLAUDE.md` nginx routing and `frontend/CLAUDE.md` `NEXT_PUBLIC_LANGGRAPH_BASE_URL`). The summarize-message-loss symptom is still reproducible there. Options: (a) teach the LangGraph Server checkpointer to branch on an override, (b) move `/history` behind Gateway in Standard mode as well, (c) accept as known limitation for Standard mode. Decide before GA.
+
+---
+
+> **审计闭包**: 2026-06-27, 已落地 9/15, 未落地 6/15, 落地 commit `229c8095` fix(threads): load history messages from event store, immune to summarize。Task 1 (Step 1-6) 全部落地; Task 4 (Step 1-3) 测试与 commit 落地, 但 Task 3 缺失导致 Step 3 描述的 "bundle Tasks 1, 3 changes" 实际只包含 Task 1 + Task 4; Task 2 OPTIONAL deferred (flush_threshold 调整) 仍未触发; Task 3 前端 useThreadFeedback 分页 + invalidate 未排期 (TODO 2026-Q3); Task 5 Standard mode follow-up 仅在 commit body 提及, plan 文档 section 与 issue 均未创建。Predecessor commit `b55a9c8d` feat(threads): history endpoint reads messages from event store 是 4 月初早期落地版本, 被 229c8095 替换并补齐。CHANGELOG 2.0.0 "history: Strip base64 image data from REST endpoint responses (#3535)" 与本 plan 相关但不同 PR。

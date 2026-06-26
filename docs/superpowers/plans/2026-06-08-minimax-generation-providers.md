@@ -51,7 +51,7 @@ uv run --no-project --with pytest --with requests --with Pillow pytest tests/ski
 **Files:**
 - Create: `tests/skills/skill_loader.py`
 
-- [ ] **Step 1: 写加载器**
+- [x] **Step 1: 写加载器**
 
 `tests/skills/skill_loader.py`:
 ```python
@@ -92,7 +92,7 @@ class FakeResp:
         return self._json
 ```
 
-- [ ] **Step 2: 冒烟验证加载器可加载现有脚本**
+- [x] **Step 2: 冒烟验证加载器可加载现有脚本**
 
 Run:
 ```bash
@@ -100,7 +100,7 @@ uv run --no-project --with pytest --with requests --with Pillow python -c "impor
 ```
 Expected: 输出 `loaded True`（注意：此步要求 Task 1 尚未执行也能加载——当前 image generate.py 顶层 `from PIL import Image` 需 Pillow，已在命令里 `--with Pillow`）。
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/skills/skill_loader.py
@@ -116,7 +116,7 @@ git commit -m "test(skills): add importlib loader + FakeResp for skill tests"
 - Modify: `skills/public/image-generation/SKILL.md`
 - Test: `tests/skills/test_image_generation.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/skills/test_image_generation.py`:
 ```python
@@ -224,12 +224,12 @@ def test_minimax_raises_on_base_resp_error(monkeypatch, tmp_path):
     assert "1004" in str(e.value)
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_image_generation.py -v`
 Expected: FAIL（`_resolve_provider` / minimax 行为尚不存在）。
 
-- [ ] **Step 3: 整文件替换 generate.py**
+- [x] **Step 3: 整文件替换 generate.py**
 
 `skills/public/image-generation/scripts/generate.py`:
 ```python
@@ -405,12 +405,12 @@ if __name__ == "__main__":
         print(f"Error while generating image: {e}")
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_image_generation.py -v`
 Expected: PASS（7 个用例全过）。
 
-- [ ] **Step 5: 更新 SKILL.md（追加 provider 说明）**
+- [x] **Step 5: 更新 SKILL.md（追加 provider 说明）**
 
 在 `skills/public/image-generation/SKILL.md` 的 `## Notes` 段之前插入新段落：
 ```markdown
@@ -428,7 +428,7 @@ MiniMax optional overrides: `MINIMAX_API_HOST` (default `https://api.minimaxi.co
 / `--output-file` / `--aspect-ratio` arguments are identical for both providers.
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add skills/public/image-generation/scripts/generate.py skills/public/image-generation/SKILL.md tests/skills/test_image_generation.py
@@ -444,7 +444,7 @@ git commit -m "feat(image-generation): add MiniMax provider with env auto-detect
 - Modify: `skills/public/video-generation/SKILL.md`
 - Test: `tests/skills/test_video_generation.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/skills/test_video_generation.py`:
 ```python
@@ -557,12 +557,12 @@ def test_minimax_task_fail(monkeypatch, tmp_path):
         vid.generate_video(str(pf), [], str(tmp_path / "v.mp4"), "16:9")
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_video_generation.py -v`
 Expected: FAIL。
 
-- [ ] **Step 3: 整文件替换 generate.py**
+- [x] **Step 3: 整文件替换 generate.py**
 
 `skills/public/video-generation/scripts/generate.py`:
 ```python
@@ -757,12 +757,12 @@ if __name__ == "__main__":
         print(f"Error while generating video: {e}")
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_video_generation.py -v`
 Expected: PASS（6 个用例全过）。
 
-- [ ] **Step 5: 更新 SKILL.md**
+- [x] **Step 5: 更新 SKILL.md**
 
 在 `skills/public/video-generation/SKILL.md` 末尾追加：
 ```markdown
@@ -779,7 +779,7 @@ MiniMax overrides: `MINIMAX_API_HOST` (default `https://api.minimaxi.com`),
 as MiniMax `first_frame_image`. MiniMax ignores `--aspect-ratio` (it uses resolution/duration).
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add skills/public/video-generation/scripts/generate.py skills/public/video-generation/SKILL.md tests/skills/test_video_generation.py
@@ -795,7 +795,7 @@ git commit -m "feat(video-generation): add MiniMax provider with async poll/down
 - Modify: `skills/public/podcast-generation/SKILL.md`
 - Test: `tests/skills/test_podcast_generation.py`
 
-- [ ] **Step 1: 写失败测试**
+- [x] **Step 1: 写失败测试**
 
 `tests/skills/test_podcast_generation.py`:
 ```python
@@ -889,12 +889,12 @@ def test_generate_podcast_minimax_end_to_end(monkeypatch, tmp_path):
     assert "Successfully generated podcast" in msg
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [x] **Step 2: 运行测试确认失败**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_podcast_generation.py -v`
 Expected: FAIL。
 
-- [ ] **Step 3: 整文件替换 generate.py**
+- [x] **Step 3: 整文件替换 generate.py**
 
 `skills/public/podcast-generation/scripts/generate.py`:
 ```python
@@ -1157,12 +1157,12 @@ if __name__ == "__main__":
         traceback.print_exc()
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [x] **Step 4: 运行测试确认通过**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_podcast_generation.py -v`
 Expected: PASS（6 个用例全过）。
 
-- [ ] **Step 5: 更新 SKILL.md**
+- [x] **Step 5: 更新 SKILL.md**
 
 在 `skills/public/podcast-generation/SKILL.md` 末尾追加：
 ```markdown
@@ -1179,7 +1179,7 @@ MiniMax overrides: `MINIMAX_API_HOST` (default `https://api.minimaxi.com`),
 (default `male-qn-qingse`), `MINIMAX_TTS_VOICE_FEMALE` (default `female-tianmei`).
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add skills/public/podcast-generation/scripts/generate.py skills/public/podcast-generation/SKILL.md tests/skills/test_podcast_generation.py
@@ -1196,7 +1196,7 @@ git commit -m "feat(podcast-generation): add MiniMax t2a_v2 provider with env au
 - Modify: `frontend/src/app/mock/api/skills/route.ts`
 - Test: `tests/skills/test_music_generation.py`
 
-- [ ] **Step 1: 用 skill-creator 脚手架生成骨架**
+- [x] **Step 1: 用 skill-creator 脚手架生成骨架**
 
 Run:
 ```bash
@@ -1209,7 +1209,7 @@ rm -f skills/public/music-generation/scripts/example_script.py
 ```
 （若脚手架生成的示例脚本名不同，删除 `scripts/` 下除将创建的 `generate.py` 外的占位文件。）
 
-- [ ] **Step 2: 写失败测试**
+- [x] **Step 2: 写失败测试**
 
 `tests/skills/test_music_generation.py`:
 ```python
@@ -1313,12 +1313,12 @@ def test_missing_api_key_returns_message(monkeypatch, tmp_path):
     assert "MINIMAX_API_KEY" in msg
 ```
 
-- [ ] **Step 3: 运行测试确认失败**
+- [x] **Step 3: 运行测试确认失败**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_music_generation.py -v`
 Expected: FAIL（`generate_music` 不存在）。
 
-- [ ] **Step 4: 写实现 generate.py**
+- [x] **Step 4: 写实现 generate.py**
 
 `skills/public/music-generation/scripts/generate.py`:
 ```python
@@ -1403,12 +1403,12 @@ if __name__ == "__main__":
         print(f"Error while generating music: {e}")
 ```
 
-- [ ] **Step 5: 运行测试确认通过**
+- [x] **Step 5: 运行测试确认通过**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/test_music_generation.py -v`
 Expected: PASS（6 个用例全过）。
 
-- [ ] **Step 6: 写 SKILL.md**
+- [x] **Step 6: 写 SKILL.md**
 
 整文件替换 `skills/public/music-generation/SKILL.md`:
 ```markdown
@@ -1490,7 +1490,7 @@ Do NOT read the python file, just call it with the parameters.
 - For non-English songs, write `lyrics` in the target language.
 ```
 
-- [ ] **Step 7: 在前端 mock skills 列表注册 music-generation**
+- [x] **Step 7: 在前端 mock skills 列表注册 music-generation**
 
 修改 `frontend/src/app/mock/api/skills/route.ts`，在 `image-generation` 条目之后、`podcast-generation` 条目之前插入（保持字母序）：
 ```typescript
@@ -1504,12 +1504,12 @@ Do NOT read the python file, just call it with the parameters.
       },
 ```
 
-- [ ] **Step 8: 前端类型检查（确认 route.ts 无误）**
+- [x] **Step 8: 前端类型检查（确认 route.ts 无误）**
 
 Run: `cd frontend && pnpm typecheck`
 Expected: PASS（无新增类型错误）。若 `frontend` 依赖未安装，先 `pnpm install` 再 typecheck。
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add skills/public/music-generation frontend/src/app/mock/api/skills/route.ts tests/skills/test_music_generation.py
@@ -1520,12 +1520,12 @@ git commit -m "feat(music-generation): new MiniMax music skill via skill-creator
 
 ## Task 5: 全量回归 + spec 覆盖核对
 
-- [ ] **Step 1: 跑全部 skill 测试**
+- [x] **Step 1: 跑全部 skill 测试**
 
 Run: `uv run --no-project --with pytest --with requests --with Pillow pytest tests/skills/ -v`
 Expected: 全部 PASS（image 7 + video 6 + podcast 6 + music 6 = 25 用例）。
 
-- [ ] **Step 2: 核对四个 skill 目录结构**
+- [x] **Step 2: 核对四个 skill 目录结构**
 
 Run:
 ```bash
@@ -1534,13 +1534,17 @@ git status --short
 ```
 Expected: `music-generation/SKILL.md` + `scripts/generate.py` 存在；无意外残留的脚手架占位文件（references/assets 已删）。
 
-- [ ] **Step 3: spec 覆盖自查（对照设计文档）**
+- [x] **Step 3: spec 覆盖自查（对照设计文档）**
 
 逐条确认：image/video/podcast 三个 provider 自动判断 + 覆盖 ✔；music 新 skill ✔；hex 解码（podcast+music）✔；base64（image）✔；video 三步轮询 ✔；参考图 data URL（image subject_reference / video first_frame_image）✔；前端注册 ✔；环境变量齐全 ✔。如发现遗漏，补任务。
 
-- [ ] **Step 4: 最终提交（如有零散改动）**
+- [x] **Step 4: 最终提交（如有零散改动）**
 
 ```bash
 git add -A
 git commit -m "test(skills): full MiniMax generation regression green" || echo "nothing to commit"
 ```
+
+---
+
+> **审计闭包**: 2026-06-27, 已落地 34/34, 未落地 0/34, 落地 commit `cd5bedaa` feat: MiniMax provider for image/video/podcast skills + new music-generation skill (#3437)。该 PR 为 squash merge, 包含 plan 全部 5 个 task 的子提交: skill_loader 加载器 + image/video/podcast/music 各 provider + 前端 mock 注册 + 全量回归。CHANGELOG 2.0.0 段已声明 "models: Add MiniMax provider for image/video/podcast skills plus a new music-generation skill. (#3437)"。Plan 状态: 已完成。

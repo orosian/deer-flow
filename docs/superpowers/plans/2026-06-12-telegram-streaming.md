@@ -33,7 +33,7 @@ Run tests from `backend/`: `PYTHONPATH=. uv run pytest tests/test_channels.py -v
 - Modify: `backend/app/channels/telegram.py` (add `supports_streaming` property)
 - Test: `backend/tests/test_channels.py` (new class `TestTelegramStreaming`)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `backend/tests/test_channels.py` (bottom of file). The file already imports `MessageBus`, `OutboundMessage`, `ChannelManager`, `pytest`, `SimpleNamespace`, `MagicMock`, `AsyncMock`, and defines `_run()`:
 
@@ -54,12 +54,12 @@ class TestTelegramStreaming:
         assert CHANNEL_CAPABILITIES["telegram"]["supports_streaming"] is True
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming::test_telegram_reports_streaming_support -v`
 Expected: FAIL with `assert False is True` (base class property returns False).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `backend/app/channels/manager.py:59` change:
 
@@ -81,12 +81,12 @@ In `backend/app/channels/telegram.py`, add a property right after `__init__` (be
         return True
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/channels/manager.py backend/app/channels/telegram.py backend/tests/test_channels.py
@@ -101,7 +101,7 @@ git commit -m "feat(telegram): report streaming support for telegram channel"
 - Modify: `backend/app/channels/telegram.py` (constants, `__init__`, helpers, `_send_running_reply`)
 - Test: `backend/tests/test_channels.py` (`TestTelegramStreaming`)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `TestTelegramStreaming`:
 
@@ -135,12 +135,12 @@ Add to `TestTelegramStreaming`:
         _run(go())
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming::test_running_reply_registers_stream_placeholder -v`
 Expected: FAIL with `AttributeError: 'TelegramChannel' object has no attribute '_stream_messages'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `backend/app/channels/telegram.py`:
 
@@ -213,12 +213,12 @@ d) Replace `_send_running_reply` (`telegram.py:183-196`) with:
             logger.exception("[Telegram] failed to send running reply in chat=%s", chat_id)
 ```
 
-- [ ] **Step 4: Run tests to verify pass (including existing retry tests)**
+- [x] **Step 4: Run tests to verify pass (including existing retry tests)**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming tests/test_channels.py::TestTelegramSendRetry -v`
 Expected: all PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/channels/telegram.py backend/tests/test_channels.py
@@ -233,7 +233,7 @@ git commit -m "feat(telegram): register running-reply placeholder as stream targ
 - Modify: `backend/app/channels/telegram.py:97-137` (`send`)
 - Test: existing `tests/test_channels.py::TestTelegramSendRetry` must stay green
 
-- [ ] **Step 1: Replace `send()` with the dispatching version + extracted helper**
+- [x] **Step 1: Replace `send()` with the dispatching version + extracted helper**
 
 Replace the whole `send()` method (`telegram.py:97-137`) with:
 
@@ -285,12 +285,12 @@ Replace the whole `send()` method (`telegram.py:97-137`) with:
         raise last_exc
 ```
 
-- [ ] **Step 2: Run existing retry tests to verify no regression**
+- [x] **Step 2: Run existing retry tests to verify no regression**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramSendRetry tests/test_channels.py::TestTelegramStreaming -v`
 Expected: all PASS (pure refactor)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add backend/app/channels/telegram.py
@@ -305,7 +305,7 @@ git commit -m "refactor(telegram): extract _send_new_message from send()"
 - Modify: `backend/app/channels/telegram.py` (`send`, new `_send_stream_update`)
 - Test: `backend/tests/test_channels.py` (`TestTelegramStreaming`)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `TestTelegramStreaming`. First add a shared fake-bot factory at the top of the class:
 
@@ -439,12 +439,12 @@ Then the tests:
         _run(go())
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming -v`
 Expected: the new tests FAIL (current `send()` sends new messages for every outbound; `bot.sent` counts are wrong).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `backend/app/channels/telegram.py`, replace the `send()` body and add `_send_stream_update`:
 
@@ -524,12 +524,12 @@ In `backend/app/channels/telegram.py`, replace the `send()` body and add `_send_
         state["last_text"] = display
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming tests/test_channels.py::TestTelegramSendRetry -v`
 Expected: all PASS. Note `TestTelegramSendRetry` still passes because its messages default to `is_final=True` with no registered stream state.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/app/channels/telegram.py backend/tests/test_channels.py
@@ -544,7 +544,7 @@ git commit -m "feat(telegram): edit streamed message in place for non-final upda
 - Modify: `backend/app/channels/telegram.py` (`send`, new `_finalize_stream_message`)
 - Test: `backend/tests/test_channels.py` (`TestTelegramStreaming`)
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `TestTelegramStreaming`:
 
@@ -626,12 +626,12 @@ Add to `TestTelegramStreaming`:
         _run(go())
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py::TestTelegramStreaming -v`
 Expected: new tests FAIL (final messages currently always go through `_send_new_message`).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `backend/app/channels/telegram.py`, update `send()`'s final branch and add `_finalize_stream_message`:
 
@@ -686,17 +686,17 @@ In `backend/app/channels/telegram.py`, update `send()`'s final branch and add `_
         self._last_bot_message[chat_key] = last_message_id
 ```
 
-- [ ] **Step 4: Run the full channel test file**
+- [x] **Step 4: Run the full channel test file**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_channels.py -v`
 Expected: all PASS (including Feishu/WeCom/manager tests — none of their code paths were touched).
 
-- [ ] **Step 5: Run telegram connection tests too**
+- [x] **Step 5: Run telegram connection tests too**
 
 Run: `PYTHONPATH=. uv run pytest tests/test_telegram_channel_connections.py -v`
 Expected: all PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add backend/app/channels/telegram.py backend/tests/test_channels.py
@@ -711,7 +711,7 @@ git commit -m "feat(telegram): finalize streamed message with overflow splitting
 - Modify: `backend/CLAUDE.md` (IM Channels section)
 - Modify: `README.md` (only if it mentions Telegram non-streaming — check first)
 
-- [ ] **Step 1: Update backend/CLAUDE.md**
+- [x] **Step 1: Update backend/CLAUDE.md**
 
 In the "IM Channels System" section, two spots:
 
@@ -739,22 +739,22 @@ Change to:
 
 (Renumber the following items accordingly.)
 
-- [ ] **Step 2: Check README mentions**
+- [x] **Step 2: Check README mentions**
 
 Run: `grep -rn "Telegram" README.md docs/ --include="*.md" -l | head`
 If any doc states Telegram does not stream, update it the same way. If none, skip.
 
-- [ ] **Step 3: Run the full backend test suite**
+- [x] **Step 3: Run the full backend test suite**
 
 Run from `backend/`: `make test`
 Expected: all PASS.
 
-- [ ] **Step 4: Lint**
+- [x] **Step 4: Lint**
 
 Run from `backend/`: `make lint`
 Expected: clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/CLAUDE.md README.md docs/
@@ -768,3 +768,7 @@ git commit -m "docs: telegram channel now streams replies via message editing"
 - **Spec coverage:** capability flip (Task 1), placeholder reuse (Task 2), throttle/truncate/429-drop/fallback-new-message (Task 4), final edit/split/cleanup/not-modified/RetryAfter-wait (Task 5), direct-send regression protection (Task 5 `test_final_without_stream_state_sends_plain_message` + existing `TestTelegramSendRetry`), docs (Task 6). Spec test list items 1-6 all map to concrete tests.
 - **Type consistency:** `_stream_messages: dict[str, dict[str, Any]]` keys `message_id`/`last_edit_at`/`last_text` used identically in Tasks 2, 4, 5. `_send_new_message(chat_id: int, chat_key: str, text: str)` signature consistent between Tasks 3 and 5.
 - **Known trade-off:** the final-path fallback `send_message` in `_finalize_stream_message` has no retry loop (single attempt, exception propagates to `_on_outbound` which logs and skips file uploads — same contract as today's `send()` failure).
+
+---
+
+> **审计闭包**: 2026-06-27, 已落地 29/29, 未落地 0/29, 落地 commit `839fa992` feat(telegram): stream agent replies by editing the placeholder message in place (#3534)。该 PR 为 squash merge, 包含 plan 全部 6 个 task 的子提交 (capability flip / placeholder registration / send 重构 / 非 final edit / final edit + overflow / 文档)。CHANGELOG 2.0.0 段已声明。Plan 状态: 已完成。
