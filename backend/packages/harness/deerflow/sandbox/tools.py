@@ -61,7 +61,21 @@ _WRITE_FILE_CONTENT_MAX_BYTES = 80 * 1024
 _WRITE_FILE_MAX_BYTES_ENV = "DEERFLOW_WRITE_FILE_MAX_BYTES"
 _LOCAL_BASH_CWD_COMMANDS = {"cd", "pushd"}
 _LOCAL_BASH_COMMAND_WRAPPERS = {"command", "builtin"}
-_LOCAL_BASH_COMMAND_PREFIX_KEYWORDS = {"!", "{", "case", "do", "elif", "else", "for", "if", "select", "then", "time", "until", "while"}
+_LOCAL_BASH_COMMAND_PREFIX_KEYWORDS = {
+    "!",
+    "{",
+    "case",
+    "do",
+    "elif",
+    "else",
+    "for",
+    "if",
+    "select",
+    "then",
+    "time",
+    "until",
+    "while",
+}
 _LOCAL_BASH_COMMAND_END_KEYWORDS = {"}", "done", "esac", "fi"}
 _LOCAL_BASH_ROOT_PATH_COMMANDS = {
     "awk",
@@ -688,7 +702,9 @@ def validate_local_tool_path(path: str, thread_data: ThreadDataState | None, *, 
             raise PermissionError(f"Write access to read-only mount is not allowed: {path}")
         return
 
-    raise PermissionError(f"Only paths under {VIRTUAL_PATH_PREFIX}/, {_get_skills_container_path()}/, {_ACP_WORKSPACE_VIRTUAL_PATH}/, or configured mount paths are allowed")
+    raise PermissionError(
+        f"Only paths under {VIRTUAL_PATH_PREFIX}/, {_get_skills_container_path()}/, {_ACP_WORKSPACE_VIRTUAL_PATH}/, or configured mount paths are allowed"
+    )
 
 
 def _validate_resolved_user_data_path(resolved: Path, thread_data: ThreadDataState) -> None:
@@ -814,7 +830,9 @@ def _is_allowed_local_bash_absolute_path(path: str, allowed_paths: list[str], *,
         _reject_path_traversal(path)
         return True
 
-    if allow_system_paths and any(path == prefix.rstrip("/") or path.startswith(prefix) for prefix in _LOCAL_BASH_SYSTEM_PATH_PREFIXES):
+    if allow_system_paths and any(
+        path == prefix.rstrip("/") or path.startswith(prefix) for prefix in _LOCAL_BASH_SYSTEM_PATH_PREFIXES
+    ):
         return True
 
     return False
@@ -844,15 +862,23 @@ def _next_cd_target(tokens: list[str], start_index: int) -> tuple[str | None, in
 
 def _validate_local_bash_cwd_target(command_name: str, target: str | None, allowed_paths: list[str]) -> None:
     if target is None or target == "-":
-        raise PermissionError(f"Unsafe working directory change in command: {command_name}. Use paths under {VIRTUAL_PATH_PREFIX}")
+        raise PermissionError(
+            f"Unsafe working directory change in command: {command_name}. Use paths under {VIRTUAL_PATH_PREFIX}"
+        )
     if target.startswith(("$", "`")):
-        raise PermissionError(f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}")
+        raise PermissionError(
+            f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}"
+        )
     if target.startswith("~"):
-        raise PermissionError(f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}")
+        raise PermissionError(
+            f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}"
+        )
     if target.startswith("/"):
         _reject_path_traversal(target)
         if not _is_allowed_local_bash_absolute_path(target, allowed_paths, allow_system_paths=False):
-            raise PermissionError(f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}")
+            raise PermissionError(
+                f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}"
+            )
 
 
 def _looks_like_unsafe_cwd_target(target: str | None) -> bool:
@@ -881,7 +907,9 @@ def _validate_local_bash_root_path_args(command_name: str, tokens: list[str], st
 def _validate_local_bash_shell_tokens(command: str, allowed_paths: list[str]) -> None:
     """Conservatively reject relative path escapes missed by absolute-path scanning."""
     if re.search(r"\$\([^)]*\b(?:cd|pushd)\b", command):
-        raise PermissionError(f"Unsafe working directory change in command substitution. Use paths under {VIRTUAL_PATH_PREFIX}")
+        raise PermissionError(
+            f"Unsafe working directory change in command substitution. Use paths under {VIRTUAL_PATH_PREFIX}"
+        )
 
     tokens = _split_shell_tokens(command)
 
@@ -1012,7 +1040,9 @@ def validate_local_bash_command_paths(command: str, thread_data: ThreadDataState
     # Block file:// URLs which bypass the absolute-path regex but allow local file exfiltration
     file_url_match = _FILE_URL_PATTERN.search(command)
     if file_url_match:
-        raise PermissionError(f"Unsafe file:// URL in command: {file_url_match.group()}. Use paths under {VIRTUAL_PATH_PREFIX}")
+        raise PermissionError(
+            f"Unsafe file:// URL in command: {file_url_match.group()}. Use paths under {VIRTUAL_PATH_PREFIX}"
+        )
 
     unsafe_paths: list[str] = []
     allowed_paths = _get_mcp_allowed_paths()
@@ -1189,7 +1219,9 @@ def ensure_sandbox_initialized(runtime: Runtime | None = None) -> Sandbox:
             sandbox = get_sandbox_provider().get(sandbox_id)
             if sandbox is not None:
                 if runtime.context is not None:
-                    runtime.context["sandbox_id"] = sandbox_id  # Ensure sandbox_id is in context for releasing in after_agent
+                    runtime.context["sandbox_id"] = (
+                        sandbox_id  # Ensure sandbox_id is in context for releasing in after_agent
+                    )
                 return sandbox
             # Sandbox was released, fall through to acquire new one
 
@@ -1360,7 +1392,9 @@ def _truncate_read_file_output(output: str, max_chars: int) -> str:
     total = len(output)
     # Compute the exact worst-case marker length: both numeric fields are at
     # their maximum (total chars), so this is a tight upper bound.
-    marker_max_len = len(f"\n... [truncated: showing first {total} of {total} chars. Use start_line/end_line to read a specific range] ...")
+    marker_max_len = len(
+        f"\n... [truncated: showing first {total} of {total} chars. Use start_line/end_line to read a specific range] ..."
+    )
     kept = max(0, max_chars - marker_max_len)
     if kept == 0:
         return output[:max_chars]
@@ -1383,11 +1417,15 @@ def _truncate_ls_output(output: str, max_chars: int) -> str:
     if len(output) <= max_chars:
         return output
     total = len(output)
-    marker_max_len = len(f"\n... [truncated: showing first {total} of {total} chars. Use a more specific path to see fewer results] ...")
+    marker_max_len = len(
+        f"\n... [truncated: showing first {total} of {total} chars. Use a more specific path to see fewer results] ..."
+    )
     kept = max(0, max_chars - marker_max_len)
     if kept == 0:
         return output[:max_chars]
-    marker = f"\n... [truncated: showing first {kept} of {total} chars. Use a more specific path to see fewer results] ..."
+    marker = (
+        f"\n... [truncated: showing first {kept} of {total} chars. Use a more specific path to see fewer results] ..."
+    )
     return f"{output[:kept]}{marker}"
 
 
@@ -1737,7 +1775,9 @@ async def _read_file_tool_async(
     start_line: int | None = None,
     end_line: int | None = None,
 ) -> str:
-    return await _run_sync_tool_after_async_sandbox_init(read_file_tool.func, runtime, description, path, start_line, end_line)
+    return await _run_sync_tool_after_async_sandbox_init(
+        read_file_tool.func, runtime, description, path, start_line, end_line
+    )
 
 
 read_file_tool.coroutine = _read_file_tool_async
@@ -1847,7 +1887,9 @@ async def _write_file_tool_async(
     content: str,
     append: bool = False,
 ) -> str:
-    return await _run_sync_tool_after_async_sandbox_init(write_file_tool.func, runtime, description, path, content, append)
+    return await _run_sync_tool_after_async_sandbox_init(
+        write_file_tool.func, runtime, description, path, content, append
+    )
 
 
 write_file_tool.coroutine = _write_file_tool_async

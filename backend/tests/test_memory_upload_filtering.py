@@ -9,7 +9,11 @@ persisting in long-term memory:
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
-from deerflow.agents.memory.message_processing import detect_correction, detect_reinforcement, filter_messages_for_memory
+from deerflow.agents.memory.message_processing import (
+    detect_correction,
+    detect_reinforcement,
+    filter_messages_for_memory,
+)
 from deerflow.agents.memory.updater import _strip_upload_mentions_from_memory
 
 # ---------------------------------------------------------------------------
@@ -208,7 +212,9 @@ class TestStripUploadMentionsFromMemory:
     # --- summaries ---
 
     def test_upload_event_sentence_removed_from_summary(self):
-        mem = self._make_memory("User is interested in AI. User uploaded a test file for verification purposes. User prefers concise answers.")
+        mem = self._make_memory(
+            "User is interested in AI. User uploaded a test file for verification purposes. User prefers concise answers."
+        )
         result = _strip_upload_mentions_from_memory(mem)
         summary = result["user"]["topOfMind"]["summary"]
         assert "uploaded a test file" not in summary
@@ -216,7 +222,9 @@ class TestStripUploadMentionsFromMemory:
         assert "User prefers concise answers" in summary
 
     def test_upload_path_sentence_removed_from_summary(self):
-        mem = self._make_memory("User uses Python. User uploaded file to /mnt/user-data/uploads/tid/data.csv. User likes clean code.")
+        mem = self._make_memory(
+            "User uses Python. User uploaded file to /mnt/user-data/uploads/tid/data.csv. User likes clean code."
+        )
         result = _strip_upload_mentions_from_memory(mem)
         summary = result["user"]["topOfMind"]["summary"]
         assert "/mnt/user-data/uploads/" not in summary
@@ -236,7 +244,9 @@ class TestStripUploadMentionsFromMemory:
 
     def test_uploading_a_test_file_removed(self):
         """'uploading a test file' (with intervening words) must be caught."""
-        mem = self._make_memory("User conducted a hands-on test by uploading a test file titled 'test_deerflow_memory_bug.txt'. User is also learning Python.")
+        mem = self._make_memory(
+            "User conducted a hands-on test by uploading a test file titled 'test_deerflow_memory_bug.txt'. User is also learning Python."
+        )
         result = _strip_upload_mentions_from_memory(mem)
         summary = result["user"]["topOfMind"]["summary"]
         assert "test_deerflow_memory_bug.txt" not in summary

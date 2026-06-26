@@ -53,7 +53,11 @@ def pop_cached_subagent_usage(tool_call_id: str) -> dict | None:
 
 def _is_subagent_terminal(result: Any) -> bool:
     """Return whether a background subagent result is safe to clean up."""
-    return result.status in {SubagentStatus.COMPLETED, SubagentStatus.FAILED, SubagentStatus.CANCELLED, SubagentStatus.TIMED_OUT} or getattr(result, "completed_at", None) is not None
+    return (
+        result.status
+        in {SubagentStatus.COMPLETED, SubagentStatus.FAILED, SubagentStatus.CANCELLED, SubagentStatus.TIMED_OUT}
+        or getattr(result, "completed_at", None) is not None
+    )
 
 
 async def _await_subagent_terminal(task_id: str, max_polls: int) -> Any | None:
@@ -79,7 +83,9 @@ async def _deferred_cleanup_subagent_task(task_id: str, trace_id: str, max_polls
             cleanup_background_task(task_id)
             return
         if cleanup_poll_count >= max_polls:
-            logger.warning(f"[trace={trace_id}] Deferred cleanup for task {task_id} timed out after {cleanup_poll_count} polls")
+            logger.warning(
+                f"[trace={trace_id}] Deferred cleanup for task {task_id} timed out after {cleanup_poll_count} polls"
+            )
             return
         await asyncio.sleep(5)
         cleanup_poll_count += 1
@@ -229,15 +235,25 @@ async def task_tool(
     """
     runtime_app_config = _get_runtime_app_config(runtime)
     cache_token_usage = _token_usage_cache_enabled(runtime_app_config)
-    available_subagent_names = get_available_subagent_names(app_config=runtime_app_config) if runtime_app_config is not None else get_available_subagent_names()
+    available_subagent_names = (
+        get_available_subagent_names(app_config=runtime_app_config)
+        if runtime_app_config is not None
+        else get_available_subagent_names()
+    )
 
     # Get subagent configuration
-    config = get_subagent_config(subagent_type, app_config=runtime_app_config) if runtime_app_config is not None else get_subagent_config(subagent_type)
+    config = (
+        get_subagent_config(subagent_type, app_config=runtime_app_config)
+        if runtime_app_config is not None
+        else get_subagent_config(subagent_type)
+    )
     if config is None:
         available = ", ".join(available_subagent_names)
         return f"Error: Unknown subagent type '{subagent_type}'. Available: {available}"
     if subagent_type == "bash":
-        host_bash_allowed = is_host_bash_allowed(runtime_app_config) if runtime_app_config is not None else is_host_bash_allowed()
+        host_bash_allowed = (
+            is_host_bash_allowed(runtime_app_config) if runtime_app_config is not None else is_host_bash_allowed()
+        )
         if not host_bash_allowed:
             return f"Error: {LOCAL_BASH_SUBAGENT_DISABLED_MESSAGE}"
 
@@ -328,7 +344,9 @@ async def task_tool(
     # Polling timeout: execution timeout + 60s buffer, checked every 5s
     max_poll_count = (config.timeout_seconds + 60) // 5
 
-    logger.info(f"[trace={trace_id}] Started background task {task_id} (subagent={subagent_type}, timeout={config.timeout_seconds}s, polling_limit={max_poll_count} polls)")
+    logger.info(
+        f"[trace={trace_id}] Started background task {task_id} (subagent={subagent_type}, timeout={config.timeout_seconds}s, polling_limit={max_poll_count} polls)"
+    )
 
     writer = get_stream_writer()
     # Send Task Started message'
@@ -408,7 +426,9 @@ async def task_tool(
             # This catches edge cases where the background task gets stuck
             if poll_count > max_poll_count:
                 timeout_minutes = config.timeout_seconds // 60
-                logger.error(f"[trace={trace_id}] Task {task_id} polling timed out after {poll_count} polls (should have been caught by thread pool timeout)")
+                logger.error(
+                    f"[trace={trace_id}] Task {task_id} polling timed out after {poll_count} polls (should have been caught by thread pool timeout)"
+                )
                 _report_subagent_usage(runtime, result)
                 usage = _summarize_usage(getattr(result, "token_usage_records", None))
                 _cache_subagent_usage(tool_call_id, usage, enabled=cache_token_usage)

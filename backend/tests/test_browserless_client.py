@@ -154,7 +154,9 @@ class TestBrowserlessTools:
     async def test_web_fetch_tool_success(self, mock_get_client):
         """web_fetch_tool successfully fetches and extracts content."""
         mock_client = MagicMock()
-        mock_client.fetch_html = AsyncMock(return_value="<html><body><article><h1>Title</h1><p>Content</p></article></body></html>")
+        mock_client.fetch_html = AsyncMock(
+            return_value="<html><body><article><h1>Title</h1><p>Content</p></article></body></html>"
+        )
         mock_get_client.return_value = mock_client
 
         with patch("deerflow.community.browserless.tools._get_tool_config", return_value=None):

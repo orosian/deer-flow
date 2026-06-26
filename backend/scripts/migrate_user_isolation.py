@@ -192,7 +192,9 @@ def main() -> None:
         "--user-id",
         default="default",
         metavar="USER_ID",
-        help=("User ID to claim un-owned legacy data (global memory.json and legacy custom agents). Defaults to 'default'. In multi-user installs, set this to the operator account that should inherit those legacy artifacts."),
+        help=(
+            "User ID to claim un-owned legacy data (global memory.json and legacy custom agents). Defaults to 'default'. In multi-user installs, set this to the operator account that should inherit those legacy artifacts."
+        ),
     )
     args = parser.parse_args()
 

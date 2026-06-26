@@ -518,7 +518,11 @@ async def get_channel_providers(request: Request) -> ChannelProvidersResponse:
     # concurrently so one slow channel restart does not serialize the
     # whole /providers response.
     await asyncio.gather(
-        *(_ensure_runtime_channel_ready_if_available(provider, channels_config) for provider in enabled_providers if _runtime_channel_configured(provider, channels_config)),
+        *(
+            _ensure_runtime_channel_ready_if_available(provider, channels_config)
+            for provider in enabled_providers
+            if _runtime_channel_configured(provider, channels_config)
+        ),
     )
 
     providers: list[ChannelProviderResponse] = []
@@ -673,7 +677,9 @@ async def configure_channel_provider_runtime(
     started = await _restart_runtime_channel_if_available(provider, runtime_config)
     if started is False:
         display_name = _PROVIDER_META[provider]["display_name"]
-        raise HTTPException(status_code=400, detail=f"Failed to start {display_name} channel. Check the values and try again.")
+        raise HTTPException(
+            status_code=400, detail=f"Failed to start {display_name} channel. Check the values and try again."
+        )
 
     store = await _get_runtime_config_store(request)
     await asyncio.to_thread(store.set_provider_config, provider, runtime_config)

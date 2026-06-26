@@ -270,10 +270,32 @@ class FeishuChannel(Channel):
                 content = json.dumps({"file_key": file_key})
 
             if msg.thread_ts:
-                request = self._ReplyMessageRequest.builder().message_id(msg.thread_ts).request_body(self._ReplyMessageRequestBody.builder().msg_type(msg_type).content(content).reply_in_thread(True).build()).build()
+                request = (
+                    self._ReplyMessageRequest.builder()
+                    .message_id(msg.thread_ts)
+                    .request_body(
+                        self._ReplyMessageRequestBody.builder()
+                        .msg_type(msg_type)
+                        .content(content)
+                        .reply_in_thread(True)
+                        .build()
+                    )
+                    .build()
+                )
                 await asyncio.to_thread(self._api_client.im.v1.message.reply, request)
             else:
-                request = self._CreateMessageRequest.builder().receive_id_type("chat_id").request_body(self._CreateMessageRequestBody.builder().receive_id(msg.chat_id).msg_type(msg_type).content(content).build()).build()
+                request = (
+                    self._CreateMessageRequest.builder()
+                    .receive_id_type("chat_id")
+                    .request_body(
+                        self._CreateMessageRequestBody.builder()
+                        .receive_id(msg.chat_id)
+                        .msg_type(msg_type)
+                        .content(content)
+                        .build()
+                    )
+                    .build()
+                )
                 await asyncio.to_thread(self._api_client.im.v1.message.create, request)
 
             logger.info("[Feishu] file sent: %s (type=%s)", attachment.filename, msg_type)
@@ -285,7 +307,11 @@ class FeishuChannel(Channel):
     async def _upload_image(self, path) -> str:
         """Upload an image to Feishu and return the image_key."""
         async with await async_open(str(path), "rb") as f:
-            request = self._CreateImageRequest.builder().request_body(self._CreateImageRequestBody.builder().image_type("message").image(f).build()).build()
+            request = (
+                self._CreateImageRequest.builder()
+                .request_body(self._CreateImageRequestBody.builder().image_type("message").image(f).build())
+                .build()
+            )
             response = await asyncio.to_thread(self._api_client.im.v1.image.create, request)
         if not response.success():
             raise RuntimeError(f"Feishu image upload failed: code={response.code}, msg={response.msg}")
@@ -306,7 +332,13 @@ class FeishuChannel(Channel):
             file_type = "stream"
 
         async with await async_open(str(path), "rb") as f:
-            request = self._CreateFileRequest.builder().request_body(self._CreateFileRequestBody.builder().file_type(file_type).file_name(filename).file(f).build()).build()
+            request = (
+                self._CreateFileRequest.builder()
+                .request_body(
+                    self._CreateFileRequestBody.builder().file_type(file_type).file_name(filename).file(f).build()
+                )
+                .build()
+            )
             response = await asyncio.to_thread(self._api_client.im.v1.file.create, request)
         if not response.success():
             raise RuntimeError(f"Feishu file upload failed: code={response.code}, msg={response.msg}")
@@ -318,7 +350,9 @@ class FeishuChannel(Channel):
         Returns the sandbox virtual path when the image is persisted successfully.
         """
         if not msg.thread_ts:
-            logger.warning("[Feishu] received file message without thread_ts, cannot associate with conversation: %s", msg)
+            logger.warning(
+                "[Feishu] received file message without thread_ts, cannot associate with conversation: %s", msg
+            )
             return msg
         files = msg.files
         if not files:
@@ -327,10 +361,14 @@ class FeishuChannel(Channel):
         text = msg.text
         for file in files:
             if file.get("image_key"):
-                virtual_path = await self._receive_single_file(msg.thread_ts, file["image_key"], "image", thread_id, user_id=user_id)
+                virtual_path = await self._receive_single_file(
+                    msg.thread_ts, file["image_key"], "image", thread_id, user_id=user_id
+                )
                 text = text.replace("[image]", virtual_path, 1)
             elif file.get("file_key"):
-                virtual_path = await self._receive_single_file(msg.thread_ts, file["file_key"], "file", thread_id, user_id=user_id)
+                virtual_path = await self._receive_single_file(
+                    msg.thread_ts, file["file_key"], "file", thread_id, user_id=user_id
+                )
                 text = text.replace("[file]", virtual_path, 1)
         msg.text = text
         return msg
@@ -449,7 +487,16 @@ class FeishuChannel(Channel):
         if not self._api_client or not self._CreateMessageReactionRequest:
             return
         try:
-            request = self._CreateMessageReactionRequest.builder().message_id(message_id).request_body(self._CreateMessageReactionRequestBody.builder().reaction_type(self._Emoji.builder().emoji_type(emoji_type).build()).build()).build()
+            request = (
+                self._CreateMessageReactionRequest.builder()
+                .message_id(message_id)
+                .request_body(
+                    self._CreateMessageReactionRequestBody.builder()
+                    .reaction_type(self._Emoji.builder().emoji_type(emoji_type).build())
+                    .build()
+                )
+                .build()
+            )
             await asyncio.to_thread(self._api_client.im.v1.message_reaction.create, request)
             logger.info("[Feishu] reaction '%s' added to message %s", emoji_type, message_id)
         except Exception:
@@ -461,7 +508,18 @@ class FeishuChannel(Channel):
             return None
 
         content = self._build_card_content(text)
-        request = self._ReplyMessageRequest.builder().message_id(message_id).request_body(self._ReplyMessageRequestBody.builder().msg_type("interactive").content(content).reply_in_thread(True).build()).build()
+        request = (
+            self._ReplyMessageRequest.builder()
+            .message_id(message_id)
+            .request_body(
+                self._ReplyMessageRequestBody.builder()
+                .msg_type("interactive")
+                .content(content)
+                .reply_in_thread(True)
+                .build()
+            )
+            .build()
+        )
         response = await asyncio.to_thread(self._api_client.im.v1.message.reply, request)
         response_data = getattr(response, "data", None)
         return getattr(response_data, "message_id", None)
@@ -472,7 +530,18 @@ class FeishuChannel(Channel):
             return
 
         content = self._build_card_content(text)
-        request = self._CreateMessageRequest.builder().receive_id_type("chat_id").request_body(self._CreateMessageRequestBody.builder().receive_id(chat_id).msg_type("interactive").content(content).build()).build()
+        request = (
+            self._CreateMessageRequest.builder()
+            .receive_id_type("chat_id")
+            .request_body(
+                self._CreateMessageRequestBody.builder()
+                .receive_id(chat_id)
+                .msg_type("interactive")
+                .content(content)
+                .build()
+            )
+            .build()
+        )
         await asyncio.to_thread(self._api_client.im.v1.message.create, request)
 
     async def _update_card(self, message_id: str, text: str) -> None:
@@ -481,13 +550,20 @@ class FeishuChannel(Channel):
             return
 
         content = self._build_card_content(text)
-        request = self._PatchMessageRequest.builder().message_id(message_id).request_body(self._PatchMessageRequestBody.builder().content(content).build()).build()
+        request = (
+            self._PatchMessageRequest.builder()
+            .message_id(message_id)
+            .request_body(self._PatchMessageRequestBody.builder().content(content).build())
+            .build()
+        )
         await asyncio.to_thread(self._api_client.im.v1.message.patch, request)
 
     def _track_background_task(self, task: asyncio.Task, *, name: str, msg_id: str) -> None:
         """Keep a strong reference to fire-and-forget tasks and surface errors."""
         self._background_tasks.add(task)
-        task.add_done_callback(lambda done_task, task_name=name, mid=msg_id: self._finalize_background_task(done_task, task_name, mid))
+        task.add_done_callback(
+            lambda done_task, task_name=name, mid=msg_id: self._finalize_background_task(done_task, task_name, mid)
+        )
 
     def _finalize_background_task(self, task: asyncio.Task, name: str, msg_id: str) -> None:
         self._background_tasks.discard(task)
@@ -500,10 +576,15 @@ class FeishuChannel(Channel):
             self._running_card_ids[source_message_id] = running_card_id
             logger.info("[Feishu] running card created: source=%s card=%s", source_message_id, running_card_id)
         else:
-            logger.warning("[Feishu] running card creation returned no message_id for source=%s, subsequent updates will fall back to new replies", source_message_id)
+            logger.warning(
+                "[Feishu] running card creation returned no message_id for source=%s, subsequent updates will fall back to new replies",
+                source_message_id,
+            )
         return running_card_id
 
-    def _ensure_running_card_started(self, source_message_id: str, text: str = "Working on it...") -> asyncio.Task | None:
+    def _ensure_running_card_started(
+        self, source_message_id: str, text: str = "Working on it..."
+    ) -> asyncio.Task | None:
         """Start running-card creation once per source message."""
         running_card_id = self._running_card_ids.get(source_message_id)
         if running_card_id:
@@ -515,7 +596,9 @@ class FeishuChannel(Channel):
 
         running_card_task = asyncio.create_task(self._create_running_card(source_message_id, text))
         self._running_card_tasks[source_message_id] = running_card_task
-        running_card_task.add_done_callback(lambda done_task, mid=source_message_id: self._finalize_running_card_task(mid, done_task))
+        running_card_task.add_done_callback(
+            lambda done_task, mid=source_message_id: self._finalize_running_card_task(mid, done_task)
+        )
         return running_card_task
 
     def _finalize_running_card_task(self, source_message_id: str, task: asyncio.Task) -> None:
@@ -744,7 +827,9 @@ class FeishuChannel(Channel):
             workspace_id=inbound.chat_id,
         )
 
-    async def _bind_connection_from_connect_code(self, *, message_id: str, chat_id: str, user_id: str, code: str) -> bool:
+    async def _bind_connection_from_connect_code(
+        self, *, message_id: str, chat_id: str, user_id: str, code: str
+    ) -> bool:
         if self._connection_repo is None or not code:
             return False
 

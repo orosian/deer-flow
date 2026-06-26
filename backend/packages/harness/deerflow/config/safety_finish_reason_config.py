@@ -15,7 +15,9 @@ class SafetyDetectorConfig(BaseModel):
     """One detector entry under ``safety_finish_reason.detectors``."""
 
     use: str = Field(
-        description=("Class path of a SafetyTerminationDetector implementation (e.g. 'deerflow.agents.middlewares.safety_termination_detectors:OpenAICompatibleContentFilterDetector')."),
+        description=(
+            "Class path of a SafetyTerminationDetector implementation (e.g. 'deerflow.agents.middlewares.safety_termination_detectors:OpenAICompatibleContentFilterDetector')."
+        ),
     )
     config: dict = Field(
         default_factory=dict,

@@ -23,7 +23,9 @@ try:
     _ = models
 except ImportError:
     # Models not available — migration will work with existing metadata only.
-    logging.getLogger(__name__).warning("Could not import deerflow.persistence.models; Alembic may not detect all tables")
+    logging.getLogger(__name__).warning(
+        "Could not import deerflow.persistence.models; Alembic may not detect all tables"
+    )
 
 config = context.config
 if config.config_file_name is not None:

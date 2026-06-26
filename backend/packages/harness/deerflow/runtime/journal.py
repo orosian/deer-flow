@@ -239,7 +239,17 @@ class RunJournal(BaseCallbackHandler):
                 if self._first_human_msg:
                     break
 
-    def on_llm_start(self, serialized: dict, prompts: list[str], *, run_id: UUID, parent_run_id: UUID | None = None, tags: list[str] | None = None, metadata: dict[str, Any] | None = None, **kwargs: Any) -> None:
+    def on_llm_start(
+        self,
+        serialized: dict,
+        prompts: list[str],
+        *,
+        run_id: UUID,
+        parent_run_id: UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         # Fallback: on_chat_model_start is preferred. This just tracks latency.
         self._llm_start_times[str(run_id)] = time.monotonic()
 
@@ -346,7 +356,9 @@ class RunJournal(BaseCallbackHandler):
         self._llm_start_times.pop(str(run_id), None)
         self._put(event_type="llm.error", category="trace", content=str(error))
 
-    def on_tool_start(self, serialized, input_str, *, run_id, parent_run_id=None, tags=None, metadata=None, inputs=None, **kwargs):
+    def on_tool_start(
+        self, serialized, input_str, *, run_id, parent_run_id=None, tags=None, metadata=None, inputs=None, **kwargs
+    ):
         """Handle tool start event, cache tool call ID for later correlation"""
         tool_call_id = str(run_id)
         logger.debug("Tool start for node %s, tool_call_id=%s, tags=%s", run_id, tool_call_id, tags)
@@ -366,7 +378,9 @@ class RunJournal(BaseCallbackHandler):
                         self._put(event_type="llm.tool.result", category="message", content=message.model_dump())
                         self._record_message_summary(message)
                     else:
-                        logger.warning(f"on_tool_end {run_id}: command update message is not BaseMessage: {type(message)}")
+                        logger.warning(
+                            f"on_tool_end {run_id}: command update message is not BaseMessage: {type(message)}"
+                        )
             else:
                 logger.warning(f"on_tool_end {run_id}: output is not ToolMessage: {type(output)}")
         finally:
@@ -438,7 +452,9 @@ class RunJournal(BaseCallbackHandler):
     def _identify_caller(self, tags: list[str] | None) -> str:
         _tags = tags or []
         for tag in _tags:
-            if isinstance(tag, str) and (tag.startswith("subagent:") or tag.startswith("middleware:") or tag == "lead_agent"):
+            if isinstance(tag, str) and (
+                tag.startswith("subagent:") or tag.startswith("middleware:") or tag == "lead_agent"
+            ):
                 return tag
         # Default to lead_agent: the main agent graph does not inject
         # callback tags, while subagents and middleware explicitly tag

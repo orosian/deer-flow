@@ -182,7 +182,9 @@ async def convert_file_to_markdown(file_path: Path) -> Path | None:
 #
 # Chinese headings (第三节...) are already captured as standard # headings
 # by pymupdf4llm, so they don't need this pattern.
-_BOLD_HEADING_RE = re.compile(r"^\*\*((ITEM|PART|SECTION|SCHEDULE|EXHIBIT|APPENDIX|ANNEX|CHAPTER)\b[A-Z0-9 .,\-]*)\*\*\s*$")
+_BOLD_HEADING_RE = re.compile(
+    r"^\*\*((ITEM|PART|SECTION|SCHEDULE|EXHIBIT|APPENDIX|ANNEX|CHAPTER)\b[A-Z0-9 .,\-]*)\*\*\s*$"
+)
 
 # Regex for split-bold headings produced by pymupdf4llm when a heading spans
 # multiple text spans in the PDF (e.g. section number and title are separate spans).
@@ -195,7 +197,9 @@ _BOLD_HEADING_RE = re.compile(r"^\*\*((ITEM|PART|SECTION|SCHEDULE|EXHIBIT|APPEND
 #      **1** **概述** or accented words (negative lookahead instead of [A-Za-z])
 #   4. At most two additional blocks (four total) with [^*]+ (no * inside) to keep
 #      the regex linear and avoid ReDoS on attacker-controlled content
-_SPLIT_BOLD_HEADING_RE = re.compile(r"^\*\*[\dA-Z][\d\.]*\*\*\s+\*\*(?!\d[\d\s.,\-–—/:()%]*\*\*)[^*]+\*\*(?:\s+\*\*[^*]+\*\*){0,2}\s*$")
+_SPLIT_BOLD_HEADING_RE = re.compile(
+    r"^\*\*[\dA-Z][\d\.]*\*\*\s+\*\*(?!\d[\d\s.,\-–—/:()%]*\*\*)[^*]+\*\*(?:\s+\*\*[^*]+\*\*){0,2}\s*$"
+)
 
 # Maximum number of outline entries injected into the agent context.
 # Keeps prompt size bounded even for very long documents.

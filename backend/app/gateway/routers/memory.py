@@ -74,7 +74,9 @@ class Fact(BaseModel):
     confidence: float = Field(default=0.5, description="Confidence score (0-1)")
     createdAt: str = Field(default="", description="Creation timestamp")
     source: str = Field(default="unknown", description="Source thread ID")
-    sourceError: str | None = Field(default=None, description="Optional description of the prior mistake or wrong approach")
+    sourceError: str | None = Field(
+        default=None, description="Optional description of the prior mistake or wrong approach"
+    )
 
 
 class MemoryResponse(BaseModel):

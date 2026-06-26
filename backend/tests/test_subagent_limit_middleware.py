@@ -130,7 +130,9 @@ class TestTruncateTaskCalls:
         msg = AIMessage(
             content="",
             tool_calls=[_task_call("t1"), _task_call("t2"), _task_call("t3"), _task_call("t4")],
-            additional_kwargs={"tool_calls": [_raw_tool_call("t1"), _raw_tool_call("t2"), _raw_tool_call("t3"), _raw_tool_call("t4")]},
+            additional_kwargs={
+                "tool_calls": [_raw_tool_call("t1"), _raw_tool_call("t2"), _raw_tool_call("t3"), _raw_tool_call("t4")]
+            },
             response_metadata={"finish_reason": "tool_calls"},
         )
 

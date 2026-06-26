@@ -129,7 +129,11 @@ def _is_script_support_file(rel_path: Path) -> bool:
 def _should_scan_support_file(rel_path: Path) -> bool:
     if _is_script_support_file(rel_path):
         return True
-    return bool(rel_path.parts) and rel_path.parts[0] in _PROMPT_INPUT_DIRS and rel_path.suffix.lower() in _PROMPT_INPUT_SUFFIXES
+    return (
+        bool(rel_path.parts)
+        and rel_path.parts[0] in _PROMPT_INPUT_DIRS
+        and rel_path.suffix.lower() in _PROMPT_INPUT_SUFFIXES
+    )
 
 
 def _move_staged_skill_into_reserved_target(staging_target: Path, target: Path) -> None:
@@ -155,7 +159,9 @@ async def _scan_skill_file_or_raise(skill_dir: Path, path: Path, skill_name: str
     try:
         content = await asyncio.to_thread(path.read_text, encoding="utf-8")
     except UnicodeDecodeError as e:
-        raise SkillSecurityScanError(f"Security scan failed for skill '{skill_name}': {location} must be valid UTF-8") from e
+        raise SkillSecurityScanError(
+            f"Security scan failed for skill '{skill_name}': {location} must be valid UTF-8"
+        ) from e
 
     try:
         result = await scan_skill_content(content, executable=executable, location=location)
@@ -189,7 +195,9 @@ async def _scan_skill_archive_contents_or_raise(skill_dir: Path, skill_name: str
         if rel_path == Path("SKILL.md"):
             continue
         if path.name == "SKILL.md":
-            raise SkillSecurityScanError(f"Security scan failed for skill '{skill_name}': nested SKILL.md is not allowed at {skill_name}/{rel_path.as_posix()}")
+            raise SkillSecurityScanError(
+                f"Security scan failed for skill '{skill_name}': nested SKILL.md is not allowed at {skill_name}/{rel_path.as_posix()}"
+            )
         if not _should_scan_support_file(rel_path):
             continue
 

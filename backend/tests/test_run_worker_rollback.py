@@ -255,7 +255,9 @@ async def test_run_agent_defaults_root_run_name_from_configurable_agent_name():
 
 @pytest.mark.anyio
 async def test_rollback_restores_snapshot_without_deleting_thread():
-    checkpointer = FakeCheckpointer(put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}})
+    checkpointer = FakeCheckpointer(
+        put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}}
+    )
 
     await _rollback_to_pre_run_checkpoint(
         checkpointer=checkpointer,
@@ -382,7 +384,9 @@ async def test_rollback_raises_when_restore_config_has_no_checkpoint_id():
 
 @pytest.mark.anyio
 async def test_rollback_normalizes_none_checkpoint_ns_to_root_namespace():
-    checkpointer = FakeCheckpointer(put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}})
+    checkpointer = FakeCheckpointer(
+        put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}}
+    )
 
     await _rollback_to_pre_run_checkpoint(
         checkpointer=checkpointer,
@@ -410,7 +414,9 @@ async def test_rollback_normalizes_none_checkpoint_ns_to_root_namespace():
 @pytest.mark.anyio
 async def test_rollback_raises_on_malformed_pending_write_not_a_tuple():
     """pending_writes containing a non-3-tuple item should raise RuntimeError."""
-    checkpointer = FakeCheckpointer(put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}})
+    checkpointer = FakeCheckpointer(
+        put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}}
+    )
 
     with pytest.raises(RuntimeError, match="rollback failed: pending_write is not a 3-tuple"):
         await _rollback_to_pre_run_checkpoint(
@@ -438,7 +444,9 @@ async def test_rollback_raises_on_malformed_pending_write_not_a_tuple():
 @pytest.mark.anyio
 async def test_rollback_raises_on_malformed_pending_write_non_string_channel():
     """pending_writes containing a non-string channel should raise RuntimeError."""
-    checkpointer = FakeCheckpointer(put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}})
+    checkpointer = FakeCheckpointer(
+        put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}}
+    )
 
     with pytest.raises(RuntimeError, match="rollback failed: pending_write has non-string channel"):
         await _rollback_to_pre_run_checkpoint(
@@ -464,7 +472,9 @@ async def test_rollback_raises_on_malformed_pending_write_non_string_channel():
 @pytest.mark.anyio
 async def test_rollback_propagates_aput_writes_failure():
     """If aput_writes fails, the exception should propagate (not be swallowed)."""
-    checkpointer = FakeCheckpointer(put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}})
+    checkpointer = FakeCheckpointer(
+        put_result={"configurable": {"thread_id": "thread-1", "checkpoint_ns": "", "checkpoint_id": "restored-1"}}
+    )
     # Simulate aput_writes failure
     checkpointer.aput_writes.side_effect = RuntimeError("Database connection lost")
 
@@ -539,7 +549,9 @@ def test_agent_factory_supports_app_config_returns_false_when_signature_lookup_f
         def __call__(self, **kwargs):
             return kwargs
 
-    monkeypatch.setattr("deerflow.runtime.runs.worker.inspect.signature", lambda _obj: (_ for _ in ()).throw(ValueError("boom")))
+    monkeypatch.setattr(
+        "deerflow.runtime.runs.worker.inspect.signature", lambda _obj: (_ for _ in ()).throw(ValueError("boom"))
+    )
 
     assert _agent_factory_supports_app_config(BrokenCallable()) is False
 

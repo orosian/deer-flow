@@ -87,7 +87,11 @@ class TestLiveStreaming:
 
     def test_stream_ai_content_nonempty(self, client):
         """Streamed messages-tuple AI events contain non-empty content."""
-        ai_messages = [e for e in client.stream("What color is the sky? One word.") if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")]
+        ai_messages = [
+            e
+            for e in client.stream("What color is the sky? One word.")
+            if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")
+        ]
         assert len(ai_messages) >= 1
         for m in ai_messages:
             assert len(m.data.get("content", "")) > 0
@@ -126,12 +130,16 @@ class TestLiveToolUse:
 
     def test_agent_uses_ls_tool(self, client):
         """Agent uses ls tool to list a directory."""
-        events = list(client.stream("Use the ls tool to list the contents of /mnt/user-data/workspace. Just report what you see."))
+        events = list(
+            client.stream("Use the ls tool to list the contents of /mnt/user-data/workspace. Just report what you see.")
+        )
 
         types = [e.type for e in events]
         print(f"  event types: {types}")
 
-        tc_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and "tool_calls" in e.data]
+        tc_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and "tool_calls" in e.data
+        ]
         assert len(tc_events) >= 1
         assert tc_events[0].data["tool_calls"][0]["name"] == "ls"
 
@@ -144,24 +152,34 @@ class TestLiveToolUse:
 class TestLiveMultiToolChain:
     def test_write_then_read(self, client):
         """Agent writes a file, then reads it back."""
-        events = list(client.stream("Step 1: Use write_file to write 'integration_test_content' to /mnt/user-data/outputs/live_test.txt. Step 2: Use read_file to read that file back. Step 3: Tell me the content you read."))
+        events = list(
+            client.stream(
+                "Step 1: Use write_file to write 'integration_test_content' to /mnt/user-data/outputs/live_test.txt. Step 2: Use read_file to read that file back. Step 3: Tell me the content you read."
+            )
+        )
 
         types = [e.type for e in events]
         print(f"  event types: {types}")
         for e in events:
             print(f"  [{e.type}] {e.data}")
 
-        tc_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and "tool_calls" in e.data]
+        tc_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and "tool_calls" in e.data
+        ]
         tool_names = [tc.data["tool_calls"][0]["name"] for tc in tc_events]
 
         assert "write_file" in tool_names, f"Expected write_file, got: {tool_names}"
         assert "read_file" in tool_names, f"Expected read_file, got: {tool_names}"
 
         # Final AI message or tool result should mention the content
-        ai_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")]
+        ai_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")
+        ]
         tr_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "tool"]
         final_text = ai_events[-1].data["content"] if ai_events else ""
-        assert "integration_test_content" in final_text.lower() or any("integration_test_content" in e.data.get("content", "") for e in tr_events)
+        assert "integration_test_content" in final_text.lower() or any(
+            "integration_test_content" in e.data.get("content", "") for e in tr_events
+        )
 
 
 # ===========================================================================
@@ -279,7 +297,9 @@ class TestLiveArtifact:
         )
 
         # Verify write happened
-        tc_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and "tool_calls" in e.data]
+        tc_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and "tool_calls" in e.data
+        ]
         assert any(any(tc["name"] == "write_file" for tc in e.data["tool_calls"]) for e in tc_events)
 
         # Read artifact

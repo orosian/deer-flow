@@ -37,10 +37,10 @@ logger = logging.getLogger(__name__)
 # Error message constants
 # ---------------------------------------------------------------------------
 
-SQLITE_STORE_INSTALL = "langgraph-checkpoint-sqlite is required for the SQLite store. Install it with: uv add langgraph-checkpoint-sqlite"
-POSTGRES_STORE_INSTALL = (
-    "langgraph-checkpoint-postgres is required for the PostgreSQL store. Install the package extra with: pip install 'deerflow-harness[postgres]' (or use: uv sync --all-packages --extra postgres when developing locally)"
+SQLITE_STORE_INSTALL = (
+    "langgraph-checkpoint-sqlite is required for the SQLite store. Install it with: uv add langgraph-checkpoint-sqlite"
 )
+POSTGRES_STORE_INSTALL = "langgraph-checkpoint-postgres is required for the PostgreSQL store. Install the package extra with: pip install 'deerflow-harness[postgres]' (or use: uv sync --all-packages --extra postgres when developing locally)"
 POSTGRES_CONN_REQUIRED = "checkpointer.connection_string is required for the postgres backend"
 
 # ---------------------------------------------------------------------------
@@ -135,7 +135,9 @@ def get_store() -> BaseStore:
         if config is None:
             from langgraph.store.memory import InMemoryStore
 
-            logger.warning("No 'checkpointer' section in config.yaml — using InMemoryStore for the store. Thread list will be lost on server restart. Configure a sqlite or postgres backend for persistence.")
+            logger.warning(
+                "No 'checkpointer' section in config.yaml — using InMemoryStore for the store. Thread list will be lost on server restart. Configure a sqlite or postgres backend for persistence."
+            )
             _store = InMemoryStore()
             return _store
 
@@ -186,7 +188,9 @@ def store_context() -> Iterator[BaseStore]:
     if config.checkpointer is None:
         from langgraph.store.memory import InMemoryStore
 
-        logger.warning("No 'checkpointer' section in config.yaml — using InMemoryStore for the store. Thread list will be lost on server restart. Configure a sqlite or postgres backend for persistence.")
+        logger.warning(
+            "No 'checkpointer' section in config.yaml — using InMemoryStore for the store. Thread list will be lost on server restart. Configure a sqlite or postgres backend for persistence."
+        )
         yield InMemoryStore()
         return
 

@@ -20,7 +20,9 @@ def store():
 class TestPutAndSeq:
     @pytest.mark.anyio
     async def test_put_returns_dict_with_seq(self, store):
-        record = await store.put(thread_id="t1", run_id="r1", event_type="human_message", category="message", content="hello")
+        record = await store.put(
+            thread_id="t1", run_id="r1", event_type="human_message", category="message", content="hello"
+        )
         assert "seq" in record
         assert record["seq"] == 1
         assert record["thread_id"] == "t1"
@@ -49,7 +51,9 @@ class TestPutAndSeq:
     @pytest.mark.anyio
     async def test_put_respects_provided_created_at(self, store):
         ts = "2024-06-01T12:00:00+00:00"
-        record = await store.put(thread_id="t1", run_id="r1", event_type="human_message", category="message", created_at=ts)
+        record = await store.put(
+            thread_id="t1", run_id="r1", event_type="human_message", category="message", created_at=ts
+        )
         assert record["created_at"] == ts
 
     @pytest.mark.anyio
@@ -372,7 +376,10 @@ class TestDbRunEventStore:
         await init_engine("sqlite", url=url, sqlite_dir=str(tmp_path))
         s = DbRunEventStore(get_session_factory())
 
-        content = [{"type": "text", "text": "hello"}, {"type": "image_url", "image_url": {"url": "https://example.test/a.png"}}]
+        content = [
+            {"type": "text", "text": "hello"},
+            {"type": "image_url", "image_url": {"url": "https://example.test/a.png"}},
+        ]
         record = await s.put(thread_id="t1", run_id="r1", event_type="ai_message", category="message", content=content)
 
         assert record["content"] == content

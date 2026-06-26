@@ -168,7 +168,11 @@ class ThreadMetaRepository(ThreadMetaStore):
         async with self._sf() as session:
             if not await self._check_ownership(session, thread_id, resolved_user_id):
                 return
-            await session.execute(update(ThreadMetaRow).where(ThreadMetaRow.thread_id == thread_id).values(display_name=display_name, updated_at=datetime.now(UTC)))
+            await session.execute(
+                update(ThreadMetaRow)
+                .where(ThreadMetaRow.thread_id == thread_id)
+                .values(display_name=display_name, updated_at=datetime.now(UTC))
+            )
             await session.commit()
 
     async def update_status(
@@ -182,7 +186,11 @@ class ThreadMetaRepository(ThreadMetaStore):
         async with self._sf() as session:
             if not await self._check_ownership(session, thread_id, resolved_user_id):
                 return
-            await session.execute(update(ThreadMetaRow).where(ThreadMetaRow.thread_id == thread_id).values(status=status, updated_at=datetime.now(UTC)))
+            await session.execute(
+                update(ThreadMetaRow)
+                .where(ThreadMetaRow.thread_id == thread_id)
+                .values(status=status, updated_at=datetime.now(UTC))
+            )
             await session.commit()
 
     async def update_metadata(
@@ -223,7 +231,11 @@ class ThreadMetaRepository(ThreadMetaStore):
         async with self._sf() as session:
             if not await self._check_ownership(session, thread_id, resolved_user_id):
                 return
-            await session.execute(update(ThreadMetaRow).where(ThreadMetaRow.thread_id == thread_id).values(user_id=owner_user_id, updated_at=datetime.now(UTC)))
+            await session.execute(
+                update(ThreadMetaRow)
+                .where(ThreadMetaRow.thread_id == thread_id)
+                .values(user_id=owner_user_id, updated_at=datetime.now(UTC))
+            )
             await session.commit()
 
     async def delete(

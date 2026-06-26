@@ -45,7 +45,10 @@ def test_auth_config_missing_secret_generates_and_persists(tmp_path, caplog):
     try:
         with patch.dict(os.environ, {}, clear=True):
             os.environ.pop("AUTH_JWT_SECRET", None)
-            with patch("deerflow.config.paths.get_paths", return_value=Paths(base_dir=tmp_path)), caplog.at_level(logging.WARNING):
+            with (
+                patch("deerflow.config.paths.get_paths", return_value=Paths(base_dir=tmp_path)),
+                caplog.at_level(logging.WARNING),
+            ):
                 config = cfg.get_auth_config()
             assert config.jwt_secret
             assert any("AUTH_JWT_SECRET" in msg for msg in caplog.messages)

@@ -67,7 +67,9 @@ def _extract_json_object(raw: str) -> dict | None:
     return None
 
 
-async def scan_skill_content(content: str, *, executable: bool = False, location: str = SKILL_MD_FILE, app_config: AppConfig | None = None) -> ScanResult:
+async def scan_skill_content(
+    content: str, *, executable: bool = False, location: str = SKILL_MD_FILE, app_config: AppConfig | None = None
+) -> ScanResult:
     """Screen skill content before it is written to disk."""
     rubric = (
         "You are a security reviewer for AI agent skills. "
@@ -77,13 +79,19 @@ async def scan_skill_content(content: str, *, executable: bool = False, location
         "Respond with ONLY a single JSON object on one line, no code fences, no commentary:\n"
         '{"decision":"allow|warn|block","reason":"..."}'
     )
-    prompt = f"Location: {location}\nExecutable: {str(executable).lower()}\n\nReview this content:\n-----\n{content}\n-----"
+    prompt = (
+        f"Location: {location}\nExecutable: {str(executable).lower()}\n\nReview this content:\n-----\n{content}\n-----"
+    )
 
     model_responded = False
     try:
         config = app_config or get_app_config()
         model_name = config.skill_evolution.moderation_model_name
-        model = create_chat_model(name=model_name, thinking_enabled=False, app_config=config) if model_name else create_chat_model(thinking_enabled=False, app_config=config)
+        model = (
+            create_chat_model(name=model_name, thinking_enabled=False, app_config=config)
+            if model_name
+            else create_chat_model(thinking_enabled=False, app_config=config)
+        )
         response = await model.ainvoke(
             [
                 {"role": "system", "content": rubric},

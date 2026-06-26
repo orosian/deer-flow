@@ -54,7 +54,9 @@ class LocalAuthProvider(AuthProvider):
             except Exception:
                 # Rehash is an opportunistic upgrade; a transient DB error must not
                 # prevent an otherwise-valid login from succeeding.
-                logger.warning("Failed to rehash password for user %s; login will still succeed", user.email, exc_info=True)
+                logger.warning(
+                    "Failed to rehash password for user %s; login will still succeed", user.email, exc_info=True
+                )
 
         return user
 
@@ -62,7 +64,9 @@ class LocalAuthProvider(AuthProvider):
         """Get user by ID."""
         return await self._repo.get_user_by_id(user_id)
 
-    async def create_user(self, email: str, password: str | None = None, system_role: str = "user", needs_setup: bool = False) -> User:
+    async def create_user(
+        self, email: str, password: str | None = None, system_role: str = "user", needs_setup: bool = False
+    ) -> User:
         """Create a new local user.
 
         Args:

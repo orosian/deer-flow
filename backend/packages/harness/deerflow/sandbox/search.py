@@ -75,7 +75,11 @@ class GrepMatch:
 # Windows).
 _EXACT_IGNORE_NAMES = frozenset(os.path.normcase(p) for p in IGNORE_PATTERNS if not any(c in p for c in "*?["))
 _GLOB_IGNORE_PATTERNS = [p for p in IGNORE_PATTERNS if any(c in p for c in "*?[")]
-_GLOB_IGNORE_RE = re.compile("|".join(fnmatch.translate(os.path.normcase(p)) for p in _GLOB_IGNORE_PATTERNS)) if _GLOB_IGNORE_PATTERNS else None
+_GLOB_IGNORE_RE = (
+    re.compile("|".join(fnmatch.translate(os.path.normcase(p)) for p in _GLOB_IGNORE_PATTERNS))
+    if _GLOB_IGNORE_PATTERNS
+    else None
+)
 
 
 def should_ignore_name(name: str) -> bool:
@@ -113,7 +117,9 @@ def is_binary_file(path: Path, sample_size: int = 8192) -> bool:
         return True
 
 
-def find_glob_matches(root: Path, pattern: str, *, include_dirs: bool = False, max_results: int = 200) -> tuple[list[str], bool]:
+def find_glob_matches(
+    root: Path, pattern: str, *, include_dirs: bool = False, max_results: int = 200
+) -> tuple[list[str], bool]:
     matches: list[str] = []
     truncated = False
     root = root.resolve()

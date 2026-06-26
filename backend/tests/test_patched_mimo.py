@@ -137,7 +137,10 @@ def test_create_chat_result_reads_reasoning_content_from_message_attribute():
 
     result = model._create_chat_result(FakeResponse())
 
-    assert result.generations[0].message.additional_kwargs["reasoning_content"] == "Reasoning stored on the SDK message object."
+    assert (
+        result.generations[0].message.additional_kwargs["reasoning_content"]
+        == "Reasoning stored on the SDK message object."
+    )
 
 
 def test_convert_chunk_to_generation_chunk_preserves_reasoning_deltas():

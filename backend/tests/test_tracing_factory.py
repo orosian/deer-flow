@@ -75,7 +75,9 @@ def test_build_tracing_callbacks_creates_langsmith_and_langfuse(monkeypatch):
             },
         )(),
     )
-    monkeypatch.setattr(tracing_factory, "_create_langsmith_tracer", lambda cfg: FakeLangSmithTracer(project_name=cfg.project))
+    monkeypatch.setattr(
+        tracing_factory, "_create_langsmith_tracer", lambda cfg: FakeLangSmithTracer(project_name=cfg.project)
+    )
     monkeypatch.setattr(
         tracing_factory,
         "_create_langfuse_handler",
@@ -107,7 +109,9 @@ def test_build_tracing_callbacks_raises_when_enabled_provider_fails(monkeypatch)
             },
         )(),
     )
-    monkeypatch.setattr(tracing_factory, "_create_langfuse_handler", lambda cfg: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(
+        tracing_factory, "_create_langfuse_handler", lambda cfg: (_ for _ in ()).throw(RuntimeError("boom"))
+    )
 
     with pytest.raises(RuntimeError, match="Langfuse tracing initialization failed"):
         tracing_factory.build_tracing_callbacks()

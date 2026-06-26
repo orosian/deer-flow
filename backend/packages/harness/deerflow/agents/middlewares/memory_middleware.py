@@ -8,7 +8,11 @@ from langchain.agents.middleware import AgentMiddleware
 from langgraph.config import get_config
 from langgraph.runtime import Runtime
 
-from deerflow.agents.memory.message_processing import detect_correction, detect_reinforcement, filter_messages_for_memory
+from deerflow.agents.memory.message_processing import (
+    detect_correction,
+    detect_reinforcement,
+    filter_messages_for_memory,
+)
 from deerflow.agents.memory.queue import get_memory_queue
 from deerflow.config.memory_config import get_memory_config
 from deerflow.runtime.user_context import get_effective_user_id

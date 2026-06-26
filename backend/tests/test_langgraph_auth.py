@@ -41,7 +41,13 @@ def _req(cookies=None, method="GET", headers=None):
 
 
 def _user(user_id=None, token_version=0):
-    return User(email="test@example.com", password_hash="fakehash", system_role="user", id=user_id or uuid4(), token_version=token_version)
+    return User(
+        email="test@example.com",
+        password_hash="fakehash",
+        system_role="user",
+        id=user_id or uuid4(),
+        token_version=token_version,
+    )
 
 
 def _mock_provider(user=None):
@@ -159,7 +165,9 @@ def test_wrong_secret_raises_401():
     """Token signed with different secret → 401."""
     import jwt as pyjwt
 
-    raw = pyjwt.encode({"sub": "user-1", "exp": 9999999999, "ver": 0}, "wrong-secret-that-is-long-enough-32chars!", algorithm="HS256")
+    raw = pyjwt.encode(
+        {"sub": "user-1", "exp": 9999999999, "ver": 0}, "wrong-secret-that-is-long-enough-32chars!", algorithm="HS256"
+    )
     with pytest.raises(Auth.exceptions.HTTPException) as exc:
         asyncio.run(authenticate(_req({"access_token": raw})))
     assert exc.value.status_code == 401

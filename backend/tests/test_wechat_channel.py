@@ -68,7 +68,9 @@ class _MockAsyncClient:
         payload = self._post_responses.pop(0) if self._post_responses else {"ret": 0}
         return _MockResponse(payload)
 
-    async def get(self, url: str, params: dict[str, Any] | None = None, headers: dict[str, Any] | None = None, **kwargs):
+    async def get(
+        self, url: str, params: dict[str, Any] | None = None, headers: dict[str, Any] | None = None, **kwargs
+    ):
         if self._get_calls is not None:
             self._get_calls.append({"url": url, "params": params or {}, "headers": headers or {}, **kwargs})
         payload = self._get_responses.pop(0) if self._get_responses else {"ret": 0}
@@ -135,7 +137,9 @@ def test_handle_update_downloads_inbound_image(monkeypatch, tmp_path: Path):
         aes_key = b"1234567890abcdef"
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_image_file"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_image_file"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -190,7 +194,9 @@ def test_handle_update_downloads_inbound_png_with_png_extension(monkeypatch, tmp
         aes_key = b"1234567890abcdef"
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_image_file"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_image_file"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -238,7 +244,9 @@ def test_handle_update_preserves_text_and_ref_msg_with_image(monkeypatch, tmp_pa
         plaintext = b"img-2"
         aes_key = b"1234567890abcdef"
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_image_file"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_image_file"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -951,7 +959,9 @@ def test_handle_update_downloads_inbound_file(monkeypatch, tmp_path: Path):
         aes_key = b"1234567890abcdef"
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -1006,7 +1016,9 @@ def test_handle_update_downloads_inbound_file_with_media_aeskey_hex(monkeypatch,
         aes_key = b"1234567890abcdef"
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -1057,7 +1069,9 @@ def test_handle_update_downloads_inbound_file_with_unpadded_item_aes_key(monkeyp
         encoded_key = base64.b64encode(aes_key).decode("utf-8").rstrip("=")
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -1106,7 +1120,9 @@ def test_handle_update_downloads_inbound_file_with_media_aes_key_base64_of_hex(m
         encoded_hex_key = base64.b64encode(aes_key.hex().encode("utf-8")).decode("utf-8")
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted
@@ -1156,7 +1172,9 @@ def test_handle_update_skips_disallowed_inbound_file(monkeypatch, tmp_path: Path
         aes_key = b"1234567890abcdef"
 
         channel = WechatChannel(bus=bus, config={"bot_token": "test-token", "state_dir": str(tmp_path)})
-        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](plaintext, aes_key)
+        encrypted = channel.__class__.__dict__["_extract_file_item"].__globals__["_encrypt_aes_128_ecb"](
+            plaintext, aes_key
+        )
 
         async def _fake_download(_url: str, *, timeout: float | None = None):
             return encrypted

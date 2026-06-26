@@ -416,7 +416,11 @@ class TestExtractResponseText:
     def test_list_content_blocks(self):
         from app.channels.manager import _extract_response_text
 
-        result = {"messages": [{"type": "ai", "content": [{"type": "text", "text": "hello"}, {"type": "text", "text": " world"}]}]}
+        result = {
+            "messages": [
+                {"type": "ai", "content": [{"type": "text", "text": "hello"}, {"type": "text", "text": " world"}]}
+            ]
+        }
         assert _extract_response_text(result) == "hello world"
 
     def test_picks_last_ai_message(self):
@@ -465,7 +469,11 @@ class TestExtractResponseText:
         result = {
             "messages": [
                 {"type": "human", "content": "健身"},
-                {"type": "ai", "content": "", "tool_calls": [{"name": "ask_clarification", "args": {"question": "您想了解哪方面？"}}]},
+                {
+                    "type": "ai",
+                    "content": "",
+                    "tool_calls": [{"name": "ask_clarification", "args": {"question": "您想了解哪方面？"}}],
+                },
                 {"type": "tool", "name": "ask_clarification", "content": "您想了解哪方面？"},
             ]
         }
@@ -495,7 +503,9 @@ class TestExtractResponseText:
                 {
                     "type": "ai",
                     "content": "",
-                    "tool_calls": [{"name": "present_files", "args": {"filepaths": ["/mnt/user-data/outputs/data.csv"]}}],
+                    "tool_calls": [
+                        {"name": "present_files", "args": {"filepaths": ["/mnt/user-data/outputs/data.csv"]}}
+                    ],
                 },
                 {"type": "tool", "name": "present_files", "content": "ok"},
             ]
@@ -597,7 +607,9 @@ async def _make_channel_connection_repo(tmp_path: Path):
     from deerflow.persistence.channel_connections import ChannelConnectionRepository, ChannelCredentialCipher
     from deerflow.persistence.engine import get_session_factory, init_engine
 
-    await init_engine("sqlite", url=f"sqlite+aiosqlite:///{tmp_path / 'channel-connections.db'}", sqlite_dir=str(tmp_path))
+    await init_engine(
+        "sqlite", url=f"sqlite+aiosqlite:///{tmp_path / 'channel-connections.db'}", sqlite_dir=str(tmp_path)
+    )
     return ChannelConnectionRepository(
         get_session_factory(),
         cipher=ChannelCredentialCipher.from_key("test-channel-key"),
@@ -825,7 +837,9 @@ class TestChannelManager:
                     "is_image": False,
                 }
             ]
-            assert (paths.sandbox_uploads_dir("thread-owner", user_id="owner-1") / "report.txt").read_bytes() == b"owner data"
+            assert (
+                paths.sandbox_uploads_dir("thread-owner", user_id="owner-1") / "report.txt"
+            ).read_bytes() == b"owner data"
             assert not paths.sandbox_uploads_dir("thread-owner").exists()
 
         _run(go())
@@ -846,7 +860,9 @@ class TestChannelManager:
         unbound = InboundMessage(channel_name="slack", chat_id="C1", user_id="U-platform", text="hi")
         assert _channel_storage_user_id(unbound) == _safe_user_id_for_run("U-platform")
 
-        bound = InboundMessage(channel_name="slack", chat_id="C1", user_id="U-platform", text="hi", owner_user_id="owner-1")
+        bound = InboundMessage(
+            channel_name="slack", chat_id="C1", user_id="U-platform", text="hi", owner_user_id="owner-1"
+        )
         assert _channel_storage_user_id(bound) == _safe_user_id_for_run("owner-1")
 
         anonymous = InboundMessage(channel_name="slack", chat_id="C1", user_id="", text="hi")
@@ -1454,7 +1470,9 @@ class TestChannelManager:
             await manager.stop()
 
             mock_client.runs.wait.assert_not_called()
-            assert outbound_received[0].text == ("Invalid channel session assistant_id 'bad agent!'. Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens.")
+            assert outbound_received[0].text == (
+                "Invalid channel session assistant_id 'bad agent!'. Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens."
+            )
 
         _run(go())
 
@@ -1735,7 +1753,9 @@ class TestChannelManager:
                 raise ConflictError(
                     "Thread is already running a task. Wait for it to finish or choose a different multitask strategy.",
                     response=response,
-                    body={"message": "Thread is already running a task. Wait for it to finish or choose a different multitask strategy."},
+                    body={
+                        "message": "Thread is already running a task. Wait for it to finish or choose a different multitask strategy."
+                    },
                 )
                 yield  # pragma: no cover
 
@@ -2133,7 +2153,9 @@ class TestChannelManager:
     def test_handle_command_slash_skill_respects_custom_agent_skill_whitelist(self, monkeypatch, tmp_path):
         from app.channels.manager import ChannelManager
 
-        monkeypatch.setattr("app.channels.manager.load_agent_config", lambda name: SimpleNamespace(skills=["frontend-design"]))
+        monkeypatch.setattr(
+            "app.channels.manager.load_agent_config", lambda name: SimpleNamespace(skills=["frontend-design"])
+        )
 
         async def go():
             bus = MessageBus()
@@ -2179,7 +2201,9 @@ class TestChannelManager:
             bus = MessageBus()
             store = ChannelStore(path=Path(tempfile.mkdtemp()) / "store.json")
             manager = ChannelManager(bus=bus, store=store)
-            manager._skill_storage = _make_channel_skill_storage([_make_channel_skill(tmp_path, "data-analysis", enabled=False)])
+            manager._skill_storage = _make_channel_skill_storage(
+                [_make_channel_skill(tmp_path, "data-analysis", enabled=False)]
+            )
 
             mock_client = _make_mock_langgraph_client()
             manager._client = mock_client
@@ -2204,7 +2228,10 @@ class TestChannelManager:
             await manager.stop()
 
             mock_client.runs.wait.assert_not_called()
-            assert outbound_received[0].text == "Skill `/data-analysis` is installed but disabled. Enable it before using slash activation."
+            assert (
+                outbound_received[0].text
+                == "Skill `/data-analysis` is installed but disabled. Enable it before using slash activation."
+            )
 
         _run(go())
 
@@ -2248,7 +2275,9 @@ class TestChannelManager:
         from app.channels.manager import ChannelManager, SlashSkillCommandResolutionError
 
         def fail_resolution(text, available_skills=None, storage=None):
-            raise SlashSkillCommandResolutionError("Failed to resolve slash skill command. Please check the skill configuration.")
+            raise SlashSkillCommandResolutionError(
+                "Failed to resolve slash skill command. Please check the skill configuration."
+            )
 
         monkeypatch.setattr("app.channels.manager._resolve_slash_skill_command", fail_resolution)
 
@@ -2283,7 +2312,10 @@ class TestChannelManager:
             await manager.stop()
 
             mock_client.runs.wait.assert_not_called()
-            assert outbound_received[0].text == "Failed to resolve slash skill command. Please check the skill configuration."
+            assert (
+                outbound_received[0].text
+                == "Failed to resolve slash skill command. Please check the skill configuration."
+            )
             assert outbound_received[0].thread_id == "topic-thread"
 
         _run(go())
@@ -2922,7 +2954,9 @@ class _BoundIdentityRepo:
         self.lookups: list[dict[str, str | None]] = []
         self.thread_sets: list[dict[str, str | None]] = []
 
-    async def find_connection_by_external_identity(self, *, provider: str, external_account_id: str, workspace_id: str | None = None):
+    async def find_connection_by_external_identity(
+        self, *, provider: str, external_account_id: str, workspace_id: str | None = None
+    ):
         self.lookups.append(
             {
                 "provider": provider,
@@ -2931,7 +2965,11 @@ class _BoundIdentityRepo:
             }
         )
         for connection in self.connections:
-            if connection.get("provider") == provider and connection.get("external_account_id") == external_account_id and connection.get("workspace_id") == workspace_id:
+            if (
+                connection.get("provider") == provider
+                and connection.get("external_account_id") == external_account_id
+                and connection.get("workspace_id") == workspace_id
+            ):
                 return connection
         return None
 
@@ -3522,7 +3560,10 @@ class TestExtractArtifacts:
                     "type": "ai",
                     "content": "Done.",
                     "tool_calls": [
-                        {"name": "present_files", "args": {"filepaths": ["/mnt/user-data/outputs/a.txt", "/mnt/user-data/outputs/b.csv"]}},
+                        {
+                            "name": "present_files",
+                            "args": {"filepaths": ["/mnt/user-data/outputs/a.txt", "/mnt/user-data/outputs/b.csv"]},
+                        },
                     ],
                 },
             ]
@@ -4225,7 +4266,9 @@ class TestWeComChannel:
         with caplog.at_level(logging.ERROR):
             channel._on_ws_task_done(task)
 
-        assert any("WeCom WebSocket connection task failed" in r.message and r.levelno == logging.ERROR for r in caplog.records)
+        assert any(
+            "WeCom WebSocket connection task failed" in r.message and r.levelno == logging.ERROR for r in caplog.records
+        )
 
     def test_on_ws_task_done_silent_when_cancelled(self, caplog):
         import logging
@@ -4455,7 +4498,9 @@ class TestChannelService:
             }
         )
 
-        with patch("deerflow.config.app_config.get_app_config", side_effect=AssertionError("should not read global config")):
+        with patch(
+            "deerflow.config.app_config.get_app_config", side_effect=AssertionError("should not read global config")
+        ):
             service = ChannelService.from_app_config(app_config)
 
         assert service._config == {"telegram": {"enabled": False}}
@@ -4704,7 +4749,10 @@ class TestChannelService:
             await service.stop()
 
         _run(go())
-        assert any("credentials configured but is disabled" in r.message and r.levelno == logging.WARNING for r in caplog.records)
+        assert any(
+            "credentials configured but is disabled" in r.message and r.levelno == logging.WARNING
+            for r in caplog.records
+        )
         assert all("wecom" not in r.message for r in caplog.records)
 
     def test_disabled_channel_with_int_creds_emits_warning(self, caplog):
@@ -4725,7 +4773,10 @@ class TestChannelService:
             await service.stop()
 
         _run(go())
-        assert any("credentials configured but is disabled" in r.message and r.levelno == logging.WARNING for r in caplog.records)
+        assert any(
+            "credentials configured but is disabled" in r.message and r.levelno == logging.WARNING
+            for r in caplog.records
+        )
         assert all("telegram" not in r.message for r in caplog.records)
 
     def test_disabled_channel_without_creds_emits_info(self, caplog):
@@ -4834,7 +4885,9 @@ class TestChannelService:
         def mock_get_app_config():
             return SimpleNamespace(
                 model_extra={"channels": {}},
-                channel_connections=ChannelConnectionsConfig.model_validate({"enabled": True, "telegram": {"enabled": True, "bot_username": "deerflow_bot"}}),
+                channel_connections=ChannelConnectionsConfig.model_validate(
+                    {"enabled": True, "telegram": {"enabled": True, "bot_username": "deerflow_bot"}}
+                ),
             )
 
         monkeypatch.setattr("deerflow.config.app_config.get_app_config", mock_get_app_config)
@@ -5472,7 +5525,9 @@ class TestTelegramSendRetry:
                 expected_commands = {command.removeprefix("/") for command in KNOWN_CHANNEL_COMMANDS}
                 assert expected_commands <= registered_commands
                 assert "start" in registered_commands
-                message_filters = {handler.filter_expr.expr for handler in fake_app.handlers if handler.kind == "message"}
+                message_filters = {
+                    handler.filter_expr.expr for handler in fake_app.handlers if handler.kind == "message"
+                }
                 assert {"TEXT&COMMAND", "TEXT&~COMMAND"} <= message_filters
             finally:
                 await ch.stop()
@@ -5566,7 +5621,9 @@ class TestFeishuSendRetry:
 # ---------------------------------------------------------------------------
 
 
-def _make_telegram_update(chat_type: str, message_id: int, *, reply_to_message_id: int | None = None, text: str = "hello"):
+def _make_telegram_update(
+    chat_type: str, message_id: int, *, reply_to_message_id: int | None = None, text: str = "hello"
+):
     """Build a minimal mock telegram Update for testing _on_text / _cmd_generic."""
     update = MagicMock()
     update.effective_chat.type = chat_type
@@ -5801,7 +5858,11 @@ class TestTelegramProcessingOrder:
             ch._send_running_reply = mock_send_running_reply
             ch.bus.publish_inbound = mock_publish_inbound
 
-            await ch._process_incoming_with_reply(chat_id="chat1", msg_id=123, inbound=InboundMessage(channel_name="telegram", chat_id="chat1", user_id="user1", text="hello"))
+            await ch._process_incoming_with_reply(
+                chat_id="chat1",
+                msg_id=123,
+                inbound=InboundMessage(channel_name="telegram", chat_id="chat1", user_id="user1", text="hello"),
+            )
 
             assert order == ["running_reply", "publish_inbound"]
 
@@ -5885,11 +5946,20 @@ class TestTelegramStreaming:
             await ch._send_running_reply("12345", 42)
             placeholder_id = ch._stream_messages["12345:42"]["message_id"]
 
-            update1 = OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="Hello", is_final=False, thread_ts="42")
+            update1 = OutboundMessage(
+                channel_name="telegram", chat_id="12345", thread_id="t1", text="Hello", is_final=False, thread_ts="42"
+            )
             await ch.send(update1)
 
             clock["now"] += 2.0
-            update2 = OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="Hello world", is_final=False, thread_ts="42")
+            update2 = OutboundMessage(
+                channel_name="telegram",
+                chat_id="12345",
+                thread_id="t1",
+                text="Hello world",
+                is_final=False,
+                thread_ts="42",
+            )
             await ch.send(update2)
 
             assert len(bot.sent) == 1  # only the placeholder
@@ -5907,11 +5977,23 @@ class TestTelegramStreaming:
 
             await ch._send_running_reply("12345", 42)
 
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="a", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="a", is_final=False, thread_ts="42"
+                )
+            )
             clock["now"] += 0.3  # within 1s window -> dropped
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="ab", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="ab", is_final=False, thread_ts="42"
+                )
+            )
             clock["now"] += 1.0  # past window -> edited
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="abc", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="abc", is_final=False, thread_ts="42"
+                )
+            )
 
             assert [e["text"] for e in bot.edited] == ["a", "abc"]
 
@@ -5929,11 +6011,33 @@ class TestTelegramStreaming:
 
             await ch._send_running_reply("-100123", 42)
 
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="-100123", thread_id="t1", text="a", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="-100123", thread_id="t1", text="a", is_final=False, thread_ts="42"
+                )
+            )
             clock["now"] += 1.2  # past the 1s private window, within the 3s group window -> dropped
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="-100123", thread_id="t1", text="ab", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="-100123",
+                    thread_id="t1",
+                    text="ab",
+                    is_final=False,
+                    thread_ts="42",
+                )
+            )
             clock["now"] += 2.0  # 3.2s since last edit -> edited
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="-100123", thread_id="t1", text="abc", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="-100123",
+                    thread_id="t1",
+                    text="abc",
+                    is_final=False,
+                    thread_ts="42",
+                )
+            )
 
             assert [e["text"] for e in bot.edited] == ["a", "abc"]
 
@@ -5943,7 +6047,11 @@ class TestTelegramStreaming:
         async def go():
             ch, bot = self._make_channel_with_bot()
 
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="Hi", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="Hi", is_final=False, thread_ts="42"
+                )
+            )
 
             assert len(bot.sent) == 1
             assert bot.sent[0]["text"] == "Hi"
@@ -5966,7 +6074,11 @@ class TestTelegramStreaming:
                 raise Exception("Bad Request: message to edit not found")
 
             bot.edit_message_text = edit_gone
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="Hi", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="Hi", is_final=False, thread_ts="42"
+                )
+            )
 
             # Fallback message threads under the user's message and becomes the new stream target
             assert bot.sent[1]["text"] == "Hi"
@@ -5999,7 +6111,16 @@ class TestTelegramStreaming:
 
             await ch._send_running_reply("12345", 42)
             long_text = "x" * 5000
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text=long_text, is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text=long_text,
+                    is_final=False,
+                    thread_ts="42",
+                )
+            )
 
             assert len(bot.edited) == 1
             assert len(bot.edited[0]["text"]) == 4096
@@ -6023,7 +6144,11 @@ class TestTelegramStreaming:
 
             bot.edit_message_text = edit_rate_limited
             # Must not raise, must not send a new message
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="Hi", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="Hi", is_final=False, thread_ts="42"
+                )
+            )
             assert len(bot.sent) == 1  # placeholder only
 
         _run(go())
@@ -6076,8 +6201,26 @@ class TestTelegramStreaming:
             await ch._send_running_reply("12345", 42)
             placeholder_id = ch._stream_messages["12345:42"]["message_id"]
 
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="partial", is_final=False, thread_ts="42"))
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="full answer", is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text="partial",
+                    is_final=False,
+                    thread_ts="42",
+                )
+            )
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text="full answer",
+                    is_final=True,
+                    thread_ts="42",
+                )
+            )
 
             assert [e["text"] for e in bot.edited] == ["partial", "full answer"]
             assert len(bot.sent) == 1  # placeholder only — final edited, not re-sent
@@ -6096,7 +6239,16 @@ class TestTelegramStreaming:
             await ch._send_running_reply("12345", 42)
             long_text = "a" * 4096 + "b" * 100
 
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text=long_text, is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text=long_text,
+                    is_final=True,
+                    thread_ts="42",
+                )
+            )
 
             assert len(bot.edited) == 1
             assert bot.edited[0]["text"] == "a" * 4096
@@ -6116,7 +6268,16 @@ class TestTelegramStreaming:
             monkeypatch.setattr("app.channels.telegram._monotonic", lambda: clock["now"])
 
             await ch._send_running_reply("12345", 42)
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="done", is_final=False, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text="done",
+                    is_final=False,
+                    thread_ts="42",
+                )
+            )
 
             async def edit_not_modified(**kwargs):
                 raise Exception("Bad Request: message is not modified")
@@ -6124,7 +6285,11 @@ class TestTelegramStreaming:
             bot.edit_message_text = edit_not_modified
             # Same text again as final — skipped via the equal-text guard:
             # must not raise, must not send a new message
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="done", is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="done", is_final=True, thread_ts="42"
+                )
+            )
 
             assert len(bot.sent) == 1  # placeholder only
             assert "12345:42" not in ch._stream_messages
@@ -6147,7 +6312,11 @@ class TestTelegramStreaming:
             bot.edit_message_text = edit_not_modified
             # Final text differs from last_text, so the edit IS attempted and
             # raises not-modified — must be swallowed, no fallback send.
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="done", is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram", chat_id="12345", thread_id="t1", text="done", is_final=True, thread_ts="42"
+                )
+            )
 
             assert len(bot.sent) == 1  # placeholder only
             assert "12345:42" not in ch._stream_messages
@@ -6159,7 +6328,16 @@ class TestTelegramStreaming:
         async def go():
             ch, bot = self._make_channel_with_bot()
 
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="direct", is_final=True, thread_ts=None))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text="direct",
+                    is_final=True,
+                    thread_ts=None,
+                )
+            )
 
             assert len(bot.sent) == 1
             assert bot.sent[0]["text"] == "direct"
@@ -6196,7 +6374,16 @@ class TestTelegramStreaming:
                 return await real_edit(**kwargs)
 
             bot.edit_message_text = edit_flaky
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="final", is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text="final",
+                    is_final=True,
+                    thread_ts="42",
+                )
+            )
 
             assert sleeps == [3.0]
             assert [e["text"] for e in bot.edited] == ["final"]
@@ -6228,7 +6415,16 @@ class TestTelegramStreaming:
                 raise exc
 
             bot.edit_message_text = edit_rate_limited
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text="final", is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text="final",
+                    is_final=True,
+                    thread_ts="42",
+                )
+            )
 
             # Fallback delivered the final text as a new message (after the placeholder)
             assert [m["text"] for m in bot.sent] == ["Working on it...", "final"]
@@ -6264,7 +6460,16 @@ class TestTelegramStreaming:
 
             bot.send_message = send_flaky
             long_text = "a" * 4096 + "b" * 10
-            await ch.send(OutboundMessage(channel_name="telegram", chat_id="12345", thread_id="t1", text=long_text, is_final=True, thread_ts="42"))
+            await ch.send(
+                OutboundMessage(
+                    channel_name="telegram",
+                    chat_id="12345",
+                    thread_id="t1",
+                    text=long_text,
+                    is_final=True,
+                    thread_ts="42",
+                )
+            )
 
             assert bot.edited[0]["text"] == "a" * 4096
             assert [m["text"] for m in bot.sent] == ["Working on it...", "b" * 10]

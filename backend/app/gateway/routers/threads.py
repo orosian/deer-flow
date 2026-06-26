@@ -167,7 +167,9 @@ class ThreadHistoryRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _delete_thread_data(thread_id: str, paths: Paths | None = None, *, user_id: str | None = None) -> ThreadDeleteResponse:
+def _delete_thread_data(
+    thread_id: str, paths: Paths | None = None, *, user_id: str | None = None
+) -> ThreadDeleteResponse:
     """Delete local persisted filesystem data for a thread."""
     path_manager = paths or get_paths()
     try:
@@ -421,7 +423,11 @@ async def get_thread(thread_id: str, request: Request) -> ThreadResponse:
             "status": "idle",
             "created_at": coerce_iso(ckpt_meta.get("created_at", "")),
             "updated_at": coerce_iso(ckpt_meta.get("updated_at", ckpt_meta.get("created_at", ""))),
-            "metadata": {k: v for k, v in ckpt_meta.items() if k not in ("created_at", "updated_at", "step", "source", "writes", "parents")},
+            "metadata": {
+                k: v
+                for k, v in ckpt_meta.items()
+                if k not in ("created_at", "updated_at", "step", "source", "writes", "parents")
+            },
         }
 
     if record is None:
@@ -648,7 +654,11 @@ async def get_thread_history(thread_id: str, body: ThreadHistoryRequest, request
             next_tasks = [t.name for t in tasks_raw if hasattr(t, "name")]
 
             # Strip LangGraph internal keys from metadata
-            user_meta = {k: v for k, v in metadata.items() if k not in ("created_at", "updated_at", "step", "source", "writes", "parents")}
+            user_meta = {
+                k: v
+                for k, v in metadata.items()
+                if k not in ("created_at", "updated_at", "step", "source", "writes", "parents")
+            }
             # Keep step for ordering context
             if "step" in metadata:
                 user_meta["step"] = metadata["step"]

@@ -60,8 +60,12 @@ STREAM_UPDATE_MIN_INTERVAL_SECONDS = 0.35
 # Platform) deliver the requested "messages-tuple" mode as event "messages".
 STREAM_MODES = ["messages-tuple", "values"]
 MESSAGE_STREAM_EVENTS = ("messages-tuple", "messages")
-THREAD_BUSY_MESSAGE = "This conversation is already processing another request. Please wait for it to finish and try again."
-BOUND_IDENTITY_REQUIRED_MESSAGE = "Connect this channel from DeerFlow Settings, complete the in-channel connect step, then send your message again."
+THREAD_BUSY_MESSAGE = (
+    "This conversation is already processing another request. Please wait for it to finish and try again."
+)
+BOUND_IDENTITY_REQUIRED_MESSAGE = (
+    "Connect this channel from DeerFlow Settings, complete the in-channel connect step, then send your message again."
+)
 BOUND_IDENTITY_UNAVAILABLE_MESSAGE = "Channel connection verification is temporarily unavailable. Please try again later or contact the DeerFlow operator."
 INBOUND_DEDUPE_TTL_SECONDS = 10 * 60
 INBOUND_DEDUPE_MAX_ENTRIES = 4096
@@ -196,9 +200,13 @@ def _normalize_custom_agent_name(raw_value: str) -> str:
     """Normalize legacy channel assistant IDs into valid custom agent names."""
     normalized = raw_value.strip().lower().replace("_", "-")
     if not normalized:
-        raise InvalidChannelSessionConfigError("Channel session assistant_id is empty. Use 'lead_agent' or a valid custom agent name.")
+        raise InvalidChannelSessionConfigError(
+            "Channel session assistant_id is empty. Use 'lead_agent' or a valid custom agent name."
+        )
     if not CUSTOM_AGENT_NAME_PATTERN.fullmatch(normalized):
-        raise InvalidChannelSessionConfigError(f"Invalid channel session assistant_id {raw_value!r}. Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens.")
+        raise InvalidChannelSessionConfigError(
+            f"Invalid channel session assistant_id {raw_value!r}. Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens."
+        )
     return normalized
 
 
@@ -569,17 +577,25 @@ def _resolve_slash_skill_command(
         if skill is None:
             return None
         if not skill.enabled:
-            return _SlashSkillCommandResolution(failure_message=f"Skill `/{reference.name}` is installed but disabled. Enable it before using slash activation.")
+            return _SlashSkillCommandResolution(
+                failure_message=f"Skill `/{reference.name}` is installed but disabled. Enable it before using slash activation."
+            )
         if available_skills is not None and reference.name not in available_skills:
-            return _SlashSkillCommandResolution(failure_message=f"Skill `/{reference.name}` is not available for this agent.")
+            return _SlashSkillCommandResolution(
+                failure_message=f"Skill `/{reference.name}` is not available for this agent."
+            )
 
         return _SlashSkillCommandResolution(route_to_chat=True)
     except Exception as exc:
         logger.exception("[Manager] failed to resolve slash skill command")
-        raise SlashSkillCommandResolutionError("Failed to resolve slash skill command. Please check the skill configuration.") from exc
+        raise SlashSkillCommandResolutionError(
+            "Failed to resolve slash skill command. Please check the skill configuration."
+        ) from exc
 
 
-def _resolve_attachments(thread_id: str, artifacts: list[str], *, user_id: str | None = None) -> list[ResolvedAttachment]:
+def _resolve_attachments(
+    thread_id: str, artifacts: list[str], *, user_id: str | None = None
+) -> list[ResolvedAttachment]:
     """Resolve virtual artifact paths to host filesystem paths with metadata.
 
     Only paths under ``/mnt/user-data/outputs/`` are accepted; any other
@@ -658,7 +674,9 @@ def _prepare_artifact_delivery(
     return response_text, attachments
 
 
-async def _ingest_inbound_files(thread_id: str, msg: InboundMessage, *, user_id: str | None = None) -> list[dict[str, Any]]:
+async def _ingest_inbound_files(
+    thread_id: str, msg: InboundMessage, *, user_id: str | None = None
+) -> list[dict[str, Any]]:
     if not msg.files:
         return []
 
@@ -836,7 +854,12 @@ class ChannelManager:
     def _resolve_run_params(self, msg: InboundMessage, thread_id: str) -> tuple[str, dict[str, Any], dict[str, Any]]:
         channel_layer, user_layer = self._resolve_session_layer(msg)
 
-        assistant_id = user_layer.get("assistant_id") or channel_layer.get("assistant_id") or self._default_session.get("assistant_id") or self._assistant_id
+        assistant_id = (
+            user_layer.get("assistant_id")
+            or channel_layer.get("assistant_id")
+            or self._default_session.get("assistant_id")
+            or self._assistant_id
+        )
         if not isinstance(assistant_id, str) or not assistant_id.strip():
             assistant_id = self._assistant_id
 
@@ -1003,7 +1026,13 @@ class ChannelManager:
         # Fail closed: without a workspace/team/guild identifier we cannot tell two
         # workspaces apart (e.g. Slack channel ids are not globally unique), so
         # skip dedupe rather than risk collapsing distinct workspaces' messages.
-        workspace_id = msg.workspace_id or metadata.get("workspace_id") or metadata.get("team_id") or metadata.get("guild_id") or metadata.get("aibotid")
+        workspace_id = (
+            msg.workspace_id
+            or metadata.get("workspace_id")
+            or metadata.get("team_id")
+            or metadata.get("guild_id")
+            or metadata.get("aibotid")
+        )
         if not workspace_id:
             return None
         return (msg.channel_name, str(workspace_id), msg.chat_id, message_id)
@@ -1208,7 +1237,12 @@ class ChannelManager:
             thread = await client.threads.create(metadata=metadata)
         thread_id = thread["thread_id"]
         await self._store_thread_id(msg, thread_id)
-        logger.info("[Manager] new thread created through Gateway: thread_id=%s for chat_id=%s topic_id=%s", thread_id, msg.chat_id, msg.topic_id)
+        logger.info(
+            "[Manager] new thread created through Gateway: thread_id=%s for chat_id=%s topic_id=%s",
+            thread_id,
+            msg.chat_id,
+            msg.topic_id,
+        )
         return thread_id
 
     async def _update_thread_channel_metadata(self, client, msg: InboundMessage, thread_id: str) -> None:
@@ -1332,7 +1366,9 @@ class ChannelManager:
         # Reuse the storage owner cached at the top of _handle_chat so uploads and
         # artifact delivery always resolve to the same bucket, even if a future
         # channel.receive_file returns a rewritten InboundMessage.
-        response_text, attachments = _prepare_artifact_delivery(thread_id, response_text, artifacts, user_id=storage_user_id)
+        response_text, attachments = _prepare_artifact_delivery(
+            thread_id, response_text, artifacts, user_id=storage_user_id
+        )
 
         if not response_text:
             if attachments:
@@ -1352,7 +1388,9 @@ class ChannelManager:
             owner_user_id=msg.owner_user_id,
             metadata=_response_metadata(msg.metadata, pending_clarification=pending_clarification),
         )
-        logger.info("[Manager] publishing outbound message to bus: channel=%s, chat_id=%s", msg.channel_name, msg.chat_id)
+        logger.info(
+            "[Manager] publishing outbound message to bus: channel=%s, chat_id=%s", msg.channel_name, msg.chat_id
+        )
         await self.bus.publish_outbound(outbound)
 
     async def _handle_streaming_chat(
@@ -1395,7 +1433,9 @@ class ChannelManager:
                 data = getattr(chunk, "data", None)
 
                 if event in MESSAGE_STREAM_EVENTS:
-                    accumulated_text, current_message_id = _accumulate_stream_text(streamed_buffers, current_message_id, data)
+                    accumulated_text, current_message_id = _accumulate_stream_text(
+                        streamed_buffers, current_message_id, data
+                    )
                     if accumulated_text:
                         latest_text = accumulated_text
                 elif event == "values" and isinstance(data, (dict, list)):
@@ -1440,7 +1480,9 @@ class ChannelManager:
             # Reuse the storage owner resolved by _handle_chat so artifact delivery
             # matches the upload bucket and we avoid re-running _safe_user_id_for_run
             # (and its possible filesystem touch) on the streaming-error path.
-            response_text, attachments = _prepare_artifact_delivery(thread_id, response_text, artifacts, user_id=storage_user_id)
+            response_text, attachments = _prepare_artifact_delivery(
+                thread_id, response_text, artifacts, user_id=storage_user_id
+            )
 
             if not response_text:
                 if attachments:

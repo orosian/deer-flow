@@ -39,7 +39,9 @@ from deerflow.config.tool_output_config import ToolOutputConfig
 # ---------------------------------------------------------------------------
 
 
-def _make_request(tool_name: str = "remote_executor", tool_call_id: str = "tc-1", outputs_path: str | None = None) -> SimpleNamespace:
+def _make_request(
+    tool_name: str = "remote_executor", tool_call_id: str = "tc-1", outputs_path: str | None = None
+) -> SimpleNamespace:
     thread_data = {"outputs_path": outputs_path} if outputs_path else None
     state = {"thread_data": thread_data} if thread_data else {}
     runtime = SimpleNamespace(state=state)
@@ -278,7 +280,13 @@ class TestBuildFallback:
         """The marker itself has non-zero length; total must still respect max_chars."""
         for max_chars in [200, 500, 1000, 5000, 20000]:
             content = "x" * 50000
-            result = _build_fallback(content, tool_name="long_tool_name", max_chars=max_chars, head_chars=max_chars // 2, tail_chars=max_chars // 4)
+            result = _build_fallback(
+                content,
+                tool_name="long_tool_name",
+                max_chars=max_chars,
+                head_chars=max_chars // 2,
+                tail_chars=max_chars // 4,
+            )
             assert len(result) <= max_chars, f"max_chars={max_chars}: got {len(result)}"
 
     def test_very_small_max_chars_does_not_crash(self):
@@ -300,7 +308,9 @@ class TestWrapToolCallPassThrough:
         assert result is msg
 
     def test_disabled_middleware_passes_through(self):
-        mw = ToolOutputBudgetMiddleware(config=ToolOutputConfig(enabled=False, externalize_min_chars=10, fallback_max_chars=20))
+        mw = ToolOutputBudgetMiddleware(
+            config=ToolOutputConfig(enabled=False, externalize_min_chars=10, fallback_max_chars=20)
+        )
         msg = _tm("x" * 50000, name="bash")
         result = mw.wrap_tool_call(_make_request(), lambda _: msg)
         assert result is msg
@@ -592,7 +602,9 @@ class TestMCPContentAndArtifact:
             assert result.tool_call_id == "tc-mcp"
 
     def test_multiple_text_blocks_joined_and_budgeted(self):
-        config = ToolOutputConfig(externalize_min_chars=50, fallback_max_chars=500, fallback_head_chars=100, fallback_tail_chars=50)
+        config = ToolOutputConfig(
+            externalize_min_chars=50, fallback_max_chars=500, fallback_head_chars=100, fallback_tail_chars=50
+        )
         mw = ToolOutputBudgetMiddleware(config=config)
         content = [{"type": "text", "text": "a" * 300}, {"type": "text", "text": "b" * 300}]
         msg = ToolMessage(content=content, name="mcp_tool", tool_call_id="tc-mcp2")

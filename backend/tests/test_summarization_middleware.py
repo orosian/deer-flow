@@ -12,7 +12,10 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 from langgraph.constants import TAG_NOSTREAM
 
 from deerflow.agents.memory.summarization_hook import memory_flush_hook
-from deerflow.agents.middlewares.dynamic_context_middleware import _DYNAMIC_CONTEXT_REMINDER_KEY, DynamicContextMiddleware
+from deerflow.agents.middlewares.dynamic_context_middleware import (
+    _DYNAMIC_CONTEXT_REMINDER_KEY,
+    DynamicContextMiddleware,
+)
 from deerflow.agents.middlewares.summarization_middleware import DeerFlowSummarizationMiddleware, SummarizationEvent
 from deerflow.config.memory_config import MemoryConfig
 
@@ -150,7 +153,11 @@ def test_summarization_middleware_emits_frontend_update_key_in_agent_stream() ->
 
     chunks = list(agent.stream({"messages": _messages()}, stream_mode="updates"))
     update = next(
-        (chunk["DeerFlowSummarizationMiddleware.before_model"] for chunk in chunks if "DeerFlowSummarizationMiddleware.before_model" in chunk),
+        (
+            chunk["DeerFlowSummarizationMiddleware.before_model"]
+            for chunk in chunks
+            if "DeerFlowSummarizationMiddleware.before_model" in chunk
+        ),
         None,
     )
 
@@ -356,7 +363,9 @@ async def test_abefore_model_calls_hooks_same_as_sync() -> None:
 
 def test_memory_flush_hook_skips_when_memory_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     queue = MagicMock()
-    monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=False))
+    monkeypatch.setattr(
+        "deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=False)
+    )
     monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_queue", lambda: queue)
 
     memory_flush_hook(
@@ -374,7 +383,9 @@ def test_memory_flush_hook_skips_when_memory_disabled(monkeypatch: pytest.Monkey
 
 def test_memory_flush_hook_skips_when_thread_id_missing(monkeypatch: pytest.MonkeyPatch) -> None:
     queue = MagicMock()
-    monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True))
+    monkeypatch.setattr(
+        "deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True)
+    )
     monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_queue", lambda: queue)
 
     memory_flush_hook(
@@ -397,7 +408,9 @@ def test_memory_flush_hook_enqueues_filtered_messages_and_flushes(monkeypatch: p
         AIMessage(content="Calling tool", tool_calls=[{"name": "search", "id": "tool-1", "args": {}}]),
         AIMessage(content="Final answer"),
     ]
-    monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True))
+    monkeypatch.setattr(
+        "deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True)
+    )
     monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_queue", lambda: queue)
 
     memory_flush_hook(
@@ -488,7 +501,9 @@ def test_skill_rescue_uses_injected_skills_container_path() -> None:
     middleware._skills_container_path = "/custom/skills"
     messages = [
         HumanMessage(content="u1"),
-        AIMessage(content="", tool_calls=[{"name": "read_file", "id": "t1", "args": {"path": "/custom/skills/demo/SKILL.md"}}]),
+        AIMessage(
+            content="", tool_calls=[{"name": "read_file", "id": "t1", "args": {"path": "/custom/skills/demo/SKILL.md"}}]
+        ),
         ToolMessage(content="demo skill body", tool_call_id="t1"),
         HumanMessage(content="u2"),
         AIMessage(content="final"),
@@ -514,7 +529,10 @@ def test_skill_rescue_uses_configured_skill_read_tool_names() -> None:
     middleware._skills_container_path = "/custom/skills"
     messages = [
         HumanMessage(content="u1"),
-        AIMessage(content="", tool_calls=[{"name": "custom_read", "id": "t1", "args": {"path": "/custom/skills/demo/SKILL.md"}}]),
+        AIMessage(
+            content="",
+            tool_calls=[{"name": "custom_read", "id": "t1", "args": {"path": "/custom/skills/demo/SKILL.md"}}],
+        ),
         ToolMessage(content="demo skill body", tool_call_id="t1"),
         HumanMessage(content="u2"),
         AIMessage(content="final"),
@@ -541,7 +559,9 @@ def test_skill_rescue_respects_per_skill_token_cap() -> None:
     middleware.before_model({"messages": _skill_conversation()}, _runtime())
 
     preserved = captured[0].preserved_messages
-    assert not any(isinstance(m, ToolMessage) and m.content in {"alpha skill body", "beta skill body"} for m in preserved)
+    assert not any(
+        isinstance(m, ToolMessage) and m.content in {"alpha skill body", "beta skill body"} for m in preserved
+    )
 
 
 def test_skill_rescue_disabled_when_count_zero() -> None:
@@ -786,7 +806,9 @@ def test_skill_rescue_only_preserves_skill_calls_with_matched_tool_results() -> 
 
 def test_memory_flush_hook_preserves_agent_scoped_memory(monkeypatch: pytest.MonkeyPatch) -> None:
     queue = MagicMock()
-    monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True))
+    monkeypatch.setattr(
+        "deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True)
+    )
     monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_queue", lambda: queue)
 
     memory_flush_hook(
@@ -805,7 +827,9 @@ def test_memory_flush_hook_preserves_agent_scoped_memory(monkeypatch: pytest.Mon
 
 def test_memory_flush_hook_passes_runtime_user_id(monkeypatch: pytest.MonkeyPatch) -> None:
     queue = MagicMock()
-    monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True))
+    monkeypatch.setattr(
+        "deerflow.agents.memory.summarization_hook.get_memory_config", lambda: MemoryConfig(enabled=True)
+    )
     monkeypatch.setattr("deerflow.agents.memory.summarization_hook.get_memory_queue", lambda: queue)
 
     memory_flush_hook(

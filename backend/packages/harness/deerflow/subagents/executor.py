@@ -206,7 +206,12 @@ def _get_isolated_subagent_loop() -> asyncio.AbstractEventLoop:
     global _isolated_subagent_loop, _isolated_subagent_loop_thread, _isolated_subagent_loop_started
     with _isolated_subagent_loop_lock:
         thread_is_alive = _isolated_subagent_loop_thread is not None and _isolated_subagent_loop_thread.is_alive()
-        loop_is_usable = _isolated_subagent_loop is not None and not _isolated_subagent_loop.is_closed() and _isolated_subagent_loop.is_running() and thread_is_alive
+        loop_is_usable = (
+            _isolated_subagent_loop is not None
+            and not _isolated_subagent_loop.is_closed()
+            and _isolated_subagent_loop.is_running()
+            and thread_is_alive
+        )
 
         if not loop_is_usable:
             loop = asyncio.new_event_loop()
@@ -342,12 +347,16 @@ class SubagentExecutor:
         app_config = self.app_config or get_app_config()
         if self.model_name is None:
             self.model_name = resolve_subagent_model_name(self.config, self.parent_model, app_config=app_config)
-        model = create_chat_model(name=self.model_name, thinking_enabled=False, app_config=app_config, attach_tracing=False)
+        model = create_chat_model(
+            name=self.model_name, thinking_enabled=False, app_config=app_config, attach_tracing=False
+        )
 
         from deerflow.agents.middlewares.tool_error_handling_middleware import build_subagent_runtime_middlewares
 
         # Reuse shared middleware composition with lead agent.
-        middlewares = build_subagent_runtime_middlewares(app_config=app_config, model_name=self.model_name, lazy_init=True, deferred_setup=deferred_setup)
+        middlewares = build_subagent_runtime_middlewares(
+            app_config=app_config, model_name=self.model_name, lazy_init=True, deferred_setup=deferred_setup
+        )
 
         # system_prompt is included in initial state messages (see _build_initial_state)
         # to avoid multiple SystemMessages which some LLM APIs don't support.
@@ -373,7 +382,9 @@ class SubagentExecutor:
             storage = await asyncio.to_thread(get_or_new_skill_storage, **storage_kwargs)
             # Use asyncio.to_thread to avoid blocking the event loop (LangGraph ASGI requirement)
             all_skills = await asyncio.to_thread(storage.load_skills, enabled_only=True)
-            logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} loaded {len(all_skills)} enabled skills from disk")
+            logger.info(
+                f"[trace={self.trace_id}] Subagent {self.config.name} loaded {len(all_skills)} enabled skills from disk"
+            )
         except Exception:
             logger.exception(f"[trace={self.trace_id}] Failed to load skills for subagent {self.config.name}")
             raise
@@ -565,7 +576,9 @@ class SubagentExecutor:
             if self.app_config is not None:
                 context["app_config"] = self.app_config
 
-            logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution with max_turns={self.config.max_turns}")
+            logger.info(
+                f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution with max_turns={self.config.max_turns}"
+            )
 
             # Use stream instead of invoke to get real-time updates
             # This allows us to collect AI messages as they are generated
@@ -616,7 +629,9 @@ class SubagentExecutor:
 
                         if not is_duplicate:
                             ai_messages.append(message_dict)
-                            logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} captured AI message #{len(ai_messages)}")
+                            logger.info(
+                                f"[trace={self.trace_id}] Subagent {self.config.name} captured AI message #{len(ai_messages)}"
+                            )
 
             logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} completed async execution")
             token_usage_records = collector.snapshot_records()
@@ -628,7 +643,9 @@ class SubagentExecutor:
             else:
                 # Extract the final message - find the last AIMessage
                 messages = final_state.get("messages", [])
-                logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} final messages count: {len(messages)}")
+                logger.info(
+                    f"[trace={self.trace_id}] Subagent {self.config.name} final messages count: {len(messages)}"
+                )
 
                 # Find the last AIMessage in the conversation
                 last_ai_message = None
@@ -666,7 +683,9 @@ class SubagentExecutor:
                 elif messages:
                     # Fallback: use the last message if no AIMessage found
                     last_message = messages[-1]
-                    logger.warning(f"[trace={self.trace_id}] Subagent {self.config.name} no AIMessage found, using last message: {type(last_message)}")
+                    logger.warning(
+                        f"[trace={self.trace_id}] Subagent {self.config.name} no AIMessage found, using last message: {type(last_message)}"
+                    )
                     raw_content = last_message.content if hasattr(last_message, "content") else str(last_message)
                     if isinstance(raw_content, str):
                         final_result = raw_content
@@ -772,7 +791,9 @@ class SubagentExecutor:
                 loop = None
 
             if loop is not None and loop.is_running():
-                logger.debug(f"[trace={self.trace_id}] Subagent {self.config.name} detected running event loop, using isolated loop")
+                logger.debug(
+                    f"[trace={self.trace_id}] Subagent {self.config.name} detected running event loop, using isolated loop"
+                )
                 return self._execute_in_isolated_loop(task, result_holder)
 
             # Standard path: no running event loop, use asyncio.run
@@ -812,7 +833,9 @@ class SubagentExecutor:
             status=SubagentStatus.PENDING,
         )
 
-        logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution, task_id={task_id}, timeout={self.config.timeout_seconds}s")
+        logger.info(
+            f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution, task_id={task_id}, timeout={self.config.timeout_seconds}s"
+        )
 
         with _background_tasks_lock:
             _background_tasks[task_id] = result
@@ -837,7 +860,9 @@ class SubagentExecutor:
                     # Wait for execution with timeout
                     execution_future.result(timeout=self.config.timeout_seconds)
                 except FuturesTimeoutError:
-                    logger.error(f"[trace={self.trace_id}] Subagent {self.config.name} execution timed out after {self.config.timeout_seconds}s")
+                    logger.error(
+                        f"[trace={self.trace_id}] Subagent {self.config.name} execution timed out after {self.config.timeout_seconds}s"
+                    )
                     # Signal cooperative cancellation and cancel the future
                     result_holder.cancel_event.set()
                     result_holder.try_set_terminal(

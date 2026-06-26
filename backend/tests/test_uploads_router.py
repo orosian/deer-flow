@@ -52,7 +52,11 @@ def test_upload_files_writes_thread_storage_and_skips_local_sandbox_sync(tmp_pat
         patch.object(uploads, "get_sandbox_provider", return_value=provider),
     ):
         file = UploadFile(filename="notes.txt", file=BytesIO(b"hello uploads"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     assert len(result.files) == 1
@@ -136,7 +140,11 @@ def test_upload_files_skips_acquire_when_thread_data_is_mounted(tmp_path):
         patch.object(uploads, "get_sandbox_provider", return_value=provider),
     ):
         file = UploadFile(filename="notes.txt", file=BytesIO(b"hello uploads"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-mounted", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-mounted", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     assert (thread_uploads_dir / "notes.txt").read_bytes() == b"hello uploads"
@@ -162,7 +170,11 @@ def test_upload_files_does_not_auto_convert_documents_by_default(tmp_path):
         patch.object(uploads, "convert_file_to_markdown", AsyncMock()) as convert_mock,
     ):
         file = UploadFile(filename="report.pdf", file=BytesIO(b"pdf-bytes"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     assert len(result.files) == 1
@@ -195,7 +207,11 @@ def test_upload_files_syncs_non_local_sandbox_and_marks_markdown_file(tmp_path):
         patch.object(uploads, "convert_file_to_markdown", AsyncMock(side_effect=fake_convert)),
     ):
         file = UploadFile(filename="report.pdf", file=BytesIO(b"pdf-bytes"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     assert len(result.files) == 1
@@ -234,7 +250,11 @@ def test_upload_files_makes_non_local_files_sandbox_writable(tmp_path):
         patch.object(uploads, "_make_file_sandbox_writable") as make_writable,
     ):
         file = UploadFile(filename="report.pdf", file=BytesIO(b"pdf-bytes"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     make_writable.assert_any_call(thread_uploads_dir / "report.pdf")
@@ -260,7 +280,11 @@ def test_upload_files_does_not_adjust_permissions_for_local_sandbox(tmp_path):
         patch.object(uploads, "_make_file_sandbox_readable") as make_readable,
     ):
         file = UploadFile(filename="notes.txt", file=BytesIO(b"hello uploads"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     make_writable.assert_not_called()
@@ -290,7 +314,11 @@ def test_upload_files_acquires_non_local_sandbox_before_writing(tmp_path):
         patch.object(uploads, "get_sandbox_provider", return_value=provider),
     ):
         file = UploadFile(filename="notes.txt", file=BytesIO(b"hello uploads"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     provider.acquire.assert_called_once_with("thread-aio")
@@ -311,7 +339,11 @@ def test_upload_files_fails_before_writing_when_non_local_sandbox_unavailable(tm
         patch.object(uploads, "get_sandbox_provider", return_value=provider),
     ):
         with pytest.raises(RuntimeError, match="sandbox unavailable"):
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()))
+            asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()
+                )
+            )
 
     assert list(thread_uploads_dir.iterdir()) == []
     assert file.read_calls == []
@@ -325,14 +357,22 @@ def test_upload_files_rejects_too_many_files_before_writing(tmp_path):
     with (
         patch.object(uploads, "ensure_uploads_dir", return_value=thread_uploads_dir),
         patch.object(uploads, "get_sandbox_provider", return_value=_mounted_provider()),
-        patch.object(uploads, "_get_upload_limits", return_value=uploads.UploadLimits(max_files=1, max_file_size=10, max_total_size=20)),
+        patch.object(
+            uploads,
+            "_get_upload_limits",
+            return_value=uploads.UploadLimits(max_files=1, max_file_size=10, max_total_size=20),
+        ),
     ):
         files = [
             ChunkedUpload("one.txt", [b"one"]),
             ChunkedUpload("two.txt", [b"two"]),
         ]
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=files, config=SimpleNamespace()))
+            asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-local", request=MagicMock(), files=files, config=SimpleNamespace()
+                )
+            )
 
     assert exc_info.value.status_code == 413
     assert list(thread_uploads_dir.iterdir()) == []
@@ -350,10 +390,18 @@ def test_upload_files_rejects_oversized_single_file_and_removes_partial_file(tmp
     with (
         patch.object(uploads, "ensure_uploads_dir", return_value=thread_uploads_dir),
         patch.object(uploads, "get_sandbox_provider", return_value=provider),
-        patch.object(uploads, "_get_upload_limits", return_value=uploads.UploadLimits(max_files=10, max_file_size=5, max_total_size=20)),
+        patch.object(
+            uploads,
+            "_get_upload_limits",
+            return_value=uploads.UploadLimits(max_files=10, max_file_size=5, max_total_size=20),
+        ),
     ):
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()))
+            asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()
+                )
+            )
 
     assert exc_info.value.status_code == 413
     assert not (thread_uploads_dir / "big.txt").exists()
@@ -368,14 +416,22 @@ def test_upload_files_rejects_total_size_over_limit_and_cleans_request_files(tmp
     with (
         patch.object(uploads, "ensure_uploads_dir", return_value=thread_uploads_dir),
         patch.object(uploads, "get_sandbox_provider", return_value=_mounted_provider()),
-        patch.object(uploads, "_get_upload_limits", return_value=uploads.UploadLimits(max_files=10, max_file_size=10, max_total_size=5)),
+        patch.object(
+            uploads,
+            "_get_upload_limits",
+            return_value=uploads.UploadLimits(max_files=10, max_file_size=10, max_total_size=5),
+        ),
     ):
         files = [
             ChunkedUpload("first.txt", [b"123"]),
             ChunkedUpload("second.txt", [b"456"]),
         ]
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=files, config=SimpleNamespace()))
+            asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-local", request=MagicMock(), files=files, config=SimpleNamespace()
+                )
+            )
 
     assert exc_info.value.status_code == 413
     assert not (thread_uploads_dir / "first.txt").exists()
@@ -395,14 +451,22 @@ def test_upload_files_does_not_sync_non_local_sandbox_when_total_size_exceeds_li
     with (
         patch.object(uploads, "ensure_uploads_dir", return_value=thread_uploads_dir),
         patch.object(uploads, "get_sandbox_provider", return_value=provider),
-        patch.object(uploads, "_get_upload_limits", return_value=uploads.UploadLimits(max_files=10, max_file_size=10, max_total_size=5)),
+        patch.object(
+            uploads,
+            "_get_upload_limits",
+            return_value=uploads.UploadLimits(max_files=10, max_file_size=10, max_total_size=5),
+        ),
     ):
         files = [
             ChunkedUpload("first.txt", [b"123"]),
             ChunkedUpload("second.txt", [b"456"]),
         ]
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=files, config=SimpleNamespace()))
+            asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-aio", request=MagicMock(), files=files, config=SimpleNamespace()
+                )
+            )
 
     assert exc_info.value.status_code == 413
     provider.acquire.assert_called_once_with("thread-aio")
@@ -428,7 +492,11 @@ def test_upload_files_does_not_sync_non_local_sandbox_when_conversion_fails(tmp_
     ):
         file = UploadFile(filename="report.pdf", file=BytesIO(b"pdf-bytes"))
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()))
+            asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()
+                )
+            )
 
     assert exc_info.value.status_code == 500
     provider.acquire.assert_called_once_with("thread-aio")
@@ -510,7 +578,11 @@ def test_upload_files_adjusts_read_permissions_for_mounted_non_local_sandbox(tmp
         patch.object(uploads, "_make_file_sandbox_readable") as make_readable,
     ):
         file = UploadFile(filename="notes.txt", file=BytesIO(b"hello uploads"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-aio", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
 
     assert result.success is True
     make_readable.assert_called_once()
@@ -535,13 +607,21 @@ def test_upload_files_rejects_dotdot_and_dot_filenames(tmp_path):
         # These filenames must be rejected outright
         for bad_name in ["..", "."]:
             file = UploadFile(filename=bad_name, file=BytesIO(b"data"))
-            result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()))
+            result = asyncio.run(
+                call_unwrapped(
+                    uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()
+                )
+            )
             assert result.success is True
             assert result.files == [], f"Expected no files for unsafe filename {bad_name!r}"
 
         # Path-traversal prefixes are stripped to the basename and accepted safely
         file = UploadFile(filename="../etc/passwd", file=BytesIO(b"data"))
-        result = asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()))
+        result = asyncio.run(
+            call_unwrapped(
+                uploads.upload_files, "thread-local", request=MagicMock(), files=[file], config=SimpleNamespace()
+            )
+        )
         assert result.success is True
         assert len(result.files) == 1
         assert result.files[0].filename == "passwd"
@@ -656,7 +736,9 @@ def test_delete_uploaded_file_removes_generated_markdown_companion(tmp_path):
     (thread_uploads_dir / "report.md").write_text("converted", encoding="utf-8")
 
     with patch.object(uploads, "get_uploads_dir", return_value=thread_uploads_dir):
-        result = asyncio.run(call_unwrapped(uploads.delete_uploaded_file, "thread-aio", "report.pdf", request=MagicMock()))
+        result = asyncio.run(
+            call_unwrapped(uploads.delete_uploaded_file, "thread-aio", "report.pdf", request=MagicMock())
+        )
 
     assert result == {"success": True, "message": "Deleted report.pdf"}
     assert not (thread_uploads_dir / "report.pdf").exists()
@@ -757,6 +839,8 @@ def test_upload_files_uses_configured_file_count_limit(tmp_path):
             ChunkedUpload("two.txt", [b"two"]),
         ]
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=files, config=cfg))
+            asyncio.run(
+                call_unwrapped(uploads.upload_files, "thread-local", request=MagicMock(), files=files, config=cfg)
+            )
 
     assert exc_info.value.status_code == 413

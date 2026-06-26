@@ -119,15 +119,32 @@ def main() -> int:
 
         # ---- Assertions ----
         safety_event = next(
-            (e for e in events if e["type"] == "custom" and isinstance(e["data"], dict) and e["data"].get("type") == "safety_termination"),
+            (
+                e
+                for e in events
+                if e["type"] == "custom"
+                and isinstance(e["data"], dict)
+                and e["data"].get("type") == "safety_termination"
+            ),
             None,
         )
         final_values = next(
             (e for e in reversed(events) if e["type"] == "values"),
             None,
         )
-        tool_messages = [e for e in events if e["type"] == "messages-tuple" and isinstance(e["data"], dict) and e["data"].get("type") == "tool"]
-        ai_tool_call_messages = [e for e in events if e["type"] == "messages-tuple" and isinstance(e["data"], dict) and e["data"].get("type") == "ai" and e["data"].get("tool_calls")]
+        tool_messages = [
+            e
+            for e in events
+            if e["type"] == "messages-tuple" and isinstance(e["data"], dict) and e["data"].get("type") == "tool"
+        ]
+        ai_tool_call_messages = [
+            e
+            for e in events
+            if e["type"] == "messages-tuple"
+            and isinstance(e["data"], dict)
+            and e["data"].get("type") == "ai"
+            and e["data"].get("tool_calls")
+        ]
 
         print(f"\n[stats] total stream events: {len(events)}")
         print(f"[stats] model call count: {fake.call_count}")
@@ -150,7 +167,9 @@ def main() -> int:
         last_ai = next((m for m in reversed(final_messages) if isinstance(m, dict) and m.get("type") == "ai"), None)
         if last_ai is None:
             print("  *** no AIMessage in final state ***")
-            print(f"      message types seen: {[m.get('type') if isinstance(m, dict) else type(m).__name__ for m in final_messages]}")
+            print(
+                f"      message types seen: {[m.get('type') if isinstance(m, dict) else type(m).__name__ for m in final_messages]}"
+            )
             return 1
 
         tool_calls = last_ai.get("tool_calls") or []
@@ -180,7 +199,9 @@ def main() -> int:
         if tool_messages:
             failures.append(f"tool node was invoked: {len(tool_messages)} ToolMessage(s) on stream")
         if stamp.get("reason_value") != "content_filter":
-            failures.append(f"safety_termination.reason_value was {stamp.get('reason_value')!r}, expected 'content_filter'")
+            failures.append(
+                f"safety_termination.reason_value was {stamp.get('reason_value')!r}, expected 'content_filter'"
+            )
         if safety_event is None:
             failures.append("safety_termination custom event was not emitted on the stream")
 

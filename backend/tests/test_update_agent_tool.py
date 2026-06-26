@@ -29,7 +29,9 @@ class _DummyRuntime(SimpleNamespace):
 
 
 def _runtime(agent_name: str | None = "test-agent", tool_call_id: str = "call_1") -> _DummyRuntime:
-    return _DummyRuntime(context={"agent_name": agent_name} if agent_name is not None else {}, tool_call_id=tool_call_id)
+    return _DummyRuntime(
+        context={"agent_name": agent_name} if agent_name is not None else {}, tool_call_id=tool_call_id
+    )
 
 
 def _tool_runtime(agent_name: str | None = "test-agent", tool_call_id: str = "call_1") -> ToolRuntime:
@@ -272,7 +274,9 @@ def test_update_agent_forces_name_to_directory(tmp_path, patched_paths):
     stays consistent with the runtime context."""
     agent_dir = _user_agent_dir(tmp_path)
     agent_dir.mkdir(parents=True)
-    (agent_dir / "config.yaml").write_text(yaml.safe_dump({"name": "drifted-name", "description": "old"}, sort_keys=False), encoding="utf-8")
+    (agent_dir / "config.yaml").write_text(
+        yaml.safe_dump({"name": "drifted-name", "description": "old"}, sort_keys=False), encoding="utf-8"
+    )
     (agent_dir / "SOUL.md").write_text("soul", encoding="utf-8")
 
     update_agent.func(runtime=_runtime(), description="bumped")

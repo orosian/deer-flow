@@ -113,7 +113,10 @@ class LocalSandbox(Sandbox):
     @cached_property
     def _reverse_output_patterns(self) -> list[re.Pattern[str]]:
         """Compiled matchers for local paths in command output (longest local path first)."""
-        return [re.compile(re.escape(self._resolved_local_paths[m]) + r"(?:[/\\][^\s\"';&|<>()]*)?") for m in self._mappings_by_local_specificity]
+        return [
+            re.compile(re.escape(self._resolved_local_paths[m]) + r"(?:[/\\][^\s\"';&|<>()]*)?")
+            for m in self._mappings_by_local_specificity
+        ]
 
     @cached_property
     def _resolved_local_paths(self) -> dict[PathMapping, str]:
@@ -323,7 +326,9 @@ class LocalSandbox(Sandbox):
             if shell is not None:
                 return shell
 
-            raise RuntimeError("No suitable shell executable found. Tried /bin/zsh, /bin/bash, /bin/sh, `sh` on PATH, then PowerShell and cmd.exe fallbacks for Windows.")
+            raise RuntimeError(
+                "No suitable shell executable found. Tried /bin/zsh, /bin/bash, /bin/sh, `sh` on PATH, then PowerShell and cmd.exe fallbacks for Windows."
+            )
 
         raise RuntimeError("No suitable shell executable found. Tried /bin/zsh, /bin/bash, /bin/sh, and `sh` on PATH.")
 
@@ -382,7 +387,9 @@ class LocalSandbox(Sandbox):
         result: list[str] = []
         for entry in entries:
             is_dir = entry.endswith(("/", "\\"))
-            reversed_entry = self._reverse_resolve_path(entry.rstrip("/\\")) if is_dir else self._reverse_resolve_path(entry)
+            reversed_entry = (
+                self._reverse_resolve_path(entry.rstrip("/\\")) if is_dir else self._reverse_resolve_path(entry)
+            )
             result.append(f"{reversed_entry}/" if is_dir and not reversed_entry.endswith("/") else reversed_entry)
         return result
 
@@ -407,7 +414,9 @@ class LocalSandbox(Sandbox):
         stripped_path = normalised.lstrip("/")
         allowed_prefix = VIRTUAL_PATH_PREFIX.lstrip("/")
         if stripped_path != allowed_prefix and not stripped_path.startswith(f"{allowed_prefix}/"):
-            logger.error("Refused download outside allowed directory: path=%s, allowed_prefix=%s", path, VIRTUAL_PATH_PREFIX)
+            logger.error(
+                "Refused download outside allowed directory: path=%s, allowed_prefix=%s", path, VIRTUAL_PATH_PREFIX
+            )
             raise PermissionError(errno.EACCES, f"Access denied: path must be under '{VIRTUAL_PATH_PREFIX}'", path)
 
         resolved_path = self._resolve_path(path)
@@ -447,9 +456,13 @@ class LocalSandbox(Sandbox):
             # Re-raise with the original path for clearer error messages, hiding internal resolved paths
             raise type(e)(e.errno, e.strerror, path) from None
 
-    def glob(self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200) -> tuple[list[str], bool]:
+    def glob(
+        self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200
+    ) -> tuple[list[str], bool]:
         resolved_path = Path(self._resolve_path(path))
-        matches, truncated = find_glob_matches(resolved_path, pattern, include_dirs=include_dirs, max_results=max_results)
+        matches, truncated = find_glob_matches(
+            resolved_path, pattern, include_dirs=include_dirs, max_results=max_results
+        )
         return [self._reverse_resolve_path(match) for match in matches], truncated
 
     def grep(

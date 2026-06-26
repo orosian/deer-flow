@@ -112,7 +112,9 @@ class MemoryUpdateQueue:
             )
             self._schedule_timer(0)
 
-        logger.info("Memory update queued for immediate processing on thread %s, queue size: %d", thread_id, len(self._queue))
+        logger.info(
+            "Memory update queued for immediate processing on thread %s, queue size: %d", thread_id, len(self._queue)
+        )
 
     def _enqueue_locked(
         self,
@@ -126,11 +128,19 @@ class MemoryUpdateQueue:
     ) -> None:
         queue_key = self._queue_key(thread_id, user_id, agent_name)
         existing_context = next(
-            (context for context in self._queue if self._queue_key(context.thread_id, context.user_id, context.agent_name) == queue_key),
+            (
+                context
+                for context in self._queue
+                if self._queue_key(context.thread_id, context.user_id, context.agent_name) == queue_key
+            ),
             None,
         )
-        merged_correction_detected = correction_detected or (existing_context.correction_detected if existing_context is not None else False)
-        merged_reinforcement_detected = reinforcement_detected or (existing_context.reinforcement_detected if existing_context is not None else False)
+        merged_correction_detected = correction_detected or (
+            existing_context.correction_detected if existing_context is not None else False
+        )
+        merged_reinforcement_detected = reinforcement_detected or (
+            existing_context.reinforcement_detected if existing_context is not None else False
+        )
         context = ConversationContext(
             thread_id=thread_id,
             messages=messages,
@@ -140,7 +150,11 @@ class MemoryUpdateQueue:
             reinforcement_detected=merged_reinforcement_detected,
         )
 
-        self._queue = [context for context in self._queue if self._queue_key(context.thread_id, context.user_id, context.agent_name) != queue_key]
+        self._queue = [
+            context
+            for context in self._queue
+            if self._queue_key(context.thread_id, context.user_id, context.agent_name) != queue_key
+        ]
         self._queue.append(context)
 
     def _reset_timer(self) -> None:

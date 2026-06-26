@@ -93,7 +93,9 @@ def _make_file_sandbox_writable(file_path: os.PathLike[str] | str) -> None:
         logger.warning("Skipping sandbox chmod for symlinked upload path: %s", file_path)
         return
 
-    writable_mode = stat.S_IMODE(file_stat.st_mode) | stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH | stat.S_IRGRP | stat.S_IROTH
+    writable_mode = (
+        stat.S_IMODE(file_stat.st_mode) | stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH | stat.S_IRGRP | stat.S_IROTH
+    )
     chmod_kwargs = {"follow_symlinks": False} if os.chmod in os.supports_follow_symlinks else {}
     os.chmod(file_path, writable_mode, **chmod_kwargs)
 
@@ -148,7 +150,9 @@ def _get_upload_limit(app_config: AppConfig, key: str, default: int, *, legacy_k
 def _get_upload_limits(app_config: AppConfig) -> UploadLimits:
     return UploadLimits(
         max_files=_get_upload_limit(app_config, "max_files", DEFAULT_MAX_FILES, legacy_key="max_file_count"),
-        max_file_size=_get_upload_limit(app_config, "max_file_size", DEFAULT_MAX_FILE_SIZE, legacy_key="max_single_file_size"),
+        max_file_size=_get_upload_limit(
+            app_config, "max_file_size", DEFAULT_MAX_FILE_SIZE, legacy_key="max_single_file_size"
+        ),
         max_total_size=_get_upload_limit(app_config, "max_total_size", DEFAULT_MAX_TOTAL_SIZE),
     )
 

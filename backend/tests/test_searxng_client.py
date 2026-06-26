@@ -71,7 +71,9 @@ class TestSearxngClient:
             import httpx
 
             mock_resp = MagicMock()
-            mock_resp.raise_for_status.side_effect = httpx.HTTPStatusError("403 Forbidden", request=MagicMock(), response=MagicMock())
+            mock_resp.raise_for_status.side_effect = httpx.HTTPStatusError(
+                "403 Forbidden", request=MagicMock(), response=MagicMock()
+            )
             mock_ctx.get = AsyncMock(return_value=mock_resp)
 
             client = SearxngClient(base_url="http://searxng:8080")
@@ -151,7 +153,11 @@ class TestSearxngTools:
         """web_search_tool respects max_results config."""
         mock_client = MagicMock()
         # Return 10 results; the tool should slice to max_results=3
-        mock_client.search = AsyncMock(return_value=[{"title": f"Result {i}", "url": f"https://example.com/{i}", "content": f"Desc {i}"} for i in range(10)])
+        mock_client.search = AsyncMock(
+            return_value=[
+                {"title": f"Result {i}", "url": f"https://example.com/{i}", "content": f"Desc {i}"} for i in range(10)
+            ]
+        )
         mock_get_client.return_value = mock_client
 
         with patch("deerflow.community.searxng.tools._get_tool_config", return_value={"max_results": "3"}):

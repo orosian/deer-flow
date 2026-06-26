@@ -350,7 +350,9 @@ def _convert_call_tool_result(
     def _resolve_link_url(uri: str) -> str:
         if thread_id is None or user_id is None:
             return uri
-        rewritten = _local_uri_to_virtual_path(uri, thread_id=thread_id, user_id=user_id, source_base_dir=source_base_dir)
+        rewritten = _local_uri_to_virtual_path(
+            uri, thread_id=thread_id, user_id=user_id, source_base_dir=source_base_dir
+        )
         return rewritten if rewritten is not None else uri
 
     def _resolve_text(text: str) -> str:
@@ -457,7 +459,9 @@ def _make_session_pool_tool(
             # Bundle the synchronous filesystem prep (dir creation, temp-dir
             # setup, pre-call snapshot) and run it off the event loop — the
             # snapshot walks the whole workspace and would otherwise block.
-            source_base_dir, tmp_dir, before_files = await asyncio.to_thread(_prepare_stdio_workspace, paths, thread_id=thread_id, user_id=user_id)
+            source_base_dir, tmp_dir, before_files = await asyncio.to_thread(
+                _prepare_stdio_workspace, paths, thread_id=thread_id, user_id=user_id
+            )
             # Stdio MCP servers resolve relative output links against their
             # process cwd. Keep that cwd inside the thread's mounted user-data
             # tree so files produced by tools like Playwright land where the
@@ -489,7 +493,9 @@ def _make_session_pool_tool(
                     if isinstance(request.headers, Mapping):
                         call_kwargs["meta"] = {"headers": dict(request.headers)}
                     else:
-                        logger.warning("Ignoring MCP interceptor headers with unsupported type: %s", type(request.headers).__name__)
+                        logger.warning(
+                            "Ignoring MCP interceptor headers with unsupported type: %s", type(request.headers).__name__
+                        )
                 return await session.call_tool(request.name, request.args, **call_kwargs)
 
             handler = base_handler
@@ -552,7 +558,9 @@ async def get_mcp_tools() -> list[BaseTool]:
     try:
         from langchain_mcp_adapters.client import MultiServerMCPClient
     except ImportError:
-        logger.warning("langchain-mcp-adapters not installed. Install it to enable MCP tools: pip install langchain-mcp-adapters")
+        logger.warning(
+            "langchain-mcp-adapters not installed. Install it to enable MCP tools: pip install langchain-mcp-adapters"
+        )
         return []
 
     # NOTE: We use ExtensionsConfig.from_file() instead of get_extensions_config()
@@ -592,7 +600,9 @@ async def get_mcp_tools() -> list[BaseTool]:
             raw_interceptor_paths = [raw_interceptor_paths]
         elif not isinstance(raw_interceptor_paths, list):
             if raw_interceptor_paths is not None:
-                logger.warning(f"mcpInterceptors must be a list of strings, got {type(raw_interceptor_paths).__name__}; skipping")
+                logger.warning(
+                    f"mcpInterceptors must be a list of strings, got {type(raw_interceptor_paths).__name__}; skipping"
+                )
             raw_interceptor_paths = []
         for interceptor_path in raw_interceptor_paths:
             try:
@@ -602,7 +612,9 @@ async def get_mcp_tools() -> list[BaseTool]:
                     tool_interceptors.append(interceptor)
                     logger.info(f"Loaded MCP interceptor: {interceptor_path}")
                 elif interceptor is not None:
-                    logger.warning(f"Builder {interceptor_path} returned non-callable {type(interceptor).__name__}; skipping")
+                    logger.warning(
+                        f"Builder {interceptor_path} returned non-callable {type(interceptor).__name__}; skipping"
+                    )
             except Exception as e:
                 logger.warning(
                     f"Failed to load MCP interceptor {interceptor_path}: {e}",
@@ -635,7 +647,9 @@ async def get_mcp_tools() -> list[BaseTool]:
             if tool_server is not None:
                 transport = servers_config[tool_server].get("transport", "stdio")
                 if transport == "stdio":
-                    wrapped_tools.append(_make_session_pool_tool(tool, tool_server, servers_config[tool_server], tool_interceptors))
+                    wrapped_tools.append(
+                        _make_session_pool_tool(tool, tool_server, servers_config[tool_server], tool_interceptors)
+                    )
                 else:
                     wrapped_tools.append(tool)
             else:

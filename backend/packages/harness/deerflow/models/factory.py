@@ -79,7 +79,14 @@ def _apply_stream_chunk_timeout_default(model_use_path: str, model_settings_from
     model_settings_from_config["stream_chunk_timeout"] = _DEFAULT_STREAM_CHUNK_TIMEOUT_SECONDS
 
 
-def create_chat_model(name: str | None = None, thinking_enabled: bool = False, *, app_config: AppConfig | None = None, attach_tracing: bool = True, **kwargs) -> BaseChatModel:
+def create_chat_model(
+    name: str | None = None,
+    thinking_enabled: bool = False,
+    *,
+    app_config: AppConfig | None = None,
+    attach_tracing: bool = True,
+    **kwargs,
+) -> BaseChatModel:
     """Create a chat model instance from the config.
 
     Args:
@@ -132,7 +139,9 @@ def create_chat_model(name: str | None = None, thinking_enabled: bool = False, *
         effective_wte = {**effective_wte, "thinking": merged_thinking}
     if thinking_enabled and has_thinking_settings:
         if not model_config.supports_thinking:
-            raise ValueError(f"Model {name} does not support thinking. Set `supports_thinking` to true in the `config.yaml` to enable thinking.") from None
+            raise ValueError(
+                f"Model {name} does not support thinking. Set `supports_thinking` to true in the `config.yaml` to enable thinking."
+            ) from None
         if effective_wte:
             model_settings_from_config.update(effective_wte)
     if not thinking_enabled:
@@ -146,7 +155,11 @@ def create_chat_model(name: str | None = None, thinking_enabled: bool = False, *
                 {"thinking": {"type": "disabled"}},
             )
             model_settings_from_config["reasoning_effort"] = "minimal"
-        elif has_thinking_settings and (disable_chat_template_kwargs := _vllm_disable_chat_template_kwargs(effective_wte.get("extra_body", {}).get("chat_template_kwargs") or {})):
+        elif has_thinking_settings and (
+            disable_chat_template_kwargs := _vllm_disable_chat_template_kwargs(
+                effective_wte.get("extra_body", {}).get("chat_template_kwargs") or {}
+            )
+        ):
             # vLLM uses chat template kwargs to switch thinking on/off.
             model_settings_from_config["extra_body"] = _deep_merge_dicts(
                 model_settings_from_config.get("extra_body"),

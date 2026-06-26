@@ -185,7 +185,9 @@ def test_wecom_connect_command_binds_identity(tmp_path):
         assert connections[0]["provider"] == "wecom"
         assert connections[0]["external_account_id"] == "wecom-user-1"
         assert connections[0]["workspace_id"] == "bot-1"
-        channel._ws_client.reply.assert_awaited_once_with(frame, {"msgtype": "text", "text": {"content": "WeCom connected to DeerFlow."}})
+        channel._ws_client.reply.assert_awaited_once_with(
+            frame, {"msgtype": "text", "text": {"content": "WeCom connected to DeerFlow."}}
+        )
         await repo.close()
 
     anyio.run(go)

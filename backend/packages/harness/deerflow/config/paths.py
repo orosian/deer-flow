@@ -26,14 +26,18 @@ def _default_local_base_dir() -> Path:
 def _validate_thread_id(thread_id: str) -> str:
     """Validate a thread ID before using it in filesystem paths."""
     if not _SAFE_THREAD_ID_RE.match(thread_id):
-        raise ValueError(f"Invalid thread_id {thread_id!r}: only alphanumeric characters, hyphens, and underscores are allowed.")
+        raise ValueError(
+            f"Invalid thread_id {thread_id!r}: only alphanumeric characters, hyphens, and underscores are allowed."
+        )
     return thread_id
 
 
 def _validate_user_id(user_id: str) -> str:
     """Validate a user ID before using it in filesystem paths."""
     if not _SAFE_USER_ID_RE.match(user_id):
-        raise ValueError(f"Invalid user_id {user_id!r}: only alphanumeric characters, hyphens, and underscores are allowed.")
+        raise ValueError(
+            f"Invalid user_id {user_id!r}: only alphanumeric characters, hyphens, and underscores are allowed."
+        )
     return user_id
 
 
@@ -289,7 +293,13 @@ class Paths:
     def host_thread_dir(self, thread_id: str, *, user_id: str | None = None) -> str:
         """Host path for a thread directory, preserving Windows path syntax."""
         if user_id is not None:
-            return _join_host_path(self._host_base_dir_str(), "users", _validate_user_id(user_id), "threads", _validate_thread_id(thread_id))
+            return _join_host_path(
+                self._host_base_dir_str(),
+                "users",
+                _validate_user_id(user_id),
+                "threads",
+                _validate_thread_id(thread_id),
+            )
         return _join_host_path(self._host_base_dir_str(), "threads", _validate_thread_id(thread_id))
 
     def host_sandbox_user_data_dir(self, thread_id: str, *, user_id: str | None = None) -> str:

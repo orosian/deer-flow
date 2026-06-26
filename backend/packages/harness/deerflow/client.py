@@ -38,7 +38,12 @@ from deerflow.agents.lead_agent.prompt import apply_prompt_template
 from deerflow.agents.thread_state import ThreadState
 from deerflow.config.agents_config import AGENT_NAME_PATTERN
 from deerflow.config.app_config import get_app_config, reload_app_config
-from deerflow.config.extensions_config import ExtensionsConfig, SkillStateConfig, get_extensions_config, reload_extensions_config
+from deerflow.config.extensions_config import (
+    ExtensionsConfig,
+    SkillStateConfig,
+    get_extensions_config,
+    reload_extensions_config,
+)
 from deerflow.config.paths import get_paths
 from deerflow.models import create_chat_model
 from deerflow.runtime.user_context import get_effective_user_id
@@ -275,7 +280,9 @@ class DeerFlowClient:
 
         self._agent = create_agent(**kwargs)
         self._agent_config_key = key
-        logger.info("Agent created: agent_name=%s, model=%s, thinking=%s", self._agent_name, model_name, thinking_enabled)
+        logger.info(
+            "Agent created: agent_name=%s, model=%s, thinking=%s", self._agent_name, model_name, thinking_enabled
+        )
 
     @staticmethod
     def _get_tools(*, model_name: str | None, subagent_enabled: bool):
@@ -298,7 +305,9 @@ class DeerFlowClient:
         return None
 
     @staticmethod
-    def _ai_text_event(msg_id: str | None, text: str, usage: dict | None, additional_kwargs: dict[str, Any] | None = None) -> "StreamEvent":
+    def _ai_text_event(
+        msg_id: str | None, text: str, usage: dict | None, additional_kwargs: dict[str, Any] | None = None
+    ) -> "StreamEvent":
         """Build a ``messages-tuple`` AI text event."""
         data: dict[str, Any] = {"type": "ai", "content": text, "id": msg_id}
         if usage:
@@ -308,7 +317,9 @@ class DeerFlowClient:
         return StreamEvent(type="messages-tuple", data=data)
 
     @staticmethod
-    def _ai_tool_calls_event(msg_id: str | None, tool_calls, additional_kwargs: dict[str, Any] | None = None) -> "StreamEvent":
+    def _ai_tool_calls_event(
+        msg_id: str | None, tool_calls, additional_kwargs: dict[str, Any] | None = None
+    ) -> "StreamEvent":
         """Build a ``messages-tuple`` AI tool-calls event."""
         data: dict[str, Any] = {
             "type": "ai",
@@ -382,7 +393,10 @@ class DeerFlowClient:
             return content
         if isinstance(content, list):
             if content and all(isinstance(block, str) for block in content):
-                chunk_like = len(content) > 1 and all(isinstance(block, str) and len(block) <= 20 and any(ch in block for ch in '{}[]":,') for block in content)
+                chunk_like = len(content) > 1 and all(
+                    isinstance(block, str) and len(block) <= 20 and any(ch in block for ch in '{}[]":,')
+                    for block in content
+                )
                 return "".join(content) if chunk_like else "\n".join(content)
 
             pieces: list[str] = []
@@ -487,7 +501,9 @@ class DeerFlowClient:
         for cp in checkpointer.list(config):
             channel_values = dict(cp.checkpoint.get("channel_values", {}))
             if "messages" in channel_values:
-                channel_values["messages"] = [self._serialize_message(m) if hasattr(m, "content") else m for m in channel_values["messages"]]
+                channel_values["messages"] = [
+                    self._serialize_message(m) if hasattr(m, "content") else m for m in channel_values["messages"]
+                ]
 
             cfg = cp.config.get("configurable", {})
             parent_cfg = cp.parent_config.get("configurable", {}) if cp.parent_config else {}
@@ -499,7 +515,9 @@ class DeerFlowClient:
                     "ts": cp.checkpoint.get("ts"),
                     "metadata": cp.metadata,
                     "values": channel_values,
-                    "pending_writes": [{"task_id": w[0], "channel": w[1], "value": w[2]} for w in getattr(cp, "pending_writes", [])],
+                    "pending_writes": [
+                        {"task_id": w[0], "channel": w[1], "value": w[2]} for w in getattr(cp, "pending_writes", [])
+                    ],
                 }
             )
 
@@ -664,7 +682,9 @@ class DeerFlowClient:
                 "total_tokens": total_tokens,
             }
 
-        def _unsent_additional_kwargs(msg_id: str | None, additional_kwargs: dict[str, Any] | None) -> dict[str, Any] | None:
+        def _unsent_additional_kwargs(
+            msg_id: str | None, additional_kwargs: dict[str, Any] | None
+        ) -> dict[str, Any] | None:
             if not additional_kwargs:
                 return None
             if not msg_id:
@@ -724,7 +744,9 @@ class DeerFlowClient:
                     if msg_chunk.tool_calls:
                         if msg_id:
                             streamed_ids.add(msg_id)
-                        additional_kwargs_delta = None if sent_additional_kwargs else _unsent_additional_kwargs(msg_id, additional_kwargs)
+                        additional_kwargs_delta = (
+                            None if sent_additional_kwargs else _unsent_additional_kwargs(msg_id, additional_kwargs)
+                        )
                         yield self._ai_tool_calls_event(
                             msg_id,
                             msg_chunk.tool_calls,
@@ -778,7 +800,9 @@ class DeerFlowClient:
 
                     text = self._extract_text(msg.content)
                     if text:
-                        additional_kwargs_delta = None if sent_additional_kwargs else _unsent_additional_kwargs(msg_id, additional_kwargs)
+                        additional_kwargs_delta = (
+                            None if sent_additional_kwargs else _unsent_additional_kwargs(msg_id, additional_kwargs)
+                        )
                         yield self._ai_text_event(
                             msg_id,
                             text,
@@ -786,7 +810,9 @@ class DeerFlowClient:
                             additional_kwargs_delta,
                         )
                     elif msg_id:
-                        additional_kwargs_delta = None if sent_additional_kwargs else _unsent_additional_kwargs(msg_id, additional_kwargs)
+                        additional_kwargs_delta = (
+                            None if sent_additional_kwargs else _unsent_additional_kwargs(msg_id, additional_kwargs)
+                        )
                         if not additional_kwargs_delta:
                             continue
                         # See the metadata-only follow-up convention above.
@@ -968,7 +994,9 @@ class DeerFlowClient:
         """
         config_path = ExtensionsConfig.resolve_config_path()
         if config_path is None:
-            raise FileNotFoundError("Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH or ensure it exists in the project root.")
+            raise FileNotFoundError(
+                "Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH or ensure it exists in the project root."
+            )
 
         current_config = get_extensions_config()
 
@@ -1033,7 +1061,9 @@ class DeerFlowClient:
 
         config_path = ExtensionsConfig.resolve_config_path()
         if config_path is None:
-            raise FileNotFoundError("Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH or ensure it exists in the project root.")
+            raise FileNotFoundError(
+                "Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH or ensure it exists in the project root."
+            )
 
         extensions_config = get_extensions_config()
         extensions_config.skills[name] = SkillStateConfig(enabled=enabled)

@@ -121,10 +121,14 @@ def update_agent(
     agent_name_raw: str | None = runtime.context.get("agent_name") if runtime.context else None
 
     def _err(message: str) -> Command:
-        return Command(update={"messages": [ToolMessage(content=f"Error: {message}", tool_call_id=tool_call_id, status="error")]})
+        return Command(
+            update={"messages": [ToolMessage(content=f"Error: {message}", tool_call_id=tool_call_id, status="error")]}
+        )
 
     if soul is None and description is None and skills is None and tool_groups is None and model is None:
-        return _err('No fields provided. Pass at least one of: soul, description, skills, tool_groups, model. Omit unchanged fields instead of passing null-like strings such as "null", "none", or "undefined".')
+        return _err(
+            'No fields provided. Pass at least one of: soul, description, skills, tool_groups, model. Omit unchanged fields instead of passing null-like strings such as "null", "none", or "undefined".'
+        )
 
     try:
         agent_name = validate_agent_name(agent_name_raw)
@@ -132,7 +136,9 @@ def update_agent(
         return _err(str(e))
 
     if not agent_name:
-        return _err("update_agent is only available inside a custom agent's chat. There is no agent_name in the current runtime context, so there is nothing to update. If you are inside the bootstrap flow, use setup_agent instead.")
+        return _err(
+            "update_agent is only available inside a custom agent's chat. There is no agent_name in the current runtime context, so there is nothing to update. If you are inside the bootstrap flow, use setup_agent instead."
+        )
 
     # Resolve the active user so that updates only affect this user's agent.
     # ``resolve_runtime_user_id`` prefers ``runtime.context["user_id"]`` (set by
@@ -152,12 +158,16 @@ def update_agent(
     paths = get_paths()
     agent_dir = paths.user_agent_dir(user_id, agent_name)
     if not agent_dir.exists() and paths.agent_dir(agent_name).exists():
-        return _err(f"Agent '{agent_name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating.")
+        return _err(
+            f"Agent '{agent_name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating."
+        )
 
     try:
         existing_cfg = load_agent_config(agent_name, user_id=user_id)
     except FileNotFoundError:
-        return _err(f"Agent '{agent_name}' does not exist for the current user. Use setup_agent to create a new agent first.")
+        return _err(
+            f"Agent '{agent_name}' does not exist for the current user. Use setup_agent to create a new agent first."
+        )
     except ValueError as e:
         return _err(f"Agent '{agent_name}' has an unreadable config: {e}")
 
@@ -238,7 +248,9 @@ def update_agent(
                     e,
                     exc_info=True,
                 )
-                return _err(f"Partial update for agent '{agent_name}': {[p.name for p in committed]} were updated, but the rest failed ({e}). Re-run update_agent to retry the remaining fields.")
+                return _err(
+                    f"Partial update for agent '{agent_name}': {[p.name for p in committed]} were updated, but the rest failed ({e}). Re-run update_agent to retry the remaining fields."
+                )
             raise
 
     except Exception as e:
@@ -247,14 +259,25 @@ def update_agent(
         return _err(f"Failed to update agent '{agent_name}': {e}")
 
     if not updated_fields:
-        return Command(update={"messages": [ToolMessage(content=f"No changes applied to agent '{agent_name}'. The provided values matched the existing config.", tool_call_id=tool_call_id)]})
+        return Command(
+            update={
+                "messages": [
+                    ToolMessage(
+                        content=f"No changes applied to agent '{agent_name}'. The provided values matched the existing config.",
+                        tool_call_id=tool_call_id,
+                    )
+                ]
+            }
+        )
 
     logger.info("[update_agent] Updated agent '%s' (user=%s) fields: %s", agent_name, user_id, updated_fields)
     return Command(
         update={
             "messages": [
                 ToolMessage(
-                    content=(f"Agent '{agent_name}' updated successfully. Changed: {', '.join(updated_fields)}. The new configuration takes effect on the next user turn."),
+                    content=(
+                        f"Agent '{agent_name}' updated successfully. Changed: {', '.join(updated_fields)}. The new configuration takes effect on the next user turn."
+                    ),
                     tool_call_id=tool_call_id,
                 )
             ]

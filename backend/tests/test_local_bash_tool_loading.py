@@ -4,7 +4,12 @@ from deerflow.sandbox.security import is_host_bash_allowed
 from deerflow.tools.tools import get_available_tools
 
 
-def _make_config(*, allow_host_bash: bool, sandbox_use: str = "deerflow.sandbox.local:LocalSandboxProvider", extra_tools: list[SimpleNamespace] | None = None):
+def _make_config(
+    *,
+    allow_host_bash: bool,
+    sandbox_use: str = "deerflow.sandbox.local:LocalSandboxProvider",
+    extra_tools: list[SimpleNamespace] | None = None,
+):
     return SimpleNamespace(
         tools=[
             SimpleNamespace(name="bash", group="bash", use="deerflow.sandbox.tools:bash_tool"),

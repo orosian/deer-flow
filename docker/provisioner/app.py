@@ -110,20 +110,14 @@ def _init_k8s_client() -> k8s_client.CoreV1Api:
     """
     if os.path.exists(KUBECONFIG_PATH):
         if os.path.isdir(KUBECONFIG_PATH):
-            raise RuntimeError(
-                f"KUBECONFIG_PATH points to a directory, expected a file: {KUBECONFIG_PATH}"
-            )
+            raise RuntimeError(f"KUBECONFIG_PATH points to a directory, expected a file: {KUBECONFIG_PATH}")
         try:
             k8s_config.load_kube_config(config_file=KUBECONFIG_PATH)
             logger.info(f"Loaded kubeconfig from {KUBECONFIG_PATH}")
         except Exception as exc:
-            raise RuntimeError(
-                f"Failed to load kubeconfig from {KUBECONFIG_PATH}: {exc}"
-            ) from exc
+            raise RuntimeError(f"Failed to load kubeconfig from {KUBECONFIG_PATH}: {exc}") from exc
     else:
-        logger.warning(
-            f"Kubeconfig not found at {KUBECONFIG_PATH}; trying in-cluster config"
-        )
+        logger.warning(f"Kubeconfig not found at {KUBECONFIG_PATH}; trying in-cluster config")
         try:
             k8s_config.load_incluster_config()
         except Exception as exc:
@@ -157,17 +151,13 @@ def _wait_for_kubeconfig(timeout: int = 30) -> None:
                 return
             if os.path.isdir(KUBECONFIG_PATH):
                 raise RuntimeError(
-                    "Kubeconfig path is a directory. "
-                    f"Please mount a kubeconfig file at {KUBECONFIG_PATH}."
+                    f"Kubeconfig path is a directory. Please mount a kubeconfig file at {KUBECONFIG_PATH}."
                 )
-            raise RuntimeError(
-                f"Kubeconfig path exists but is not a regular file: {KUBECONFIG_PATH}"
-            )
+            raise RuntimeError(f"Kubeconfig path exists but is not a regular file: {KUBECONFIG_PATH}")
         logger.info(f"Waiting for kubeconfig at {KUBECONFIG_PATH} …")
         time.sleep(2)
     logger.warning(
-        f"Kubeconfig not found at {KUBECONFIG_PATH} after {timeout}s; "
-        "will attempt in-cluster Kubernetes config"
+        f"Kubeconfig not found at {KUBECONFIG_PATH} after {timeout}s; will attempt in-cluster Kubernetes config"
     )
 
 
@@ -463,9 +453,7 @@ async def create_sandbox(req: CreateSandboxRequest):
         logger.info(f"Created Pod {_pod_name(sandbox_id)}")
     except ApiException as exc:
         if exc.status != 409:  # 409 = AlreadyExists
-            raise HTTPException(
-                status_code=500, detail=f"Pod creation failed: {exc.reason}"
-            )
+            raise HTTPException(status_code=500, detail=f"Pod creation failed: {exc.reason}")
 
     # ── Create Service ───────────────────────────────────────────────
     try:
@@ -478,9 +466,7 @@ async def create_sandbox(req: CreateSandboxRequest):
                 core_v1.delete_namespaced_pod(_pod_name(sandbox_id), K8S_NAMESPACE)
             except ApiException:
                 pass
-            raise HTTPException(
-                status_code=500, detail=f"Service creation failed: {exc.reason}"
-            )
+            raise HTTPException(status_code=500, detail=f"Service creation failed: {exc.reason}")
 
     # ── Read the auto-allocated NodePort ─────────────────────────────
     node_port: int | None = None
@@ -491,9 +477,7 @@ async def create_sandbox(req: CreateSandboxRequest):
         time.sleep(0.5)
 
     if not node_port:
-        raise HTTPException(
-            status_code=500, detail="NodePort was not allocated in time"
-        )
+        raise HTTPException(status_code=500, detail="NodePort was not allocated in time")
 
     return SandboxResponse(
         sandbox_id=sandbox_id,
@@ -524,9 +508,7 @@ async def destroy_sandbox(sandbox_id: str):
             errors.append(f"pod: {exc.reason}")
 
     if errors:
-        raise HTTPException(
-            status_code=500, detail=f"Partial cleanup: {', '.join(errors)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Partial cleanup: {', '.join(errors)}")
 
     return {"ok": True, "sandbox_id": sandbox_id}
 
@@ -554,9 +536,7 @@ async def list_sandboxes():
             label_selector="app=deer-flow-sandbox",
         )
     except ApiException as exc:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to list services: {exc.reason}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list services: {exc.reason}")
 
     sandboxes: list[SandboxResponse] = []
     for svc in services.items:

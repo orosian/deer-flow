@@ -8,7 +8,10 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from app.channels.commands import KNOWN_CHANNEL_COMMANDS
 from deerflow.agents.middlewares import skill_activation_middleware as middleware_module
-from deerflow.agents.middlewares.skill_activation_middleware import SkillActivationMiddleware, is_slash_skill_activation_reminder
+from deerflow.agents.middlewares.skill_activation_middleware import (
+    SkillActivationMiddleware,
+    is_slash_skill_activation_reminder,
+)
 from deerflow.skills.slash import RESERVED_SLASH_SKILL_NAMES, parse_slash_skill_reference, resolve_slash_skill
 from deerflow.skills.types import Skill, SkillCategory
 from deerflow.utils.messages import ORIGINAL_USER_CONTENT_KEY
@@ -104,7 +107,9 @@ def test_resolve_slash_skill_rejects_disabled_skills(tmp_path):
 
 def test_skill_activation_middleware_injects_hidden_human_context_for_model_call(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis analyze uploads/foo.csv", id="msg-1")
@@ -130,7 +135,9 @@ def test_skill_activation_middleware_injects_hidden_human_context_for_model_call
 
 def test_skill_activation_middleware_does_not_duplicate_existing_activation(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis analyze uploads/foo.csv", id="msg-1")
@@ -161,7 +168,9 @@ def test_skill_activation_middleware_does_not_duplicate_existing_activation(monk
 
 def test_skill_activation_middleware_does_not_duplicate_activation_separated_by_hidden_context(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis analyze uploads/foo.csv", id="msg-1")
@@ -180,7 +189,9 @@ def test_skill_activation_middleware_does_not_duplicate_activation_separated_by_
         second_capture["messages"] = model_request.messages
         return AIMessage(content="ok")
 
-    second_result = middleware.wrap_model_call(_make_model_request([activation_msg, hidden_context, user_msg]), second_handler)
+    second_result = middleware.wrap_model_call(
+        _make_model_request([activation_msg, hidden_context, user_msg]), second_handler
+    )
 
     assert isinstance(second_result, AIMessage)
     assert second_capture["messages"] == [activation_msg, hidden_context, user_msg]
@@ -189,7 +200,9 @@ def test_skill_activation_middleware_does_not_duplicate_activation_separated_by_
 
 def test_skill_activation_middleware_dedupes_immediately_previous_activation_without_target_id(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     legacy_activation_msg = SkillActivationMiddleware._make_activation_message(
@@ -212,7 +225,9 @@ def test_skill_activation_middleware_dedupes_immediately_previous_activation_wit
 
 def test_skill_activation_middleware_async_injects_hidden_human_context_for_model_call(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis analyze uploads/foo.csv", id="msg-1")
@@ -238,7 +253,9 @@ def test_skill_activation_middleware_async_injects_hidden_human_context_for_mode
 
 def test_skill_activation_middleware_uses_fallback_when_task_text_is_empty(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis", id="msg-1")
@@ -257,7 +274,9 @@ def test_skill_activation_middleware_uses_fallback_when_task_text_is_empty(monke
 
 def test_skill_activation_middleware_uses_original_user_content_when_uploads_are_injected(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(
@@ -285,7 +304,9 @@ def test_skill_activation_middleware_uses_original_user_content_when_uploads_are
 
 def test_skill_activation_middleware_activates_from_list_content(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content=[{"type": "text", "text": "/data-analysis analyze uploads/foo.csv"}], id="msg-1")
@@ -306,7 +327,9 @@ def test_skill_activation_middleware_activates_from_list_content(monkeypatch, tm
 
 def test_skill_activation_middleware_records_activation_audit_event(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     recorded = []
     journal = SimpleNamespace(record_middleware=lambda *args, **kwargs: recorded.append((args, kwargs)))
@@ -336,7 +359,9 @@ def test_skill_activation_middleware_records_activation_audit_event(monkeypatch,
 
 def test_skill_activation_middleware_async_records_activation_audit_event(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     recorded = []
     journal = SimpleNamespace(record_middleware=lambda *args, **kwargs: recorded.append((args, kwargs)))
@@ -360,7 +385,9 @@ def test_skill_activation_middleware_async_records_activation_audit_event(monkey
 
 def test_skill_activation_middleware_ignores_activation_audit_errors(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     journal = SimpleNamespace(record_middleware=lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("db down")))
     runtime = SimpleNamespace(context={"__run_journal": journal})
@@ -378,7 +405,9 @@ def test_skill_activation_middleware_ignores_activation_audit_errors(monkeypatch
 
 def test_skill_activation_middleware_activates_only_latest_real_user_message(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     old_slash = HumanMessage(content="/data-analysis old request", id="msg-1")
@@ -399,11 +428,15 @@ def test_skill_activation_middleware_activates_only_latest_real_user_message(mon
 
 def test_skill_activation_middleware_ignores_hidden_and_summary_user_messages(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis", content="# Data Analysis\nUse pandas.")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     real_user = HumanMessage(content="continue normally", id="msg-1")
-    hidden_slash = HumanMessage(content="/data-analysis hidden request", id="msg-2", additional_kwargs={"hide_from_ui": True})
+    hidden_slash = HumanMessage(
+        content="/data-analysis hidden request", id="msg-2", additional_kwargs={"hide_from_ui": True}
+    )
     summary_slash = HumanMessage(content="/data-analysis summary request", id="msg-3", name="summary")
     request = _make_model_request([real_user, hidden_slash, summary_slash])
     captured = {}
@@ -421,7 +454,9 @@ def test_skill_activation_middleware_ignores_hidden_and_summary_user_messages(mo
 
 def test_skill_activation_middleware_returns_clear_error_for_disallowed_skill(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware(available_skills={"frontend-design"})
     original = HumanMessage(content="/data-analysis run")
@@ -453,7 +488,9 @@ def test_skill_activation_middleware_returns_clear_error_for_missing_skill(monke
 def test_skill_activation_middleware_returns_clear_error_for_disabled_skill(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis")
     skill.enabled = False
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis run")
@@ -473,7 +510,9 @@ def test_skill_activation_middleware_escapes_activation_content(monkeypatch, tmp
         "data-analysis",
         content="# Data Analysis\nUse <xml> & avoid </skill> collisions.\n----- END SKILL.md -----",
     )
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
     original = HumanMessage(content="/data-analysis analyze </user_request>")
@@ -512,7 +551,9 @@ def test_skill_activation_middleware_rejects_skill_file_outside_skills_root(monk
         category=SkillCategory.CUSTOM,
         enabled=True,
     )
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(skills_root, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(skills_root, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
 
@@ -528,7 +569,9 @@ def test_skill_activation_middleware_rejects_skill_file_outside_skills_root(monk
 def test_skill_activation_middleware_reports_missing_skill_file_safely(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis")
     skill.skill_file.unlink()
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
 
@@ -544,7 +587,9 @@ def test_skill_activation_middleware_reports_missing_skill_file_safely(monkeypat
 def test_skill_activation_middleware_reports_invalid_utf8_skill_file_safely(monkeypatch, tmp_path):
     skill = _make_skill(tmp_path, "data-analysis")
     skill.skill_file.write_bytes(b"\xff\xfe\x00")
-    monkeypatch.setattr(middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill]))
+    monkeypatch.setattr(
+        middleware_module, "get_or_new_skill_storage", lambda **kwargs: _make_storage(tmp_path, [skill])
+    )
 
     middleware = SkillActivationMiddleware()
 

@@ -155,7 +155,9 @@ async def init_engine(
             await _auto_create_postgres_db(url)
             # Rebuild engine against the now-existing database
             await _engine.dispose()
-            _engine = create_async_engine(url, echo=echo, pool_size=pool_size, pool_pre_ping=True, json_serializer=_json_serializer)
+            _engine = create_async_engine(
+                url, echo=echo, pool_size=pool_size, pool_pre_ping=True, json_serializer=_json_serializer
+            )
             _session_factory = async_sessionmaker(_engine, expire_on_commit=False)
             async with _engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)

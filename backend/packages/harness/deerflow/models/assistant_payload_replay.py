@@ -59,7 +59,11 @@ def _match_ai_message(
 ) -> AIMessage | None:
     payload_key = _assistant_signature(payload_msg)
     if payload_key is not None:
-        matches = [index for index, ai_msg in enumerate(ai_messages) if index not in used_ai_indexes and _ai_signature(ai_msg) == payload_key]
+        matches = [
+            index
+            for index, ai_msg in enumerate(ai_messages)
+            if index not in used_ai_indexes and _ai_signature(ai_msg) == payload_key
+        ]
         if len(matches) == 1:
             used_ai_indexes.add(matches[0])
             return ai_messages[matches[0]]

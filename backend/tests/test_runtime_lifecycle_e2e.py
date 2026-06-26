@@ -321,11 +321,15 @@ def _drain_stream(response, *, timeout: float = 10.0, max_bytes: int = 1024 * 10
     while True:
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise AssertionError(f"SSE stream did not finish within {timeout}s; transcript tail={body[-4000:].decode('utf-8', errors='replace')}")
+            raise AssertionError(
+                f"SSE stream did not finish within {timeout}s; transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
+            )
         try:
             chunk = chunks.get(timeout=remaining)
         except queue.Empty as exc:
-            raise AssertionError(f"SSE stream did not produce data within {timeout}s; transcript tail={body[-4000:].decode('utf-8', errors='replace')}") from exc
+            raise AssertionError(
+                f"SSE stream did not produce data within {timeout}s; transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
+            ) from exc
         if chunk is sentinel:
             break
         if isinstance(chunk, BaseException):
@@ -336,7 +340,9 @@ def _drain_stream(response, *, timeout: float = 10.0, max_bytes: int = 1024 * 10
         if len(body) >= max_bytes:
             raise AssertionError(f"SSE stream exceeded {max_bytes} bytes without event: end")
     if b"event: end" not in body:
-        raise AssertionError(f"SSE stream closed before event: end; transcript tail={body[-4000:].decode('utf-8', errors='replace')}")
+        raise AssertionError(
+            f"SSE stream closed before event: end; transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
+        )
     return body.decode("utf-8", errors="replace")
 
 
@@ -474,8 +480,16 @@ def test_stream_run_completes_and_persists_runtime_state(isolated_app):
         event_types = [row["event_type"] for row in message_events]
         assert "llm.human.input" in event_types
         assert "llm.ai.response" in event_types
-        assert any(row["content"]["content"] == "Run lifecycle E2E prompt" for row in message_events if row["event_type"] == "llm.human.input")
-        assert any(row["content"]["content"] == "Lifecycle complete." for row in message_events if row["event_type"] == "llm.ai.response")
+        assert any(
+            row["content"]["content"] == "Run lifecycle E2E prompt"
+            for row in message_events
+            if row["event_type"] == "llm.human.input"
+        )
+        assert any(
+            row["content"]["content"] == "Lifecycle complete."
+            for row in message_events
+            if row["event_type"] == "llm.ai.response"
+        )
 
 
 def test_stream_run_executes_real_lead_agent_setup_agent_business_path(isolated_app, isolated_deer_flow_home: Path):
@@ -533,7 +547,9 @@ def test_stream_run_executes_real_lead_agent_setup_agent_business_path(isolated_
         assert run["assistant_id"] == "lead_agent"
 
         expected_soul = isolated_deer_flow_home / "users" / auth_user_id / "agents" / agent_name / "SOUL.md"
-        assert expected_soul.exists(), f"setup_agent did not write SOUL.md. tmp tree: {sorted(str(p.relative_to(isolated_deer_flow_home)) for p in isolated_deer_flow_home.rglob('SOUL.md'))}"
+        assert expected_soul.exists(), (
+            f"setup_agent did not write SOUL.md. tmp tree: {sorted(str(p.relative_to(isolated_deer_flow_home)) for p in isolated_deer_flow_home.rglob('SOUL.md'))}"
+        )
         assert f"Agent name: {agent_name}" in expected_soul.read_text(encoding="utf-8")
         assert not (isolated_deer_flow_home / "users" / "default" / "agents" / agent_name).exists()
 

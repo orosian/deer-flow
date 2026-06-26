@@ -230,19 +230,35 @@ class WechatChannel(Channel):
         self._channel_version = str(config.get("channel_version") or self.DEFAULT_CHANNEL_VERSION)
         self._polling_timeout = self._coerce_float(config.get("polling_timeout"), self.DEFAULT_POLLING_TIMEOUT)
         self._retry_delay = self._coerce_float(config.get("polling_retry_delay"), self.DEFAULT_RETRY_DELAY)
-        self._qrcode_poll_interval = self._coerce_float(config.get("qrcode_poll_interval"), self.DEFAULT_QRCODE_POLL_INTERVAL)
-        self._qrcode_poll_timeout = self._coerce_float(config.get("qrcode_poll_timeout"), self.DEFAULT_QRCODE_POLL_TIMEOUT)
+        self._qrcode_poll_interval = self._coerce_float(
+            config.get("qrcode_poll_interval"), self.DEFAULT_QRCODE_POLL_INTERVAL
+        )
+        self._qrcode_poll_timeout = self._coerce_float(
+            config.get("qrcode_poll_timeout"), self.DEFAULT_QRCODE_POLL_TIMEOUT
+        )
         self._qrcode_login_enabled = bool(config.get("qrcode_login_enabled", False))
         self._qrcode_bot_type = self._coerce_int(config.get("qrcode_bot_type"), self.DEFAULT_QRCODE_BOT_TYPE)
         self._ilink_app_id = str(config.get("ilink_app_id") or "").strip()
         self._route_tag = str(config.get("route_tag") or "").strip()
         self._respect_server_longpoll_timeout = bool(config.get("respect_server_longpoll_timeout", True))
-        self._max_inbound_image_bytes = self._coerce_int(config.get("max_inbound_image_bytes"), self.DEFAULT_MAX_IMAGE_BYTES)
-        self._max_outbound_image_bytes = self._coerce_int(config.get("max_outbound_image_bytes"), self.DEFAULT_MAX_OUTBOUND_IMAGE_BYTES)
-        self._max_inbound_file_bytes = self._coerce_int(config.get("max_inbound_file_bytes"), self.DEFAULT_MAX_INBOUND_FILE_BYTES)
-        self._max_outbound_file_bytes = self._coerce_int(config.get("max_outbound_file_bytes"), self.DEFAULT_MAX_OUTBOUND_FILE_BYTES)
-        self._allowed_file_extensions = self._coerce_str_set(config.get("allowed_file_extensions"), self.DEFAULT_ALLOWED_FILE_EXTENSIONS)
-        self._allowed_users: set[str] = {str(uid).strip() for uid in config.get("allowed_users", []) if str(uid).strip()}
+        self._max_inbound_image_bytes = self._coerce_int(
+            config.get("max_inbound_image_bytes"), self.DEFAULT_MAX_IMAGE_BYTES
+        )
+        self._max_outbound_image_bytes = self._coerce_int(
+            config.get("max_outbound_image_bytes"), self.DEFAULT_MAX_OUTBOUND_IMAGE_BYTES
+        )
+        self._max_inbound_file_bytes = self._coerce_int(
+            config.get("max_inbound_file_bytes"), self.DEFAULT_MAX_INBOUND_FILE_BYTES
+        )
+        self._max_outbound_file_bytes = self._coerce_int(
+            config.get("max_outbound_file_bytes"), self.DEFAULT_MAX_OUTBOUND_FILE_BYTES
+        )
+        self._allowed_file_extensions = self._coerce_str_set(
+            config.get("allowed_file_extensions"), self.DEFAULT_ALLOWED_FILE_EXTENSIONS
+        )
+        self._allowed_users: set[str] = {
+            str(uid).strip() for uid in config.get("allowed_users", []) if str(uid).strip()
+        }
         self._bot_token = str(config.get("bot_token") or "").strip()
         self._ilink_bot_id = str(config.get("ilink_bot_id") or "").strip() or None
         self._auth_state: dict[str, Any] = {}
@@ -359,7 +375,9 @@ class WechatChannel(Channel):
 
     async def _send_image_attachment(self, msg: OutboundMessage, attachment: ResolvedAttachment) -> bool:
         if self._max_outbound_image_bytes > 0 and attachment.size > self._max_outbound_image_bytes:
-            logger.warning("[WeChat] outbound image too large (%d bytes), skipping: %s", attachment.size, attachment.filename)
+            logger.warning(
+                "[WeChat] outbound image too large (%d bytes), skipping: %s", attachment.size, attachment.filename
+            )
             return False
 
         if not self._bot_token and not await self._ensure_authenticated():
@@ -378,7 +396,9 @@ class WechatChannel(Channel):
             return False
 
         aes_key = secrets.token_bytes(16)
-        filekey = _safe_media_filename("wechat-upload", attachment.actual_path.suffix or ".bin", message_id=msg.thread_id)
+        filekey = _safe_media_filename(
+            "wechat-upload", attachment.actual_path.suffix or ".bin", message_id=msg.thread_id
+        )
         upload_request = self._build_upload_request(
             filekey=filekey,
             media_type=UploadMediaType.IMAGE,
@@ -445,11 +465,15 @@ class WechatChannel(Channel):
 
     async def _send_file_attachment(self, msg: OutboundMessage, attachment: ResolvedAttachment) -> bool:
         if not self._is_allowed_file_type(attachment.filename, attachment.mime_type):
-            logger.warning("[WeChat] outbound file type blocked, skipping: %s (%s)", attachment.filename, attachment.mime_type)
+            logger.warning(
+                "[WeChat] outbound file type blocked, skipping: %s (%s)", attachment.filename, attachment.mime_type
+            )
             return False
 
         if self._max_outbound_file_bytes > 0 and attachment.size > self._max_outbound_file_bytes:
-            logger.warning("[WeChat] outbound file too large (%d bytes), skipping: %s", attachment.size, attachment.filename)
+            logger.warning(
+                "[WeChat] outbound file too large (%d bytes), skipping: %s", attachment.size, attachment.filename
+            )
             return False
 
         if not self._bot_token and not await self._ensure_authenticated():
@@ -468,7 +492,9 @@ class WechatChannel(Channel):
             return False
 
         aes_key = secrets.token_bytes(16)
-        filekey = _safe_media_filename("wechat-file-upload", attachment.actual_path.suffix or ".bin", message_id=msg.thread_id)
+        filekey = _safe_media_filename(
+            "wechat-file-upload", attachment.actual_path.suffix or ".bin", message_id=msg.thread_id
+        )
         upload_request = self._build_upload_request(
             filekey=filekey,
             media_type=UploadMediaType.FILE,
@@ -557,7 +583,9 @@ class WechatChannel(Channel):
                         self._get_updates_buf = ""
                         self._save_state()
                         self._save_auth_state(status="expired", bot_token="")
-                        logger.error("[WeChat] bot token expired; scan again or update bot_token and restart the channel")
+                        logger.error(
+                            "[WeChat] bot token expired; scan again or update bot_token and restart the channel"
+                        )
                         self._running = False
                         break
                     logger.warning(
@@ -616,7 +644,9 @@ class WechatChannel(Channel):
         if not text and not files:
             return
 
-        thread_ts = context_token or str(raw_message.get("client_id") or raw_message.get("msg_id") or "").strip() or None
+        thread_ts = (
+            context_token or str(raw_message.get("client_id") or raw_message.get("msg_id") or "").strip() or None
+        )
 
         if context_token:
             self._context_tokens_by_chat[chat_id] = context_token
@@ -660,7 +690,9 @@ class WechatChannel(Channel):
             return True
 
         if not chat_id:
-            await self._send_connection_reply(chat_id, context_token, "WeChat connection could not be completed from this message.")
+            await self._send_connection_reply(
+                chat_id, context_token, "WeChat connection could not be completed from this message."
+            )
             return True
 
         await self._connection_repo.upsert_connection(
@@ -767,7 +799,9 @@ class WechatChannel(Channel):
         )
         raise TimeoutError("Timed out waiting for WeChat QR confirmation")
 
-    async def _request_json(self, path: str, payload: dict[str, Any], *, timeout: float | None = None) -> dict[str, Any]:
+    async def _request_json(
+        self, path: str, payload: dict[str, Any], *, timeout: float | None = None
+    ) -> dict[str, Any]:
         client = await self._ensure_client()
         response = await client.post(
             f"{self._base_url}{path}",
@@ -999,7 +1033,9 @@ class WechatChannel(Channel):
         if not isinstance(item_list, list):
             return files
 
-        message_id = str(raw_message.get("message_id") or raw_message.get("msg_id") or raw_message.get("client_id") or "msg")
+        message_id = str(
+            raw_message.get("message_id") or raw_message.get("msg_id") or raw_message.get("client_id") or "msg"
+        )
 
         for index, item in enumerate(item_list):
             if not isinstance(item, Mapping):
@@ -1014,7 +1050,9 @@ class WechatChannel(Channel):
                     files.append(file_info)
         return files
 
-    async def _extract_image_file(self, item: Mapping[str, Any], *, message_id: str, index: int) -> dict[str, Any] | None:
+    async def _extract_image_file(
+        self, item: Mapping[str, Any], *, message_id: str, index: int
+    ) -> dict[str, Any] | None:
         image_item = item.get("image_item")
         if not isinstance(image_item, Mapping):
             return None
@@ -1040,7 +1078,11 @@ class WechatChannel(Channel):
         encrypted = await self._download_cdn_bytes(full_url)
         decrypted = _decrypt_aes_128_ecb(encrypted, aes_key)
         if self._max_inbound_image_bytes > 0 and len(decrypted) > self._max_inbound_image_bytes:
-            logger.warning("[WeChat] inbound image exceeds size limit (%d bytes), skipping message_id=%s", len(decrypted), message_id)
+            logger.warning(
+                "[WeChat] inbound image exceeds size limit (%d bytes), skipping message_id=%s",
+                len(decrypted),
+                message_id,
+            )
             return None
 
         detected_image = _detect_image_extension_and_mime(decrypted)
@@ -1062,7 +1104,9 @@ class WechatChannel(Channel):
             "full_url": full_url,
         }
 
-    async def _extract_file_item(self, item: Mapping[str, Any], *, message_id: str, index: int) -> dict[str, Any] | None:
+    async def _extract_file_item(
+        self, item: Mapping[str, Any], *, message_id: str, index: int
+    ) -> dict[str, Any] | None:
         file_item = item.get("file_item")
         if not isinstance(file_item, Mapping):
             return None
@@ -1085,16 +1129,24 @@ class WechatChannel(Channel):
             )
             return None
 
-        filename = self._normalize_inbound_filename(file_item.get("file_name"), default_prefix="wechat-file", message_id=message_id, index=index)
+        filename = self._normalize_inbound_filename(
+            file_item.get("file_name"), default_prefix="wechat-file", message_id=message_id, index=index
+        )
         mime_type = mimetypes.guess_type(filename)[0] or "application/octet-stream"
         if not self._is_allowed_file_type(filename, mime_type):
-            logger.warning("[WeChat] inbound file type blocked, skipping message_id=%s filename=%s", message_id, filename)
+            logger.warning(
+                "[WeChat] inbound file type blocked, skipping message_id=%s filename=%s", message_id, filename
+            )
             return None
 
         encrypted = await self._download_cdn_bytes(full_url)
         decrypted = _decrypt_aes_128_ecb(encrypted, aes_key)
         if self._max_inbound_file_bytes > 0 and len(decrypted) > self._max_inbound_file_bytes:
-            logger.warning("[WeChat] inbound file exceeds size limit (%d bytes), skipping message_id=%s", len(decrypted), message_id)
+            logger.warning(
+                "[WeChat] inbound file exceeds size limit (%d bytes), skipping message_id=%s",
+                len(decrypted),
+                message_id,
+            )
             return None
 
         stored_path = self._stage_downloaded_file(filename, decrypted)
@@ -1317,7 +1369,9 @@ class WechatChannel(Channel):
             return
         try:
             self._cursor_path.parent.mkdir(parents=True, exist_ok=True)
-            self._cursor_path.write_text(json.dumps({"get_updates_buf": self._get_updates_buf}, ensure_ascii=False, indent=2), encoding="utf-8")
+            self._cursor_path.write_text(
+                json.dumps({"get_updates_buf": self._get_updates_buf}, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
         except OSError:
             logger.warning("[WeChat] failed to persist cursor state to %s", self._cursor_path)
 
@@ -1381,7 +1435,9 @@ class WechatChannel(Channel):
                 # iLink bot_token is never briefly readable at umask defaults
                 # (mirrors ChannelRuntimeConfigStore._save). NamedTemporaryFile
                 # uses mkstemp, which creates the file at 0o600 from the start.
-                fd = tempfile.NamedTemporaryFile(mode="w", dir=self._auth_path.parent, suffix=".tmp", delete=False, encoding="utf-8")
+                fd = tempfile.NamedTemporaryFile(
+                    mode="w", dir=self._auth_path.parent, suffix=".tmp", delete=False, encoding="utf-8"
+                )
                 try:
                     json.dump(data, fd, ensure_ascii=False, indent=2)
                     fd.close()
@@ -1440,5 +1496,9 @@ class WechatChannel(Channel):
     def _coerce_str_set(value: Any, default: frozenset[str]) -> set[str]:
         if not isinstance(value, (list, tuple, set, frozenset)):
             return set(default)
-        normalized = {str(item).strip().lower() if str(item).strip().startswith(".") else f".{str(item).strip().lower()}" for item in value if str(item).strip()}
+        normalized = {
+            str(item).strip().lower() if str(item).strip().startswith(".") else f".{str(item).strip().lower()}"
+            for item in value
+            if str(item).strip()
+        }
         return normalized or set(default)

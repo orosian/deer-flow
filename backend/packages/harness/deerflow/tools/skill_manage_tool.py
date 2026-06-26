@@ -38,7 +38,15 @@ def _get_thread_id(runtime: Runtime | None) -> str | None:
     return runtime.config.get("configurable", {}).get("thread_id")
 
 
-def _history_record(*, action: str, file_path: str, prev_content: str | None, new_content: str | None, thread_id: str | None, scanner: dict[str, Any]) -> dict[str, Any]:
+def _history_record(
+    *,
+    action: str,
+    file_path: str,
+    prev_content: str | None,
+    new_content: str | None,
+    thread_id: str | None,
+    scanner: dict[str, Any],
+) -> dict[str, Any]:
     return {
         "action": action,
         "author": "agent",
@@ -101,7 +109,14 @@ async def _skill_manage_impl(
             await _to_thread(
                 skill_storage.append_history,
                 name,
-                _history_record(action="create", file_path=SKILL_MD_FILE, prev_content=None, new_content=content, thread_id=thread_id, scanner=scan),
+                _history_record(
+                    action="create",
+                    file_path=SKILL_MD_FILE,
+                    prev_content=None,
+                    new_content=content,
+                    thread_id=thread_id,
+                    scanner=scan,
+                ),
             )
             await refresh_skills_system_prompt_cache_async()
             return f"Created custom skill '{name}'."
@@ -118,7 +133,14 @@ async def _skill_manage_impl(
             await _to_thread(
                 skill_storage.append_history,
                 name,
-                _history_record(action="edit", file_path=SKILL_MD_FILE, prev_content=prev_content, new_content=content, thread_id=thread_id, scanner=scan),
+                _history_record(
+                    action="edit",
+                    file_path=SKILL_MD_FILE,
+                    prev_content=prev_content,
+                    new_content=content,
+                    thread_id=thread_id,
+                    scanner=scan,
+                ),
             )
             await refresh_skills_system_prompt_cache_async()
             return f"Updated custom skill '{name}'."
@@ -142,7 +164,14 @@ async def _skill_manage_impl(
             await _to_thread(
                 skill_storage.append_history,
                 name,
-                _history_record(action="patch", file_path=SKILL_MD_FILE, prev_content=prev_content, new_content=new_content, thread_id=thread_id, scanner=scan),
+                _history_record(
+                    action="patch",
+                    file_path=SKILL_MD_FILE,
+                    prev_content=prev_content,
+                    new_content=new_content,
+                    thread_id=thread_id,
+                    scanner=scan,
+                ),
             )
             await refresh_skills_system_prompt_cache_async()
             return f"Patched custom skill '{name}' ({replacement_count} replacement(s) applied, {occurrences} match(es) found)."
@@ -176,7 +205,14 @@ async def _skill_manage_impl(
             await _to_thread(
                 skill_storage.append_history,
                 name,
-                _history_record(action="write_file", file_path=path, prev_content=prev_content, new_content=content, thread_id=thread_id, scanner=scan),
+                _history_record(
+                    action="write_file",
+                    file_path=path,
+                    prev_content=prev_content,
+                    new_content=content,
+                    thread_id=thread_id,
+                    scanner=scan,
+                ),
             )
             return f"Wrote '{path}' for custom skill '{name}'."
 
@@ -192,12 +228,21 @@ async def _skill_manage_impl(
             await _to_thread(
                 skill_storage.append_history,
                 name,
-                _history_record(action="remove_file", file_path=path, prev_content=prev_content, new_content=None, thread_id=thread_id, scanner={"decision": "allow", "reason": "Deletion requested."}),
+                _history_record(
+                    action="remove_file",
+                    file_path=path,
+                    prev_content=prev_content,
+                    new_content=None,
+                    thread_id=thread_id,
+                    scanner={"decision": "allow", "reason": "Deletion requested."},
+                ),
             )
             return f"Removed '{path}' from custom skill '{name}'."
 
         if await _to_thread(skill_storage.public_skill_exists, name):
-            raise ValueError(f"'{name}' is a built-in skill. To customise it, create a new skill with the same name under skills/custom/.")
+            raise ValueError(
+                f"'{name}' is a built-in skill. To customise it, create a new skill with the same name under skills/custom/."
+            )
         raise ValueError(f"Unsupported action '{action}'.")
 
 

@@ -106,7 +106,9 @@ class SkillActivationMiddleware(AgentMiddleware):
         if skill is None:
             return _ActivationResolution(failure_message=f"Skill `/{reference.name}` is not installed.")
         if not skill.enabled:
-            return _ActivationResolution(failure_message=f"Skill `/{reference.name}` is installed but disabled. Enable it before using slash activation.")
+            return _ActivationResolution(
+                failure_message=f"Skill `/{reference.name}` is installed but disabled. Enable it before using slash activation."
+            )
         if self._available_skills is not None and reference.name not in self._available_skills:
             return _ActivationResolution(failure_message=f"Skill `/{reference.name}` is not available for this agent.")
 
@@ -123,7 +125,9 @@ class SkillActivationMiddleware(AgentMiddleware):
             skill_content = self._read_skill_content(resolved.skill.skill_file, storage.get_skills_root_path())
         except (OSError, ValueError):
             logger.exception("Failed to read slash-activated skill %s", resolved.skill.name)
-            return _ActivationResolution(failure_message=f"Skill `/{reference.name}` could not be loaded safely. Please check the skill installation.")
+            return _ActivationResolution(
+                failure_message=f"Skill `/{reference.name}` could not be loaded safely. Please check the skill installation."
+            )
 
         content_hash = hashlib.sha256(skill_content.encode("utf-8")).hexdigest()
         return _ActivationResolution(
@@ -139,7 +143,9 @@ class SkillActivationMiddleware(AgentMiddleware):
 
     @staticmethod
     def _build_activation_reminder(activation: _Activation) -> str:
-        user_request = activation.remaining_text or ("No additional task text was provided after the slash skill command. Ask the user what they want to do with this skill if the next step is unclear.")
+        user_request = activation.remaining_text or (
+            "No additional task text was provided after the slash skill command. Ask the user what they want to do with this skill if the next step is unclear."
+        )
         escaped_user_request = html.escape(user_request, quote=False)
         escaped_skill_content = html.escape(activation.skill_content, quote=False)
         escaped_skill_name = html.escape(activation.skill_name, quote=True)
@@ -182,7 +188,9 @@ Follow this skill before choosing a general workflow. Load supporting resources 
         if not messages:
             return None
 
-        target_index = next((idx for idx in range(len(messages) - 1, -1, -1) if _is_user_activation_target(messages[idx])), None)
+        target_index = next(
+            (idx for idx in range(len(messages) - 1, -1, -1) if _is_user_activation_target(messages[idx])), None
+        )
         if target_index is None:
             return None
 

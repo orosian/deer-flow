@@ -73,7 +73,22 @@ class TestInfoQuestClient:
         """Test successful web_search_raw_results operation."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"organic": [{"title": "Test Result", "desc": "Test description", "url": "https://example.com"}]}}}], "images_results": []}}
+        mock_response.json.return_value = {
+            "search_result": {
+                "results": [
+                    {
+                        "content": {
+                            "results": {
+                                "organic": [
+                                    {"title": "Test Result", "desc": "Test description", "url": "https://example.com"}
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "images_results": [],
+            }
+        }
         mock_post.return_value = mock_response
 
         client = InfoQuestClient()
@@ -90,7 +105,22 @@ class TestInfoQuestClient:
         """Test successful web_search operation."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"organic": [{"title": "Test Result", "desc": "Test description", "url": "https://example.com"}]}}}], "images_results": []}}
+        mock_response.json.return_value = {
+            "search_result": {
+                "results": [
+                    {
+                        "content": {
+                            "results": {
+                                "organic": [
+                                    {"title": "Test Result", "desc": "Test description", "url": "https://example.com"}
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "images_results": [],
+            }
+        }
         mock_post.return_value = mock_response
 
         client = InfoQuestClient()
@@ -108,8 +138,19 @@ class TestInfoQuestClient:
             {
                 "content": {
                     "results": {
-                        "organic": [{"title": "Test Page", "desc": "Page description", "url": "https://example.com/page1"}],
-                        "top_stories": {"items": [{"title": "Test News", "source": "Test Source", "time_frame": "2 hours ago", "url": "https://example.com/news1"}]},
+                        "organic": [
+                            {"title": "Test Page", "desc": "Page description", "url": "https://example.com/page1"}
+                        ],
+                        "top_stories": {
+                            "items": [
+                                {
+                                    "title": "Test News",
+                                    "source": "Test Source",
+                                    "time_frame": "2 hours ago",
+                                    "url": "https://example.com/news1",
+                                }
+                            ]
+                        },
                     }
                 }
             }
@@ -182,7 +223,21 @@ class TestInfoQuestClient:
 
     def test_clean_results_with_image_search(self):
         """Test clean_results_with_image_search method with sample raw results."""
-        raw_results = [{"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg", "title": "Test Image 1", "url": "https://example.com/page1"}]}}}]
+        raw_results = [
+            {
+                "content": {
+                    "results": {
+                        "images_results": [
+                            {
+                                "original": "https://example.com/image1.jpg",
+                                "title": "Test Image 1",
+                                "url": "https://example.com/page1",
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
         cleaned = InfoQuestClient.clean_results_with_image_search(raw_results)
 
         assert len(cleaned) == 1
@@ -210,7 +265,25 @@ class TestImageSearch:
         """Test successful image_search_raw_results operation."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg", "title": "Test Image", "url": "https://example.com/page1"}]}}}]}}
+        mock_response.json.return_value = {
+            "search_result": {
+                "results": [
+                    {
+                        "content": {
+                            "results": {
+                                "images_results": [
+                                    {
+                                        "original": "https://example.com/image1.jpg",
+                                        "title": "Test Image",
+                                        "url": "https://example.com/page1",
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
         mock_post.return_value = mock_response
 
         client = InfoQuestClient()
@@ -227,7 +300,13 @@ class TestImageSearch:
         """Test image_search_raw_results with all parameters."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg"}]}}}]}}
+        mock_response.json.return_value = {
+            "search_result": {
+                "results": [
+                    {"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg"}]}}}
+                ]
+            }
+        }
         mock_post.return_value = mock_response
 
         client = InfoQuestClient(image_search_time_range=30, image_size="l")
@@ -247,7 +326,9 @@ class TestImageSearch:
         mock_response = MagicMock()
         mock_response.status_code = 200
 
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"images_results": []}}}]}}
+        mock_response.json.return_value = {
+            "search_result": {"results": [{"content": {"results": {"images_results": []}}}]}
+        }
         mock_post.return_value = mock_response
 
         # Create client with invalid time_range (should be ignored)
@@ -269,7 +350,25 @@ class TestImageSearch:
         mock_response = MagicMock()
         mock_response.status_code = 200
 
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg", "title": "Test Image", "url": "https://example.com/page1"}]}}}]}}
+        mock_response.json.return_value = {
+            "search_result": {
+                "results": [
+                    {
+                        "content": {
+                            "results": {
+                                "images_results": [
+                                    {
+                                        "original": "https://example.com/image1.jpg",
+                                        "title": "Test Image",
+                                        "url": "https://example.com/page1",
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
         mock_post.return_value = mock_response
 
         client = InfoQuestClient()
@@ -290,7 +389,13 @@ class TestImageSearch:
         mock_response = MagicMock()
         mock_response.status_code = 200
 
-        mock_response.json.return_value = {"search_result": {"results": [{"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg"}]}}}]}}
+        mock_response.json.return_value = {
+            "search_result": {
+                "results": [
+                    {"content": {"results": {"images_results": [{"original": "https://example.com/image1.jpg"}]}}}
+                ]
+            }
+        }
         mock_post.return_value = mock_response
 
         # Create client with image search parameters

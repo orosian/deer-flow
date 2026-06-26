@@ -105,10 +105,22 @@ def test_get_thread_mounts_preserves_windows_host_path_style(tmp_path, monkeypat
 
     container_paths = {container_path: host_path for host_path, container_path, _ in mounts}
 
-    assert container_paths["/mnt/user-data/workspace"] == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\user-data\workspace"
-    assert container_paths["/mnt/user-data/uploads"] == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\user-data\uploads"
-    assert container_paths["/mnt/user-data/outputs"] == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\user-data\outputs"
-    assert container_paths["/mnt/acp-workspace"] == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\acp-workspace"
+    assert (
+        container_paths["/mnt/user-data/workspace"]
+        == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\user-data\workspace"
+    )
+    assert (
+        container_paths["/mnt/user-data/uploads"]
+        == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\user-data\uploads"
+    )
+    assert (
+        container_paths["/mnt/user-data/outputs"]
+        == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\user-data\outputs"
+    )
+    assert (
+        container_paths["/mnt/acp-workspace"]
+        == r"C:\Users\demo\deer-flow\backend\.deer-flow\threads\thread-10\acp-workspace"
+    )
 
 
 def test_discover_or_create_only_unlocks_when_lock_succeeds(tmp_path, monkeypatch):
@@ -161,7 +173,9 @@ async def test_acquire_async_uses_async_readiness_polling(monkeypatch):
 
     async_readiness_calls: list[tuple[str, int]] = []
 
-    async def fake_wait_for_sandbox_ready_async(sandbox_url: str, timeout: int = 30, poll_interval: float = 1.0) -> bool:
+    async def fake_wait_for_sandbox_ready_async(
+        sandbox_url: str, timeout: int = 30, poll_interval: float = 1.0
+    ) -> bool:
         async_readiness_calls.append((sandbox_url, timeout))
         return True
 
@@ -185,9 +199,11 @@ async def test_discover_or_create_with_lock_async_offloads_lock_file_open_and_cl
     """Async lock path must not open or close lock files on the event loop."""
     aio_mod = importlib.import_module("deerflow.community.aio_sandbox.aio_sandbox_provider")
     provider = _make_provider(tmp_path)
-    provider._discover_or_create_with_lock_async = aio_mod.AioSandboxProvider._discover_or_create_with_lock_async.__get__(
-        provider,
-        aio_mod.AioSandboxProvider,
+    provider._discover_or_create_with_lock_async = (
+        aio_mod.AioSandboxProvider._discover_or_create_with_lock_async.__get__(
+            provider,
+            aio_mod.AioSandboxProvider,
+        )
     )
     provider._thread_locks = {}
     provider._warm_pool = {}
@@ -560,7 +576,9 @@ def test_acquire_skips_dead_warm_pool_sandbox(tmp_path, monkeypatch):
         ),
     )
 
-    monkeypatch.setattr(aio_mod.AioSandboxProvider, "_sandbox_id_for_thread", lambda _self, _thread_id: "sandbox-warm-dead")
+    monkeypatch.setattr(
+        aio_mod.AioSandboxProvider, "_sandbox_id_for_thread", lambda _self, _thread_id: "sandbox-warm-dead"
+    )
     monkeypatch.setattr(aio_mod.AioSandboxProvider, "_get_extra_mounts", lambda _self, _thread_id: [])
     monkeypatch.setattr(aio_mod, "get_paths", lambda: Paths(base_dir=tmp_path))
     monkeypatch.setattr(aio_mod, "get_effective_user_id", lambda: None)

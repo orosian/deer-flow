@@ -50,7 +50,10 @@ def test_tool_search_promotes_into_next_turn():
             return self
 
     setup = build_deferred_tool_setup([active_tool, tag_mcp_tool(mcp_calc), tag_mcp_tool(mcp_other)], enabled=True)
-    turn1 = AIMessage(content="", tool_calls=[{"name": "tool_search", "args": {"query": "select:mcp_calc"}, "id": "c1", "type": "tool_call"}])
+    turn1 = AIMessage(
+        content="",
+        tool_calls=[{"name": "tool_search", "args": {"query": "select:mcp_calc"}, "id": "c1", "type": "tool_call"}],
+    )
     turn2 = AIMessage(content="done")
     model = RecordingModel(messages=iter([turn1, turn2]))
 

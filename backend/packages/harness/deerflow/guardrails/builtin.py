@@ -14,9 +14,17 @@ class AllowlistProvider:
 
     def evaluate(self, request: GuardrailRequest) -> GuardrailDecision:
         if self._allowed is not None and request.tool_name not in self._allowed:
-            return GuardrailDecision(allow=False, reasons=[GuardrailReason(code="oap.tool_not_allowed", message=f"tool '{request.tool_name}' not in allowlist")])
+            return GuardrailDecision(
+                allow=False,
+                reasons=[
+                    GuardrailReason(code="oap.tool_not_allowed", message=f"tool '{request.tool_name}' not in allowlist")
+                ],
+            )
         if request.tool_name in self._denied:
-            return GuardrailDecision(allow=False, reasons=[GuardrailReason(code="oap.tool_not_allowed", message=f"tool '{request.tool_name}' is denied")])
+            return GuardrailDecision(
+                allow=False,
+                reasons=[GuardrailReason(code="oap.tool_not_allowed", message=f"tool '{request.tool_name}' is denied")],
+            )
         return GuardrailDecision(allow=True, reasons=[GuardrailReason(code="oap.allowed")])
 
     async def aevaluate(self, request: GuardrailRequest) -> GuardrailDecision:

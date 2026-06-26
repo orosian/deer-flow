@@ -105,7 +105,11 @@ class ToolErrorHandlingMiddleware(AgentMiddleware[AgentState]):
             # Preserve LangGraph control-flow signals (interrupt/pause/resume).
             raise
         except Exception as exc:
-            logger.exception("Tool execution failed (sync): name=%s id=%s", request.tool_call.get("name"), request.tool_call.get("id"))
+            logger.exception(
+                "Tool execution failed (sync): name=%s id=%s",
+                request.tool_call.get("name"),
+                request.tool_call.get("id"),
+            )
             return self._build_error_message(request, exc)
         return self._maybe_stamp(result, request)
 
@@ -121,7 +125,11 @@ class ToolErrorHandlingMiddleware(AgentMiddleware[AgentState]):
             # Preserve LangGraph control-flow signals (interrupt/pause/resume).
             raise
         except Exception as exc:
-            logger.exception("Tool execution failed (async): name=%s id=%s", request.tool_call.get("name"), request.tool_call.get("id"))
+            logger.exception(
+                "Tool execution failed (async): name=%s id=%s",
+                request.tool_call.get("name"),
+                request.tool_call.get("id"),
+            )
             return self._build_error_message(request, exc)
         return self._maybe_stamp(result, request)
 
@@ -173,12 +181,18 @@ def _build_runtime_middlewares(
         if "framework" not in provider_kwargs:
             try:
                 sig = inspect.signature(provider_cls.__init__)
-                if "framework" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+                if "framework" in sig.parameters or any(
+                    p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+                ):
                     provider_kwargs["framework"] = "deerflow"
             except (ValueError, TypeError):
                 pass
         provider = provider_cls(**provider_kwargs)
-        middlewares.append(GuardrailMiddleware(provider, fail_closed=guardrails_config.fail_closed, passport=guardrails_config.passport))
+        middlewares.append(
+            GuardrailMiddleware(
+                provider, fail_closed=guardrails_config.fail_closed, passport=guardrails_config.passport
+            )
+        )
 
     from deerflow.agents.middlewares.sandbox_audit_middleware import SandboxAuditMiddleware
 

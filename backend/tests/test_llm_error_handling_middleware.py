@@ -34,7 +34,11 @@ class FakeError(Exception):
         self.status_code = status_code
         self.code = code
         self.body = body
-        self.response = SimpleNamespace(status_code=status_code, headers=headers or {}) if status_code is not None or headers else None
+        self.response = (
+            SimpleNamespace(status_code=status_code, headers=headers or {})
+            if status_code is not None or headers
+            else None
+        )
 
 
 def _build_middleware(**attrs: int) -> LLMErrorHandlingMiddleware:

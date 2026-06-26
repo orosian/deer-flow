@@ -128,7 +128,9 @@ class AioSandbox(Sandbox):
         """
         with self._lock:
             try:
-                result = self._client.shell.exec_command(command=command, no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT)
+                result = self._client.shell.exec_command(
+                    command=command, no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT
+                )
                 output = result.data.output if result.data else ""
 
                 if output and _ERROR_OBSERVATION_SIGNATURE in output:
@@ -139,7 +141,9 @@ class AioSandbox(Sandbox):
                     fresh_id = str(uuid.uuid4())
                     self._client.shell.create_session(id=fresh_id)
                     try:
-                        result = self._client.shell.exec_command(command=command, id=fresh_id, no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT)
+                        result = self._client.shell.exec_command(
+                            command=command, id=fresh_id, no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT
+                        )
                         output = result.data.output if result.data else ""
                     finally:
                         # Release the one-shot recovery session, best-effort, so
@@ -190,7 +194,9 @@ class AioSandbox(Sandbox):
         stripped_path = normalised.lstrip("/")
         allowed_prefix = VIRTUAL_PATH_PREFIX.lstrip("/")
         if stripped_path != allowed_prefix and not stripped_path.startswith(f"{allowed_prefix}/"):
-            logger.error("Refused download outside allowed directory: path=%s, allowed_prefix=%s", path, VIRTUAL_PATH_PREFIX)
+            logger.error(
+                "Refused download outside allowed directory: path=%s, allowed_prefix=%s", path, VIRTUAL_PATH_PREFIX
+            )
             raise PermissionError(f"Access denied: path must be under '{VIRTUAL_PATH_PREFIX}': '{path}'")
 
         with self._lock:
@@ -225,7 +231,10 @@ class AioSandbox(Sandbox):
         """
         with self._lock:
             try:
-                result = self._client.shell.exec_command(command=f"find {shlex.quote(path)} -maxdepth {max_depth} -type f -o -type d 2>/dev/null | head -500", no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT)
+                result = self._client.shell.exec_command(
+                    command=f"find {shlex.quote(path)} -maxdepth {max_depth} -type f -o -type d 2>/dev/null | head -500",
+                    no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT,
+                )
                 output = result.data.output if result.data else ""
                 if output:
                     return [line.strip() for line in output.strip().split("\n") if line.strip()]
@@ -253,7 +262,9 @@ class AioSandbox(Sandbox):
                 logger.error(f"Failed to write file in sandbox: {e}")
                 raise
 
-    def glob(self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200) -> tuple[list[str], bool]:
+    def glob(
+        self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200
+    ) -> tuple[list[str], bool]:
         if not include_dirs:
             result = self._client.file.find_files(path=path, glob=pattern)
             files = result.data.files if result.data and result.data.files else []

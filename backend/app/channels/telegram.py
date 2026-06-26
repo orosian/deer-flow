@@ -333,7 +333,9 @@ class TelegramChannel(Channel):
 
     @staticmethod
     def _split_message(text: str) -> list[str]:
-        return [text[i : i + TELEGRAM_MAX_MESSAGE_LENGTH] for i in range(0, len(text), TELEGRAM_MAX_MESSAGE_LENGTH)] or [text]
+        return [
+            text[i : i + TELEGRAM_MAX_MESSAGE_LENGTH] for i in range(0, len(text), TELEGRAM_MAX_MESSAGE_LENGTH)
+        ] or [text]
 
     async def _send_running_reply(self, chat_id: str, reply_to_message_id: int) -> None:
         """Send a 'Working on it...' reply and register it as the stream target."""
@@ -422,7 +424,13 @@ class TelegramChannel(Channel):
             },
             status="connected",
         )
-        logger.info("[Telegram] bound chat=%s user=%s to DeerFlow user=%s connection=%s", chat_id, user_id, owner_user_id, connection["id"])
+        logger.info(
+            "[Telegram] bound chat=%s user=%s to DeerFlow user=%s connection=%s",
+            chat_id,
+            user_id,
+            owner_user_id,
+            connection["id"],
+        )
         await update.message.reply_text("Telegram connected to DeerFlow.")
         return True
 
@@ -472,7 +480,9 @@ class TelegramChannel(Channel):
                 return
         if not self._check_user(update.effective_user.id):
             return
-        await update.message.reply_text("Welcome to DeerFlow! Send me a message to start a conversation.\nType /help for available commands.")
+        await update.message.reply_text(
+            "Welcome to DeerFlow! Send me a message to start a conversation.\nType /help for available commands."
+        )
 
     async def _process_incoming_with_reply(self, chat_id: str, msg_id: int, inbound: InboundMessage) -> None:
         await self._send_running_reply(chat_id, msg_id)
@@ -483,7 +493,9 @@ class TelegramChannel(Channel):
         if not self._check_user(update.effective_user.id):
             return
 
-        text = self._strip_bot_username_from_leading_command(update.message.text.strip(), self._get_bot_username(context))
+        text = self._strip_bot_username_from_leading_command(
+            update.message.text.strip(), self._get_bot_username(context)
+        )
         chat_id = str(update.effective_chat.id)
         user_id = str(update.effective_user.id)
         msg_id = str(update.message.message_id)
@@ -511,8 +523,12 @@ class TelegramChannel(Channel):
         inbound = await self._attach_connection_identity(inbound)
 
         if self._main_loop and self._main_loop.is_running():
-            fut = asyncio.run_coroutine_threadsafe(self._process_incoming_with_reply(chat_id, update.message.message_id, inbound), self._main_loop)
-            fut.add_done_callback(lambda f: self._log_future_error(f, "process_incoming_with_reply", update.message.message_id))
+            fut = asyncio.run_coroutine_threadsafe(
+                self._process_incoming_with_reply(chat_id, update.message.message_id, inbound), self._main_loop
+            )
+            fut.add_done_callback(
+                lambda f: self._log_future_error(f, "process_incoming_with_reply", update.message.message_id)
+            )
         else:
             logger.warning("[Telegram] Main loop not running. Cannot publish inbound message.")
 
@@ -521,7 +537,9 @@ class TelegramChannel(Channel):
         if not self._check_user(update.effective_user.id):
             return
 
-        text = self._strip_bot_username_from_leading_command(update.message.text.strip(), self._get_bot_username(context))
+        text = self._strip_bot_username_from_leading_command(
+            update.message.text.strip(), self._get_bot_username(context)
+        )
         if not text:
             return
 
@@ -555,7 +573,11 @@ class TelegramChannel(Channel):
         inbound = await self._attach_connection_identity(inbound)
 
         if self._main_loop and self._main_loop.is_running():
-            fut = asyncio.run_coroutine_threadsafe(self._process_incoming_with_reply(chat_id, update.message.message_id, inbound), self._main_loop)
-            fut.add_done_callback(lambda f: self._log_future_error(f, "process_incoming_with_reply", update.message.message_id))
+            fut = asyncio.run_coroutine_threadsafe(
+                self._process_incoming_with_reply(chat_id, update.message.message_id, inbound), self._main_loop
+            )
+            fut.add_done_callback(
+                lambda f: self._log_future_error(f, "process_incoming_with_reply", update.message.message_id)
+            )
         else:
             logger.warning("[Telegram] Main loop not running. Cannot publish inbound message.")

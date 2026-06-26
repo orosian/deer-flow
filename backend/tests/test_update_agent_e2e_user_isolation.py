@@ -198,8 +198,12 @@ def test_update_agent_should_use_runtime_context_user_id_when_contextvar_missing
     auth_soul = (auth_dir / "SOUL.md").read_text()
     default_soul = (default_dir / "SOUL.md").read_text()
 
-    assert auth_soul == "# Auth Updated", f"REGRESSION: update_agent ignored runtime.context['user_id']={auth_uid!r} and routed the write to users/default/ instead. auth_soul={auth_soul!r}, default_soul={default_soul!r}"
-    assert default_soul == "# Default Original", "REGRESSION: update_agent corrupted the shared default-user agent. It should have written under the authenticated user's path."
+    assert auth_soul == "# Auth Updated", (
+        f"REGRESSION: update_agent ignored runtime.context['user_id']={auth_uid!r} and routed the write to users/default/ instead. auth_soul={auth_soul!r}, default_soul={default_soul!r}"
+    )
+    assert default_soul == "# Default Original", (
+        "REGRESSION: update_agent corrupted the shared default-user agent. It should have written under the authenticated user's path."
+    )
 
 
 # ---------------------------------------------------------------------------

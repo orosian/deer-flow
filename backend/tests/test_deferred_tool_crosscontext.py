@@ -146,7 +146,9 @@ def test_policy_denied_mcp_yields_no_tool_search_end_to_end():
     """An allowlist that denies the MCP tool gates it end-to-end: after the real
     policy filter no MCP tool survives, so ``assemble_deferred_tools`` adds no
     tool_search (and does not fail-closed, because no MCP tool leaked through)."""
-    filtered = filter_tools_by_skill_allowed_tools([active_tool, tag_mcp_tool(mcp_secret)], [_make_skill(["active_tool"])])
+    filtered = filter_tools_by_skill_allowed_tools(
+        [active_tool, tag_mcp_tool(mcp_secret)], [_make_skill(["active_tool"])]
+    )
     final_tools, setup = assemble_deferred_tools(filtered, enabled=True)
 
     assert [t.name for t in final_tools] == ["active_tool"]

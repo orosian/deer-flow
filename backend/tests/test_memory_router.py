@@ -329,7 +329,18 @@ def test_get_memory_honors_bound_owner_header() -> None:
 
     def fake_get_memory_data(*, user_id: str) -> dict:
         seen["user_id"] = user_id
-        return _sample_memory(facts=[{"id": "f", "content": "owner fact", "category": "context", "confidence": 0.9, "createdAt": "", "source": "owner"}])
+        return _sample_memory(
+            facts=[
+                {
+                    "id": "f",
+                    "content": "owner fact",
+                    "category": "context",
+                    "confidence": 0.9,
+                    "createdAt": "",
+                    "source": "owner",
+                }
+            ]
+        )
 
     with patch("app.gateway.routers.memory.get_memory_data", side_effect=fake_get_memory_data):
         response = asyncio.run(memory.get_memory(_internal_owner_request("owner-1")))

@@ -239,7 +239,9 @@ class DingTalkChannel(Channel):
                 if msg.is_final:
                     self._card_track_ids.pop(source_key, None)
                     self._card_repliers.pop(out_track_id, None)
-                    await self._send_markdown_fallback(robot_code, conversation_type, sender_staff_id, conversation_id, msg.text)
+                    await self._send_markdown_fallback(
+                        robot_code, conversation_type, sender_staff_id, conversation_id, msg.text
+                    )
                     return
             if msg.is_final:
                 self._card_track_ids.pop(source_key, None)
@@ -248,7 +250,9 @@ class DingTalkChannel(Channel):
 
         async def send_markdown() -> None:
             if conversation_type == _CONVERSATION_TYPE_GROUP:
-                await self._send_group_message(robot_code, conversation_id, msg.text, at_user_ids=[sender_staff_id] if sender_staff_id else None)
+                await self._send_group_message(
+                    robot_code, conversation_id, msg.text, at_user_ids=[sender_staff_id] if sender_staff_id else None
+                )
             else:
                 await self._send_p2p_message(robot_code, sender_staff_id, msg.text)
 
@@ -784,7 +788,9 @@ class DingTalkChannel(Channel):
                     logger.exception("[DingTalk] failed to decode upload response JSON: %s", file_path)
                     return None
                 if not isinstance(payload, dict):
-                    logger.warning("[DingTalk] unexpected upload response type %s for %s", type(payload).__name__, file_path)
+                    logger.warning(
+                        "[DingTalk] unexpected upload response type %s for %s", type(payload).__name__, file_path
+                    )
                     return None
                 return payload.get("mediaId")
         except (httpx.HTTPError, OSError):

@@ -212,7 +212,9 @@ class CodexChatModel(BaseChatModel):
             "input": input_items,
             "store": False,
             "stream": True,
-            "reasoning": {"effort": self.reasoning_effort, "summary": "detailed"} if self.reasoning_effort != "none" else {"effort": "none"},
+            "reasoning": {"effort": self.reasoning_effort, "summary": "detailed"}
+            if self.reasoning_effort != "none"
+            else {"effort": "none"},
         }
 
         if tools:
@@ -236,7 +238,9 @@ class CodexChatModel(BaseChatModel):
                     if attempt >= self.retry_max_attempts:
                         raise
                     wait_ms = 2000 * (1 << (attempt - 1))
-                    logger.warning(f"Codex API error {e.response.status_code}, retrying {attempt}/{self.retry_max_attempts} after {wait_ms}ms")
+                    logger.warning(
+                        f"Codex API error {e.response.status_code}, retrying {attempt}/{self.retry_max_attempts} after {wait_ms}ms"
+                    )
                     time.sleep(wait_ms / 1000)
                 else:
                     raise
@@ -310,7 +314,9 @@ class CodexChatModel(BaseChatModel):
 
         return data if isinstance(data, dict) else None
 
-    def _parse_tool_call_arguments(self, output_item: dict[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    def _parse_tool_call_arguments(
+        self, output_item: dict[str, Any]
+    ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
         """Parse function-call arguments, surfacing malformed payloads safely."""
         raw_arguments = output_item.get("arguments", "{}")
         if isinstance(raw_arguments, dict):

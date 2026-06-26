@@ -476,7 +476,9 @@ async def test_session_pool_tool_skips_after_walk_when_no_text_content(tmp_path)
     # nothing to do and the second recursive walk should not run.
     from mcp.types import ImageContent
 
-    image_result = MagicMock(content=[ImageContent(type="image", data="QUJD", mimeType="image/png")], isError=False, structuredContent=None)
+    image_result = MagicMock(
+        content=[ImageContent(type="image", data="QUJD", mimeType="image/png")], isError=False, structuredContent=None
+    )
     mock_session = AsyncMock()
     mock_session.call_tool = AsyncMock(return_value=image_result)
     mock_cm = MagicMock()
@@ -522,7 +524,9 @@ async def test_session_pool_tool_runs_after_walk_when_text_content_present(tmp_p
 
     from mcp.types import TextContent
 
-    text_result = MagicMock(content=[TextContent(type="text", text="Saved as shot.png")], isError=False, structuredContent=None)
+    text_result = MagicMock(
+        content=[TextContent(type="text", text="Saved as shot.png")], isError=False, structuredContent=None
+    )
     mock_session = AsyncMock()
     mock_session.call_tool = AsyncMock(return_value=text_result)
     mock_cm = MagicMock()
@@ -870,8 +874,17 @@ async def test_http_transport_tools_not_pooled():
 
     extensions_config = MagicMock()
     extensions_config.get_enabled_mcp_servers.return_value = {
-        "myserver": MagicMock(type="http", url="http://localhost:8000/mcp", headers=None, command=None, args=[], env=None),
-        "playwright": MagicMock(type="stdio", command="npx", args=["-y", "@anthropic/mcp-server-playwright"], env=None, url=None, headers=None),
+        "myserver": MagicMock(
+            type="http", url="http://localhost:8000/mcp", headers=None, command=None, args=[], env=None
+        ),
+        "playwright": MagicMock(
+            type="stdio",
+            command="npx",
+            args=["-y", "@anthropic/mcp-server-playwright"],
+            env=None,
+            url=None,
+            headers=None,
+        ),
     }
     extensions_config.model_extra = {}
 
@@ -1134,7 +1147,9 @@ async def test_get_session_cancelled_while_initializing_does_not_leak():
     assert len(pool._entries) == 0
 
     current = asyncio.current_task()
-    leaked = [t for t in asyncio.all_tasks() if t is not current and not t.done() and "_run_session" in str(t.get_coro())]
+    leaked = [
+        t for t in asyncio.all_tasks() if t is not current and not t.done() and "_run_session" in str(t.get_coro())
+    ]
     assert not leaked, "owner task must not be left pending after cancellation"
 
 
@@ -1263,7 +1278,9 @@ async def test_close_all_during_in_flight_creation_does_not_resurrect_session():
     assert cms[0].closed is True, "in-flight session's __aexit__ must run on teardown"
 
     current = asyncio.current_task()
-    leaked = [t for t in asyncio.all_tasks() if t is not current and not t.done() and "_run_session" in str(t.get_coro())]
+    leaked = [
+        t for t in asyncio.all_tasks() if t is not current and not t.done() and "_run_session" in str(t.get_coro())
+    ]
     assert not leaked, "in-flight owner task must not leak after close_all"
 
 

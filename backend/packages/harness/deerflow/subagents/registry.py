@@ -83,19 +83,36 @@ def get_subagent_config(name: str, *, app_config: Any | None = None) -> Subagent
     # Timeout: per-agent override > global default (builtins only) > config's own value
     if agent_override is not None and agent_override.timeout_seconds is not None:
         if agent_override.timeout_seconds != config.timeout_seconds:
-            logger.debug("Subagent '%s': timeout overridden (%ss -> %ss)", name, config.timeout_seconds, agent_override.timeout_seconds)
+            logger.debug(
+                "Subagent '%s': timeout overridden (%ss -> %ss)",
+                name,
+                config.timeout_seconds,
+                agent_override.timeout_seconds,
+            )
             overrides["timeout_seconds"] = agent_override.timeout_seconds
     elif is_builtin and subagents_config.timeout_seconds != config.timeout_seconds:
-        logger.debug("Subagent '%s': timeout from global default (%ss -> %ss)", name, config.timeout_seconds, subagents_config.timeout_seconds)
+        logger.debug(
+            "Subagent '%s': timeout from global default (%ss -> %ss)",
+            name,
+            config.timeout_seconds,
+            subagents_config.timeout_seconds,
+        )
         overrides["timeout_seconds"] = subagents_config.timeout_seconds
 
     # Max turns: per-agent override > global default (builtins only) > config's own value
     if agent_override is not None and agent_override.max_turns is not None:
         if agent_override.max_turns != config.max_turns:
-            logger.debug("Subagent '%s': max_turns overridden (%s -> %s)", name, config.max_turns, agent_override.max_turns)
+            logger.debug(
+                "Subagent '%s': max_turns overridden (%s -> %s)", name, config.max_turns, agent_override.max_turns
+            )
             overrides["max_turns"] = agent_override.max_turns
     elif is_builtin and subagents_config.max_turns is not None and subagents_config.max_turns != config.max_turns:
-        logger.debug("Subagent '%s': max_turns from global default (%s -> %s)", name, config.max_turns, subagents_config.max_turns)
+        logger.debug(
+            "Subagent '%s': max_turns from global default (%s -> %s)",
+            name,
+            config.max_turns,
+            subagents_config.max_turns,
+        )
         overrides["max_turns"] = subagents_config.max_turns
 
     # Model: per-agent override only (no global default for model)
@@ -155,7 +172,9 @@ def get_available_subagent_names(*, app_config: Any | None = None) -> list[str]:
     """
     names = get_subagent_names(app_config=app_config)
     try:
-        host_bash_allowed = is_host_bash_allowed(app_config) if hasattr(app_config, "sandbox") else is_host_bash_allowed()
+        host_bash_allowed = (
+            is_host_bash_allowed(app_config) if hasattr(app_config, "sandbox") else is_host_bash_allowed()
+        )
     except Exception:
         logger.debug("Could not determine host bash availability; exposing all subagents")
         return names

@@ -46,12 +46,18 @@ def test_build_subagent_section_includes_bash_when_available(monkeypatch) -> Non
 def test_bash_subagent_prompt_mentions_workspace_relative_paths() -> None:
     from deerflow.subagents.builtins.bash_agent import BASH_AGENT_CONFIG
 
-    assert "Treat `/mnt/user-data/workspace` as the default working directory for file IO" in BASH_AGENT_CONFIG.system_prompt
+    assert (
+        "Treat `/mnt/user-data/workspace` as the default working directory for file IO"
+        in BASH_AGENT_CONFIG.system_prompt
+    )
     assert "`hello.txt`, `../uploads/input.csv`, and `../outputs/result.md`" in BASH_AGENT_CONFIG.system_prompt
 
 
 def test_general_purpose_subagent_prompt_mentions_workspace_relative_paths() -> None:
     from deerflow.subagents.builtins.general_purpose import GENERAL_PURPOSE_CONFIG
 
-    assert "Treat `/mnt/user-data/workspace` as the default working directory for coding and file IO" in GENERAL_PURPOSE_CONFIG.system_prompt
+    assert (
+        "Treat `/mnt/user-data/workspace` as the default working directory for coding and file IO"
+        in GENERAL_PURPOSE_CONFIG.system_prompt
+    )
     assert "`hello.txt`, `../uploads/input.csv`, and `../outputs/result.md`" in GENERAL_PURPOSE_CONFIG.system_prompt

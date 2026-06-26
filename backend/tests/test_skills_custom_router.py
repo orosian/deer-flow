@@ -88,7 +88,11 @@ def test_install_skill_archive_runs_security_scan(monkeypatch, tmp_path):
 
     storage = LocalSkillStorage(host_path=str(skills_root))
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr(skills_router, "resolve_thread_virtual_path", lambda thread_id, path: archive)
@@ -99,7 +103,9 @@ def test_install_skill_archive_runs_security_scan(monkeypatch, tmp_path):
     app = _make_test_app(config)
 
     with TestClient(app) as client:
-        response = client.post("/api/skills/install", json={"thread_id": "thread-1", "path": "mnt/user-data/outputs/archive-skill.skill"})
+        response = client.post(
+            "/api/skills/install", json={"thread_id": "thread-1", "path": "mnt/user-data/outputs/archive-skill.skill"}
+        )
 
     assert response.status_code == 200
     assert response.json()["skill_name"] == "archive-skill"
@@ -129,7 +135,11 @@ def test_uploaded_skill_archive_installs_sandbox_readable_tree(monkeypatch, tmp_
         refresh_calls.append("refresh")
 
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
         uploads=SimpleNamespace(auto_convert_documents=False),
     )
@@ -160,7 +170,9 @@ def test_uploaded_skill_archive_installs_sandbox_readable_tree(monkeypatch, tmp_
         uploaded_path = Path(uploaded_file["path"])
         assert uploaded_path.is_file()
 
-        install_response = client.post("/api/skills/install", json={"thread_id": thread_id, "path": uploaded_file["virtual_path"]})
+        install_response = client.post(
+            "/api/skills/install", json={"thread_id": thread_id, "path": uploaded_file["virtual_path"]}
+        )
 
     assert install_response.status_code == 200
     assert install_response.json()["skill_name"] == "uploaded-skill"
@@ -193,7 +205,11 @@ def test_install_skill_archive_security_scan_block_returns_400(monkeypatch, tmp_
 
     storage = LocalSkillStorage(host_path=str(skills_root))
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr(skills_router, "resolve_thread_virtual_path", lambda thread_id, path: archive)
@@ -204,7 +220,9 @@ def test_install_skill_archive_security_scan_block_returns_400(monkeypatch, tmp_
     app = _make_test_app(config)
 
     with TestClient(app) as client:
-        response = client.post("/api/skills/install", json={"thread_id": "thread-1", "path": "mnt/user-data/outputs/blocked-skill.skill"})
+        response = client.post(
+            "/api/skills/install", json={"thread_id": "thread-1", "path": "mnt/user-data/outputs/blocked-skill.skill"}
+        )
 
     assert response.status_code == 400
     assert "Security scan blocked skill 'blocked-skill': prompt injection" in response.json()["detail"]
@@ -218,11 +236,17 @@ def test_custom_skills_router_lifecycle(monkeypatch, tmp_path):
     custom_dir.mkdir(parents=True, exist_ok=True)
     (custom_dir / "SKILL.md").write_text(_skill_content("demo-skill"), encoding="utf-8")
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr("deerflow.config.get_app_config", lambda: config)
-    monkeypatch.setattr("app.gateway.routers.skills.scan_skill_content", lambda *args, **kwargs: _async_scan("allow", "ok"))
+    monkeypatch.setattr(
+        "app.gateway.routers.skills.scan_skill_content", lambda *args, **kwargs: _async_scan("allow", "ok")
+    )
     refresh_calls = []
 
     async def _refresh():
@@ -268,14 +292,22 @@ def test_custom_skill_rollback_blocked_by_scanner(monkeypatch, tmp_path):
     edited_content = _skill_content("demo-skill", "Edited skill")
     (custom_dir / "SKILL.md").write_text(edited_content, encoding="utf-8")
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr("deerflow.config.get_app_config", lambda: config)
     history_file = get_or_new_skill_storage(app_config=config).get_skill_history_file("demo-skill")
     history_file.parent.mkdir(parents=True, exist_ok=True)
     history_file.write_text(
-        '{"action":"human_edit","prev_content":' + json.dumps(original_content) + ',"new_content":' + json.dumps(edited_content) + "}\n",
+        '{"action":"human_edit","prev_content":'
+        + json.dumps(original_content)
+        + ',"new_content":'
+        + json.dumps(edited_content)
+        + "}\n",
         encoding="utf-8",
     )
 
@@ -310,11 +342,17 @@ def test_custom_skill_delete_preserves_history_and_allows_restore(monkeypatch, t
     original_content = _skill_content("demo-skill")
     (custom_dir / "SKILL.md").write_text(original_content, encoding="utf-8")
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr("deerflow.config.get_app_config", lambda: config)
-    monkeypatch.setattr("app.gateway.routers.skills.scan_skill_content", lambda *args, **kwargs: _async_scan("allow", "ok"))
+    monkeypatch.setattr(
+        "app.gateway.routers.skills.scan_skill_content", lambda *args, **kwargs: _async_scan("allow", "ok")
+    )
     refresh_calls = []
 
     async def _refresh():
@@ -346,7 +384,11 @@ def test_custom_skill_delete_continues_when_history_write_is_readonly(monkeypatc
     custom_dir.mkdir(parents=True, exist_ok=True)
     (custom_dir / "SKILL.md").write_text(_skill_content("demo-skill"), encoding="utf-8")
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr("deerflow.config.get_app_config", lambda: config)
@@ -358,7 +400,9 @@ def test_custom_skill_delete_continues_when_history_write_is_readonly(monkeypatc
     def _readonly_history(*args, **kwargs):
         raise OSError(errno.EROFS, "Read-only file system", str(skills_root / "custom" / ".history"))
 
-    monkeypatch.setattr("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.append_history", _readonly_history)
+    monkeypatch.setattr(
+        "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.append_history", _readonly_history
+    )
     monkeypatch.setattr("app.gateway.routers.skills.refresh_skills_system_prompt_cache_async", _refresh)
 
     app = _make_test_app(config)
@@ -378,7 +422,11 @@ def test_custom_skill_delete_fails_when_skill_dir_removal_fails(monkeypatch, tmp
     custom_dir.mkdir(parents=True, exist_ok=True)
     (custom_dir / "SKILL.md").write_text(_skill_content("demo-skill"), encoding="utf-8")
     config = SimpleNamespace(
-        skills=SimpleNamespace(get_skills_path=lambda: skills_root, container_path="/mnt/skills", use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+        skills=SimpleNamespace(
+            get_skills_path=lambda: skills_root,
+            container_path="/mnt/skills",
+            use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+        ),
         skill_evolution=SimpleNamespace(enabled=True, moderation_model_name=None),
     )
     monkeypatch.setattr("deerflow.config.get_app_config", lambda: config)
@@ -421,7 +469,9 @@ def test_update_skill_refreshes_prompt_cache_before_return(monkeypatch, tmp_path
 
     mock_storage = SimpleNamespace(load_skills=_load_skills)
     monkeypatch.setattr("app.gateway.routers.skills.get_or_new_skill_storage", lambda **kwargs: mock_storage)
-    monkeypatch.setattr("app.gateway.routers.skills.get_extensions_config", lambda: SimpleNamespace(mcp_servers={}, skills={}))
+    monkeypatch.setattr(
+        "app.gateway.routers.skills.get_extensions_config", lambda: SimpleNamespace(mcp_servers={}, skills={})
+    )
     monkeypatch.setattr("app.gateway.routers.skills.reload_extensions_config", lambda: None)
     monkeypatch.setattr(skills_router.ExtensionsConfig, "resolve_config_path", staticmethod(lambda: config_path))
     monkeypatch.setattr("app.gateway.routers.skills.refresh_skills_system_prompt_cache_async", _refresh)
@@ -434,4 +484,7 @@ def test_update_skill_refreshes_prompt_cache_before_return(monkeypatch, tmp_path
     assert response.status_code == 200
     assert response.json()["enabled"] is False
     assert refresh_calls == ["refresh"]
-    assert json.loads(config_path.read_text(encoding="utf-8")) == {"mcpServers": {}, "skills": {"demo-skill": {"enabled": False}}}
+    assert json.loads(config_path.read_text(encoding="utf-8")) == {
+        "mcpServers": {},
+        "skills": {"demo-skill": {"enabled": False}},
+    }

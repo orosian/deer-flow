@@ -510,7 +510,9 @@ class TestWebSearchTool:
         mock_error_response.text = "Forbidden"
 
         with patch("deerflow.community.serper.tools.httpx.Client") as mock_client_cls:
-            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.HTTPStatusError("403", request=MagicMock(), response=mock_error_response)
+            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.HTTPStatusError(
+                "403", request=MagicMock(), response=mock_error_response
+            )
 
             from deerflow.community.serper.tools import web_search_tool
 
@@ -535,7 +537,9 @@ class TestWebSearchTool:
         mock_error_response = MagicMock()
         mock_error_response.status_code = 403
         mock_error_response.text = "Forbidden"
-        mock_error_response.raise_for_status.side_effect = httpx.HTTPStatusError("403", request=MagicMock(), response=mock_error_response)
+        mock_error_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            "403", request=MagicMock(), response=mock_error_response
+        )
 
         with patch("deerflow.community.serper.tools.httpx.Client") as mock_client_cls:
             mock_client_cls.return_value.__enter__.return_value.post.return_value = mock_error_response
@@ -679,7 +683,9 @@ class TestWebSearchTool:
 
     def test_timeout_returns_error(self, mock_config_with_key):
         with patch("deerflow.community.serper.tools.httpx.Client") as mock_client_cls:
-            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.TimeoutException("Read timed out")
+            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.TimeoutException(
+                "Read timed out"
+            )
 
             from deerflow.community.serper.tools import web_search_tool
 
@@ -750,7 +756,10 @@ class TestImageSearchTool:
         assert parsed["results"][0]["title"] == "Cat 1"
         assert parsed["results"][0]["image_url"] == "https://example.com/cat1.jpg"
         assert parsed["results"][0]["thumbnail_url"] == "https://example.com/cat1_thumb.jpg"
-        assert parsed["usage_hint"] == "Use the 'image_url' values as reference images in image generation. Download them first if needed."
+        assert (
+            parsed["usage_hint"]
+            == "Use the 'image_url' values as reference images in image generation. Download them first if needed."
+        )
 
     def test_sends_correct_headers_and_payload_to_images_endpoint(self, mock_config_with_key):
         images = [{"title": "T", "imageUrl": "https://x.com/i.jpg", "thumbnailUrl": "https://x.com/t.jpg"}]
@@ -912,7 +921,9 @@ class TestImageSearchTool:
         mock_error_response.text = "Forbidden"
 
         with patch("deerflow.community.serper.tools.httpx.Client") as mock_client_cls:
-            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.HTTPStatusError("403", request=MagicMock(), response=mock_error_response)
+            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.HTTPStatusError(
+                "403", request=MagicMock(), response=mock_error_response
+            )
 
             from deerflow.community.serper.tools import image_search_tool
 
@@ -1083,7 +1094,9 @@ class TestImageSearchTool:
 
     def test_timeout_returns_error(self, mock_config_with_key):
         with patch("deerflow.community.serper.tools.httpx.Client") as mock_client_cls:
-            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.TimeoutException("Read timed out")
+            mock_client_cls.return_value.__enter__.return_value.post.side_effect = httpx.TimeoutException(
+                "Read timed out"
+            )
 
             from deerflow.community.serper.tools import image_search_tool
 

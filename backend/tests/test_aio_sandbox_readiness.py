@@ -8,7 +8,9 @@ from deerflow.community.aio_sandbox import backend as readiness
 
 
 class _FakeAsyncClient:
-    def __init__(self, *, responses: list[object], calls: list[str], timeout: float, request_timeouts: list[float] | None = None) -> None:
+    def __init__(
+        self, *, responses: list[object], calls: list[str], timeout: float, request_timeouts: list[float] | None = None
+    ) -> None:
         self._responses = responses
         self._calls = calls
         self._timeout = timeout
@@ -58,8 +60,16 @@ async def test_wait_for_sandbox_ready_async_uses_nonblocking_polling(monkeypatch
 
     monkeypatch.setattr(readiness.httpx, "AsyncClient", fake_client)
     monkeypatch.setattr(readiness.asyncio, "sleep", fake_sleep)
-    monkeypatch.setattr(readiness.requests, "get", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("requests.get should not be used")))
-    monkeypatch.setattr(readiness.time, "sleep", lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("time.sleep should not be used")))
+    monkeypatch.setattr(
+        readiness.requests,
+        "get",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("requests.get should not be used")),
+    )
+    monkeypatch.setattr(
+        readiness.time,
+        "sleep",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("time.sleep should not be used")),
+    )
 
     assert await readiness.wait_for_sandbox_ready_async("http://sandbox", timeout=5, poll_interval=0.05) is True
 
@@ -92,7 +102,9 @@ async def test_wait_for_sandbox_ready_async_retries_request_errors(monkeypatch: 
 
 
 @pytest.mark.anyio
-async def test_wait_for_sandbox_ready_async_clamps_request_and_sleep_to_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_wait_for_sandbox_ready_async_clamps_request_and_sleep_to_deadline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     calls: list[str] = []
     request_timeouts: list[float] = []
     sleeps: list[float] = []

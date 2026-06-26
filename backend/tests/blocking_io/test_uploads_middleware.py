@@ -46,7 +46,9 @@ async def test_before_agent_uploads_scan_does_not_block_event_loop(tmp_path: Pat
     uploads_dir.mkdir(parents=True, exist_ok=True)  # test-side seeding (not in scanned_modules)
     (uploads_dir / "existing.txt").write_text("hello", encoding="utf-8")
 
-    agent = await asyncio.to_thread(lambda: create_agent(model=_FakeModel(responses=[AIMessage(content="ok")]), tools=[], middleware=[mw]))
+    agent = await asyncio.to_thread(
+        lambda: create_agent(model=_FakeModel(responses=[AIMessage(content="ok")]), tools=[], middleware=[mw])
+    )
 
     result = await agent.ainvoke(
         {"messages": [HumanMessage(content="hi")]},

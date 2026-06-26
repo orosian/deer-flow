@@ -126,7 +126,11 @@ class DiscordChannel(Channel):
                     self._active_threads[channel_id] = thread_id
                     self._active_thread_ids.add(thread_id)
                 if self._active_threads:
-                    logger.info("[Discord] restored %d thread mappings from %s", len(self._active_threads), self._thread_store_path)
+                    logger.info(
+                        "[Discord] restored %d thread mappings from %s",
+                        len(self._active_threads),
+                        self._thread_store_path,
+                    )
             except Exception:
                 logger.exception("[Discord] failed to load thread mappings")
 
@@ -179,7 +183,9 @@ class DiscordChannel(Channel):
 
     async def send(self, msg: OutboundMessage) -> None:
         # Stop typing indicator once we're sending the response
-        stop_future = asyncio.run_coroutine_threadsafe(self._stop_typing(msg.chat_id, msg.thread_ts), self._discord_loop)
+        stop_future = asyncio.run_coroutine_threadsafe(
+            self._stop_typing(msg.chat_id, msg.thread_ts), self._discord_loop
+        )
         await asyncio.wrap_future(stop_future)
 
         target = await self._resolve_target(msg)
@@ -193,12 +199,16 @@ class DiscordChannel(Channel):
             await asyncio.wrap_future(send_future)
 
     async def send_file(self, msg: OutboundMessage, attachment: ResolvedAttachment) -> bool:
-        stop_future = asyncio.run_coroutine_threadsafe(self._stop_typing(msg.chat_id, msg.thread_ts), self._discord_loop)
+        stop_future = asyncio.run_coroutine_threadsafe(
+            self._stop_typing(msg.chat_id, msg.thread_ts), self._discord_loop
+        )
         await asyncio.wrap_future(stop_future)
 
         target = await self._resolve_target(msg)
         if target is None:
-            logger.error("[Discord] target not found for file upload chat_id=%s thread_ts=%s", msg.chat_id, msg.thread_ts)
+            logger.error(
+                "[Discord] target not found for file upload chat_id=%s thread_ts=%s", msg.chat_id, msg.thread_ts
+            )
             return False
 
         if self._discord_module is None:
@@ -286,11 +296,20 @@ class DiscordChannel(Channel):
             bot_mention = None
             alt_mention = None
             standard_mention = ""
-        has_mention = (bot_mention and bot_mention in message.content) or (alt_mention and alt_mention in message.content) or (standard_mention and standard_mention in message.content)
+        has_mention = (
+            (bot_mention and bot_mention in message.content)
+            or (alt_mention and alt_mention in message.content)
+            or (standard_mention and standard_mention in message.content)
+        )
 
         # Strip mention from text for processing
         if has_mention:
-            text = text.replace(bot_mention or "", "").replace(alt_mention or "", "").replace(standard_mention or "", "").strip()
+            text = (
+                text.replace(bot_mention or "", "")
+                .replace(alt_mention or "", "")
+                .replace(standard_mention or "", "")
+                .strip()
+            )
             # Don't return early if text is empty — still process the mention (e.g., create thread)
 
         connect_code = self._pending_connect_code(text)
@@ -363,16 +382,24 @@ class DiscordChannel(Channel):
                     thread_id = target_thread_id
                     chat_id = channel_id
                     typing_target = thread_obj
-                    logger.info("[Discord] created new thread %s in channel %s on mention (replacing existing thread)", target_thread_id, channel_id)
+                    logger.info(
+                        "[Discord] created new thread %s in channel %s on mention (replacing existing thread)",
+                        target_thread_id,
+                        channel_id,
+                    )
                 else:
-                    logger.info("[Discord] thread creation failed in channel %s, falling back to channel replies", channel_id)
+                    logger.info(
+                        "[Discord] thread creation failed in channel %s, falling back to channel replies", channel_id
+                    )
                     thread_id = channel_id
                     chat_id = channel_id
                     typing_target = message.channel
             else:
                 # Existing session → route to the existing thread
                 target_thread_id = self._active_threads[channel_id]
-                logger.debug("[Discord] routing message in channel %s to existing thread %s", channel_id, target_thread_id)
+                logger.debug(
+                    "[Discord] routing message in channel %s to existing thread %s", channel_id, target_thread_id
+                )
                 thread_id = target_thread_id
                 chat_id = channel_id
                 typing_target = await self._get_channel_or_thread(target_thread_id)
@@ -390,10 +417,17 @@ class DiscordChannel(Channel):
                 thread_id = target_thread_id
                 chat_id = channel_id
                 typing_target = thread_obj  # Type into the new thread
-                logger.info("[Discord] created thread %s in channel %s for user %s", target_thread_id, channel_id, message.author.display_name)
+                logger.info(
+                    "[Discord] created thread %s in channel %s for user %s",
+                    target_thread_id,
+                    channel_id,
+                    message.author.display_name,
+                )
             else:
                 # Fallback: thread creation failed (disabled/permissions), reply in channel
-                logger.info("[Discord] thread creation failed in channel %s, falling back to channel replies", channel_id)
+                logger.info(
+                    "[Discord] thread creation failed in channel %s, falling back to channel replies", channel_id
+                )
                 thread_id = channel_id
                 chat_id = channel_id
                 typing_target = message.channel  # Type into the channel
@@ -402,7 +436,9 @@ class DiscordChannel(Channel):
             thread_obj = await self._create_thread(message)
             if thread_obj is None:
                 # Thread creation failed (disabled/permissions), fall back to channel replies
-                logger.info("[Discord] thread creation failed in channel %s, falling back to channel replies", channel_id)
+                logger.info(
+                    "[Discord] thread creation failed in channel %s, falling back to channel replies", channel_id
+                )
                 thread_id = channel_id
                 chat_id = channel_id
                 typing_target = message.channel  # Type into the channel
@@ -446,7 +482,13 @@ class DiscordChannel(Channel):
         """Publish an inbound message to the main event loop."""
         if self._main_loop and self._main_loop.is_running():
             future = asyncio.run_coroutine_threadsafe(self.bus.publish_inbound(inbound), self._main_loop)
-            future.add_done_callback(lambda f: logger.exception("[Discord] publish_inbound failed", exc_info=f.exception()) if f.exception() else None)
+            future.add_done_callback(
+                lambda f: (
+                    logger.exception("[Discord] publish_inbound failed", exc_info=f.exception())
+                    if f.exception()
+                    else None
+                )
+            )
 
     async def _attach_connection_identity(self, inbound: InboundMessage, guild_id: str | None = None) -> InboundMessage:
         return await attach_connection_identity(
@@ -552,7 +594,10 @@ class DiscordChannel(Channel):
                 )
             return None
         except Exception:
-            logger.exception("[Discord] failed to create thread for message=%s (threads may be disabled or missing permissions)", message.id)
+            logger.exception(
+                "[Discord] failed to create thread for message=%s (threads may be disabled or missing permissions)",
+                message.id,
+            )
             return None
 
     async def _resolve_target(self, msg: OutboundMessage):

@@ -18,7 +18,9 @@ from deerflow.tools.tools import get_available_tools
 
 
 def test_build_mcp_servers_filters_disabled_and_maps_transports():
-    set_extensions_config(ExtensionsConfig(mcp_servers={"stale": McpServerConfig(enabled=True, type="stdio", command="echo")}, skills={}))
+    set_extensions_config(
+        ExtensionsConfig(mcp_servers={"stale": McpServerConfig(enabled=True, type="stdio", command="echo")}, skills={})
+    )
     fresh_config = ExtensionsConfig(
         mcp_servers={
             "stdio": McpServerConfig(enabled=True, type="stdio", command="npx", args=["srv"]),
@@ -44,11 +46,15 @@ def test_build_mcp_servers_filters_disabled_and_maps_transports():
 
 
 def test_build_acp_mcp_servers_formats_list_payload():
-    set_extensions_config(ExtensionsConfig(mcp_servers={"stale": McpServerConfig(enabled=True, type="stdio", command="echo")}, skills={}))
+    set_extensions_config(
+        ExtensionsConfig(mcp_servers={"stale": McpServerConfig(enabled=True, type="stdio", command="echo")}, skills={})
+    )
     fresh_config = ExtensionsConfig(
         mcp_servers={
             "stdio": McpServerConfig(enabled=True, type="stdio", command="npx", args=["srv"], env={"FOO": "bar"}),
-            "http": McpServerConfig(enabled=True, type="http", url="https://example.com/mcp", headers={"Authorization": "Bearer token"}),
+            "http": McpServerConfig(
+                enabled=True, type="http", url="https://example.com/mcp", headers={"Authorization": "Bearer token"}
+            ),
             "disabled": McpServerConfig(enabled=False, type="stdio", command="echo"),
         },
         skills={},
@@ -246,7 +252,9 @@ async def test_invoke_acp_agent_uses_fixed_acp_workspace(monkeypatch, tmp_path):
             PROTOCOL_VERSION="2026-03-24",
             Client=DummyClient,
             RequestError=DummyRequestError,
-            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(client, cmd, *args, cwd=cwd),
+            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(
+                client, cmd, *args, cwd=cwd
+            ),
             text_block=lambda text: {"type": "text", "text": text},
         ),
     )
@@ -371,7 +379,9 @@ async def test_invoke_acp_agent_uses_per_thread_workspace_when_thread_id_in_conf
             PROTOCOL_VERSION="2026-03-24",
             Client=DummyClient,
             RequestError=DummyRequestError,
-            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(client, cmd, *args, cwd=cwd),
+            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(
+                client, cmd, *args, cwd=cwd
+            ),
             text_block=lambda text: {"type": "text", "text": text},
         ),
     )
@@ -463,7 +473,9 @@ async def test_invoke_acp_agent_passes_env_to_spawn(monkeypatch, tmp_path):
             PROTOCOL_VERSION="2026-03-24",
             Client=DummyClient,
             RequestError=DummyRequestError,
-            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(client, cmd, *args, env=env, cwd=cwd),
+            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(
+                client, cmd, *args, env=env, cwd=cwd
+            ),
             text_block=lambda text: {"type": "text", "text": text},
         ),
     )
@@ -556,7 +568,9 @@ async def test_invoke_acp_agent_skips_invalid_mcp_servers(monkeypatch, tmp_path,
             PROTOCOL_VERSION="2026-03-24",
             Client=DummyClient,
             RequestError=DummyRequestError,
-            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(client, cmd, *args, env=env, cwd=cwd),
+            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(
+                client, cmd, *args, env=env, cwd=cwd
+            ),
             text_block=lambda text: {"type": "text", "text": text},
         ),
     )
@@ -643,7 +657,9 @@ async def test_invoke_acp_agent_passes_none_env_when_not_configured(monkeypatch,
             PROTOCOL_VERSION="2026-03-24",
             Client=DummyClient,
             RequestError=DummyRequestError,
-            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(client, cmd, *args, env=env, cwd=cwd),
+            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(
+                client, cmd, *args, env=env, cwd=cwd
+            ),
             text_block=lambda text: {"type": "text", "text": text},
         ),
     )
@@ -750,7 +766,9 @@ def test_get_available_tools_sync_invoke_acp_agent_preserves_thread_workspace(mo
         SimpleNamespace(
             PROTOCOL_VERSION="2026-03-24",
             Client=DummyClient,
-            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(client, cmd, *args, env=env, cwd=cwd),
+            spawn_agent_process=lambda client, cmd, *args, env=None, cwd: DummyProcessContext(
+                client, cmd, *args, env=env, cwd=cwd
+            ),
             text_block=lambda text: {"type": "text", "text": text},
         ),
     )
@@ -807,7 +825,9 @@ def test_get_available_tools_uses_explicit_app_config_for_acp_agents(monkeypatch
 
     monkeypatch.setattr("deerflow.tools.tools.is_host_bash_allowed", lambda config=None: True)
     monkeypatch.setattr("deerflow.config.acp_config.get_acp_agents", fail_get_acp_agents)
-    monkeypatch.setattr("deerflow.tools.builtins.invoke_acp_agent_tool.build_invoke_acp_agent_tool", fake_build_invoke_acp_agent_tool)
+    monkeypatch.setattr(
+        "deerflow.tools.builtins.invoke_acp_agent_tool.build_invoke_acp_agent_tool", fake_build_invoke_acp_agent_tool
+    )
 
     tools = get_available_tools(include_mcp=False, subagent_enabled=False, app_config=explicit_config)
 

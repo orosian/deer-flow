@@ -569,9 +569,13 @@ class RunManager:
 
         async with self._lock:
             if multitask_strategy not in _supported_strategies:
-                raise UnsupportedStrategyError(f"Multitask strategy '{multitask_strategy}' is not yet supported. Supported strategies: {', '.join(_supported_strategies)}")
+                raise UnsupportedStrategyError(
+                    f"Multitask strategy '{multitask_strategy}' is not yet supported. Supported strategies: {', '.join(_supported_strategies)}"
+                )
 
-            inflight = [r for r in self._thread_records_locked(thread_id) if r.status in (RunStatus.pending, RunStatus.running)]
+            inflight = [
+                r for r in self._thread_records_locked(thread_id) if r.status in (RunStatus.pending, RunStatus.running)
+            ]
 
             if multitask_strategy == "reject" and inflight:
                 raise ConflictError(f"Thread {thread_id} already has an active run")
@@ -685,7 +689,9 @@ class RunManager:
     async def has_inflight(self, thread_id: str) -> bool:
         """Return ``True`` if *thread_id* has a pending or running run."""
         async with self._lock:
-            return any(r.status in (RunStatus.pending, RunStatus.running) for r in self._thread_records_locked(thread_id))
+            return any(
+                r.status in (RunStatus.pending, RunStatus.running) for r in self._thread_records_locked(thread_id)
+            )
 
     async def cleanup(self, run_id: str, *, delay: float = 300) -> None:
         """Remove a run record after an optional delay."""
@@ -728,7 +734,13 @@ class RunManager:
         deadline = loop.time() + timeout
 
         async with self._lock:
-            inflight = [record for record in self._runs.values() if record.status in (RunStatus.pending, RunStatus.running) and record.task is not None and not record.task.done()]
+            inflight = [
+                record
+                for record in self._runs.values()
+                if record.status in (RunStatus.pending, RunStatus.running)
+                and record.task is not None
+                and not record.task.done()
+            ]
             for record in inflight:
                 record.abort_action = "interrupt"
                 record.abort_event.set()
@@ -765,15 +777,24 @@ class RunManager:
         if to_persist:
             remaining = deadline - loop.time()
             if remaining <= 0:
-                logger.warning("Run drain budget exhausted before persisting %d interrupted run(s) on shutdown", len(to_persist))
+                logger.warning(
+                    "Run drain budget exhausted before persisting %d interrupted run(s) on shutdown", len(to_persist)
+                )
             else:
                 try:
                     results = await asyncio.wait_for(
-                        asyncio.gather(*(self._persist_status(record, RunStatus.interrupted) for record in to_persist), return_exceptions=True),
+                        asyncio.gather(
+                            *(self._persist_status(record, RunStatus.interrupted) for record in to_persist),
+                            return_exceptions=True,
+                        ),
                         timeout=remaining,
                     )
                 except TimeoutError:
-                    logger.warning("Run drain status persistence exceeded the %.1fs budget; %d record(s) may not be persisted", timeout, len(to_persist))
+                    logger.warning(
+                        "Run drain status persistence exceeded the %.1fs budget; %d record(s) may not be persisted",
+                        timeout,
+                        len(to_persist),
+                    )
                 else:
                     # ``_persist_status`` is best-effort: it catches and logs its
                     # own failures, returning ``False``. Inspect the aggregate so a
@@ -781,13 +802,28 @@ class RunManager:
                     # run_id) instead of being silently swallowed by the gather.
                     for record, result in zip(to_persist, results):
                         if isinstance(result, Exception):
-                            logger.warning("Unexpected error persisting interrupted status for run %s during shutdown: %r", record.run_id, result)
+                            logger.warning(
+                                "Unexpected error persisting interrupted status for run %s during shutdown: %r",
+                                record.run_id,
+                                result,
+                            )
                         elif result is False:
-                            logger.warning("Could not persist interrupted status for run %s during shutdown", record.run_id)
+                            logger.warning(
+                                "Could not persist interrupted status for run %s during shutdown", record.run_id
+                            )
 
         if pending:
-            logger.warning("Run drain exceeded %.1fs on shutdown; %d run task(s) still active and may race checkpointer teardown", timeout, len(pending))
-        logger.info("Drained %d in-flight run(s) on shutdown (%d settled within %.1fs)", len(inflight), len(inflight) - len(pending), timeout)
+            logger.warning(
+                "Run drain exceeded %.1fs on shutdown; %d run task(s) still active and may race checkpointer teardown",
+                timeout,
+                len(pending),
+            )
+        logger.info(
+            "Drained %d in-flight run(s) on shutdown (%d settled within %.1fs)",
+            len(inflight),
+            len(inflight) - len(pending),
+            timeout,
+        )
 
 
 class ConflictError(Exception):

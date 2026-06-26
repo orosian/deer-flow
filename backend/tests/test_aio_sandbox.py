@@ -70,7 +70,9 @@ class TestErrorObservationRetry:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return SimpleNamespace(data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'"))
+                return SimpleNamespace(
+                    data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'")
+                )
             return SimpleNamespace(data=SimpleNamespace(output="success"))
 
         sandbox._client.shell.exec_command = mock_exec
@@ -96,7 +98,9 @@ class TestErrorObservationRetry:
         def mock_exec(command, **kwargs):
             exec_calls.append(kwargs)
             if len(exec_calls) == 1:
-                return SimpleNamespace(data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'"))
+                return SimpleNamespace(
+                    data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'")
+                )
             return SimpleNamespace(data=SimpleNamespace(output="ok"))
 
         def mock_create_session(id, **kwargs):
@@ -131,7 +135,9 @@ class TestErrorObservationRetry:
 
         def mock_exec(command, **kwargs):
             if "id" not in kwargs:
-                return SimpleNamespace(data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'"))
+                return SimpleNamespace(
+                    data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'")
+                )
             return SimpleNamespace(data=SimpleNamespace(output="recovered"))
 
         def mock_cleanup_session(session_id, **kwargs):
@@ -206,7 +212,9 @@ class TestNoChangeTimeout:
         def mock_exec(command, **kwargs):
             calls.append(kwargs)
             if len(calls) == 1:
-                return SimpleNamespace(data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'"))
+                return SimpleNamespace(
+                    data=SimpleNamespace(output="'ErrorObservation' object has no attribute 'exit_code'")
+                )
             return SimpleNamespace(data=SimpleNamespace(output="ok"))
 
         sandbox._client.shell.exec_command = mock_exec

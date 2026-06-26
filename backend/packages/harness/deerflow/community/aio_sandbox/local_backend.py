@@ -259,7 +259,9 @@ class LocalContainerBackend(SandboxBackend):
 
     # ── SandboxBackend interface ──────────────────────────────────────────
 
-    def create(self, thread_id: str | None, sandbox_id: str, extra_mounts: list[tuple[str, str, bool]] | None = None) -> SandboxInfo:
+    def create(
+        self, thread_id: str | None, sandbox_id: str, extra_mounts: list[tuple[str, str, bool]] | None = None
+    ) -> SandboxInfo:
         """Start a new container and return its connection info.
 
         Args:
@@ -301,7 +303,9 @@ class LocalContainerBackend(SandboxBackend):
                 # the deterministic sandbox container for this sandbox_id. Try to
                 # discover and adopt the existing container instead of failing.
                 if "is already in use by container" in err_lower or "conflict. the container name" in err_lower:
-                    logger.warning(f"Container name {container_name} already in use, attempting to discover existing sandbox instance")
+                    logger.warning(
+                        f"Container name {container_name} already in use, attempting to discover existing sandbox instance"
+                    )
                     existing = self.discover(sandbox_id)
                     if existing is not None:
                         return existing
@@ -432,7 +436,11 @@ class LocalContainerBackend(SandboxBackend):
             return []
 
         # Filter to names matching our exact prefix (docker filter is substring-based)
-        container_names = [name.strip() for name in result.stdout.strip().splitlines() if name.strip().startswith(self._container_prefix + "-")]
+        container_names = [
+            name.strip()
+            for name in result.stdout.strip().splitlines()
+            if name.strip().startswith(self._container_prefix + "-")
+        ]
         if not container_names:
             return []
 

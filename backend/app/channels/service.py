@@ -47,7 +47,12 @@ _CHANNELS_GATEWAY_URL_ENV = "DEER_FLOW_CHANNELS_GATEWAY_URL"
 
 def _channel_has_credentials(name: str, channel_config: dict[str, Any]) -> bool:
     cred_keys = _CHANNEL_CREDENTIAL_KEYS.get(name, [])
-    return any(not isinstance(channel_config.get(key), bool) and channel_config.get(key) is not None and str(channel_config[key]).strip() for key in cred_keys)
+    return any(
+        not isinstance(channel_config.get(key), bool)
+        and channel_config.get(key) is not None
+        and str(channel_config[key]).strip()
+        for key in cred_keys
+    )
 
 
 def _resolve_service_url(config: dict[str, Any], config_key: str, env_key: str, default: str) -> str:
@@ -101,10 +106,16 @@ class ChannelService:
         self.store = ChannelStore()
         self._connection_repo = connection_repo
         config = dict(channels_config or {})
-        langgraph_url = _resolve_service_url(config, "langgraph_url", _CHANNELS_LANGGRAPH_URL_ENV, DEFAULT_LANGGRAPH_URL)
+        langgraph_url = _resolve_service_url(
+            config, "langgraph_url", _CHANNELS_LANGGRAPH_URL_ENV, DEFAULT_LANGGRAPH_URL
+        )
         gateway_url = _resolve_service_url(config, "gateway_url", _CHANNELS_GATEWAY_URL_ENV, DEFAULT_GATEWAY_URL)
         default_session = config.pop("session", None)
-        channel_sessions = {name: channel_config.get("session") for name, channel_config in config.items() if isinstance(channel_config, dict)}
+        channel_sessions = {
+            name: channel_config.get("session")
+            for name, channel_config in config.items()
+            if isinstance(channel_config, dict)
+        }
         self.manager = ChannelManager(
             bus=self.bus,
             store=self.store,
@@ -135,7 +146,9 @@ class ChannelService:
         _merge_channel_connection_runtime_config(channels_config, app_config)
         connection_config = getattr(app_config, "channel_connections", None)
         connections_enabled = connection_config is not None and getattr(connection_config, "enabled", False)
-        require_bound_identity = bool(connections_enabled and getattr(connection_config, "require_bound_identity", True))
+        require_bound_identity = bool(
+            connections_enabled and getattr(connection_config, "require_bound_identity", True)
+        )
         return cls(
             channels_config=channels_config,
             connection_repo=_make_connection_repo(connection_config),

@@ -82,7 +82,11 @@ def _last_injected_date(messages: list) -> str | None:
 
 def _is_user_injection_target(message: object) -> bool:
     """Return whether *message* can receive a dynamic-context reminder."""
-    return isinstance(message, HumanMessage) and not is_dynamic_context_reminder(message) and message.name != _SUMMARY_MESSAGE_NAME
+    return (
+        isinstance(message, HumanMessage)
+        and not is_dynamic_context_reminder(message)
+        and message.name != _SUMMARY_MESSAGE_NAME
+    )
 
 
 class DynamicContextMiddleware(AgentMiddleware):
@@ -136,7 +140,9 @@ class DynamicContextMiddleware(AgentMiddleware):
         )
 
     @staticmethod
-    def _make_reminder_and_user_messages(original: HumanMessage, reminder_content: str) -> tuple[HumanMessage, HumanMessage]:
+    def _make_reminder_and_user_messages(
+        original: HumanMessage, reminder_content: str
+    ) -> tuple[HumanMessage, HumanMessage]:
         """Return (reminder_msg, user_msg) using the ID-swap technique.
 
         reminder_msg takes the original message's ID so that add_messages replaces it
@@ -194,11 +200,15 @@ class DynamicContextMiddleware(AgentMiddleware):
             return None
 
         # ── Midnight crossed: inject date-update reminder as a separate HumanMessage ──
-        last_human_idx = next((i for i in reversed(range(len(messages))) if _is_user_injection_target(messages[i])), None)
+        last_human_idx = next(
+            (i for i in reversed(range(len(messages))) if _is_user_injection_target(messages[i])), None
+        )
         if last_human_idx is None:
             return None
 
-        reminder_msg, user_msg = self._make_reminder_and_user_messages(messages[last_human_idx], self._build_date_update_reminder())
+        reminder_msg, user_msg = self._make_reminder_and_user_messages(
+            messages[last_human_idx], self._build_date_update_reminder()
+        )
         logger.info("DynamicContextMiddleware: midnight crossing detected — injected date update before current turn")
         return {"messages": [reminder_msg, user_msg]}
 

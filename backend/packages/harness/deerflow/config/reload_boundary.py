@@ -43,11 +43,19 @@ STARTUP_ONLY_PREFIX = "startup-only:"
 #: field is restart-required — so an operator changing the value knows
 #: which subsystem to restart.
 STARTUP_ONLY_FIELDS: dict[str, str] = {
-    "database": ("init_engine_from_config() runs once during langgraph_runtime() startup; the SQLAlchemy engine holds the connection pool and is not rebuilt on config.yaml edits."),
-    "checkpointer": ("make_checkpointer() binds the persistent checkpointer once at startup, including SQLite WAL / busy_timeout settings."),
-    "run_events": ("make_run_event_store() picks the memory- vs SQL-backed implementation at startup and is frozen onto app.state.run_events_config to stay paired with the underlying event store."),
+    "database": (
+        "init_engine_from_config() runs once during langgraph_runtime() startup; the SQLAlchemy engine holds the connection pool and is not rebuilt on config.yaml edits."
+    ),
+    "checkpointer": (
+        "make_checkpointer() binds the persistent checkpointer once at startup, including SQLite WAL / busy_timeout settings."
+    ),
+    "run_events": (
+        "make_run_event_store() picks the memory- vs SQL-backed implementation at startup and is frozen onto app.state.run_events_config to stay paired with the underlying event store."
+    ),
     "stream_bridge": ("make_stream_bridge() constructs the stream-bridge singleton once during startup."),
-    "sandbox": ("get_sandbox_provider() caches the provider singleton (``_default_sandbox_provider``); a different ``sandbox.use`` class path only takes effect on next process start."),
+    "sandbox": (
+        "get_sandbox_provider() caches the provider singleton (``_default_sandbox_provider``); a different ``sandbox.use`` class path only takes effect on next process start."
+    ),
     "log_level": (
         "apply_logging_level() runs only during app.py startup; it sets the deerflow/app logger levels and may lower root handler thresholds so configured messages can propagate. A freshly reloaded AppConfig does not retrigger it."
     ),
@@ -55,7 +63,9 @@ STARTUP_ONLY_FIELDS: dict[str, str] = {
     # consumed directly by ``start_channel_service()`` once at lifespan
     # startup and the live channel clients are not rebuilt on
     # config.yaml edits.
-    "channels": ("start_channel_service() is invoked once during startup; the live IM channel clients (Feishu, Slack, Telegram, DingTalk) are not rebuilt when channels.* changes."),
+    "channels": (
+        "start_channel_service() is invoked once during startup; the live IM channel clients (Feishu, Slack, Telegram, DingTalk) are not rebuilt when channels.* changes."
+    ),
     "channel_connections": (
         "start_channel_service() wires the connection repository and channel workers once at startup, and the channel-connections router caches the merged provider config on app.state; channel_connections.* edits need a restart."
     ),

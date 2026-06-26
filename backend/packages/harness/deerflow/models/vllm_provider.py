@@ -91,7 +91,9 @@ def _reasoning_to_text(reasoning: Any) -> str:
         return str(reasoning)
 
 
-def _convert_delta_to_message_chunk_with_reasoning(_dict: Mapping[str, Any], default_class: type[BaseMessageChunk]) -> BaseMessageChunk:
+def _convert_delta_to_message_chunk_with_reasoning(
+    _dict: Mapping[str, Any], default_class: type[BaseMessageChunk]
+) -> BaseMessageChunk:
     """Convert a streaming delta to a LangChain message chunk while preserving reasoning."""
     id_ = _dict.get("id")
     role = cast(str, _dict.get("role"))
@@ -226,7 +228,10 @@ class VllmChatModel(ChatOpenAI):
         usage_metadata = _create_usage_metadata(token_usage, chunk.get("service_tier")) if token_usage else None
 
         if len(choices) == 0:
-            generation_chunk = ChatGenerationChunk(message=default_chunk_class(content="", usage_metadata=usage_metadata), generation_info=base_generation_info)
+            generation_chunk = ChatGenerationChunk(
+                message=default_chunk_class(content="", usage_metadata=usage_metadata),
+                generation_info=base_generation_info,
+            )
             if self.output_version == "v1":
                 generation_chunk.message.content = []
                 generation_chunk.message.response_metadata["output_version"] = "v1"

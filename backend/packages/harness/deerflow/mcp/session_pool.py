@@ -331,7 +331,9 @@ class MCPSessionPool:
             # is running) or a short-lived asyncio.run loop (which is closed and
             # caught above). Fall back to a best-effort thread-safe signal so the
             # owner task tears down if/when its loop runs again.
-            logger.warning("Owning loop for MCP session is idle; signalling close best-effort. Session may leak until the loop runs again.")
+            logger.warning(
+                "Owning loop for MCP session is idle; signalling close best-effort. Session may leak until the loop runs again."
+            )
             self._signal_close(loop, close_evt)
             if cancel:
                 try:

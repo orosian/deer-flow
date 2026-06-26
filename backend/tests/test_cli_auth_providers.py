@@ -147,7 +147,9 @@ def test_codex_provider_parses_valid_tool_arguments(monkeypatch):
         }
     )
 
-    assert result.generations[0].message.tool_calls == [{"name": "bash", "args": {"cmd": "pwd"}, "id": "tc-1", "type": "tool_call"}]
+    assert result.generations[0].message.tool_calls == [
+        {"name": "bash", "args": {"cmd": "pwd"}, "id": "tc-1", "type": "tool_call"}
+    ]
 
 
 class _FakeResponseStream:

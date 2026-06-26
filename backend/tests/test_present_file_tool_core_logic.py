@@ -94,4 +94,7 @@ def test_present_files_rejects_paths_outside_outputs(tmp_path):
     )
 
     assert "artifacts" not in result.update
-    assert result.update["messages"][0].content == f"Error: Only files in /mnt/user-data/outputs can be presented: {leaked_path}"
+    assert (
+        result.update["messages"][0].content
+        == f"Error: Only files in /mnt/user-data/outputs can be presented: {leaked_path}"
+    )

@@ -557,7 +557,11 @@ class TestLocalSandboxProviderMounts:
             ],
         )
         config = SimpleNamespace(
-            skills=SimpleNamespace(container_path="/custom-skills", get_skills_path=lambda: skills_dir, use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+            skills=SimpleNamespace(
+                container_path="/custom-skills",
+                get_skills_path=lambda: skills_dir,
+                use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+            ),
             sandbox=sandbox_config,
         )
 
@@ -579,7 +583,11 @@ class TestLocalSandboxProviderMounts:
             ],
         )
         config = SimpleNamespace(
-            skills=SimpleNamespace(container_path="/mnt/skills", get_skills_path=lambda: skills_dir, use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+            skills=SimpleNamespace(
+                container_path="/mnt/skills",
+                get_skills_path=lambda: skills_dir,
+                use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+            ),
             sandbox=sandbox_config,
         )
 
@@ -603,7 +611,11 @@ class TestLocalSandboxProviderMounts:
             ],
         )
         config = SimpleNamespace(
-            skills=SimpleNamespace(container_path="/mnt/skills", get_skills_path=lambda: skills_dir, use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+            skills=SimpleNamespace(
+                container_path="/mnt/skills",
+                get_skills_path=lambda: skills_dir,
+                use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+            ),
             sandbox=sandbox_config,
         )
 
@@ -635,7 +647,11 @@ class TestLocalSandboxProviderMounts:
             ],
         )
         config = SimpleNamespace(
-            skills=SimpleNamespace(container_path="/mnt/skills", get_skills_path=lambda: skills_dir, use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+            skills=SimpleNamespace(
+                container_path="/mnt/skills",
+                get_skills_path=lambda: skills_dir,
+                use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+            ),
             sandbox=sandbox_config,
         )
 
@@ -767,7 +783,11 @@ class TestLocalSandboxProviderMounts:
             ],
         )
         config = SimpleNamespace(
-            skills=SimpleNamespace(container_path="/mnt/skills", get_skills_path=lambda: skills_dir, use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage"),
+            skills=SimpleNamespace(
+                container_path="/mnt/skills",
+                get_skills_path=lambda: skills_dir,
+                use="deerflow.skills.storage.local_skill_storage:LocalSkillStorage",
+            ),
             sandbox=sandbox_config,
         )
 
@@ -831,7 +851,10 @@ class TestLocalSandboxProviderResetClearsSingleton:
         reset_sandbox_provider()
 
         try:
-            with patch("deerflow.sandbox.sandbox_provider.get_app_config", return_value=first_cfg), patch("deerflow.config.get_app_config", return_value=first_cfg):
+            with (
+                patch("deerflow.sandbox.sandbox_provider.get_app_config", return_value=first_cfg),
+                patch("deerflow.config.get_app_config", return_value=first_cfg),
+            ):
                 provider = get_sandbox_provider()
                 provider.acquire()
 
@@ -844,7 +867,10 @@ class TestLocalSandboxProviderResetClearsSingleton:
             # The whole point of the regression: reset must drop the cached LocalSandbox.
             assert lsp_module._singleton is None
 
-            with patch("deerflow.sandbox.sandbox_provider.get_app_config", return_value=second_cfg), patch("deerflow.config.get_app_config", return_value=second_cfg):
+            with (
+                patch("deerflow.sandbox.sandbox_provider.get_app_config", return_value=second_cfg),
+                patch("deerflow.config.get_app_config", return_value=second_cfg),
+            ):
                 provider2 = get_sandbox_provider()
                 provider2.acquire()
 
@@ -883,7 +909,10 @@ class TestLocalSandboxProviderResetClearsSingleton:
         reset_sandbox_provider()
 
         try:
-            with patch("deerflow.sandbox.sandbox_provider.get_app_config", return_value=cfg), patch("deerflow.config.get_app_config", return_value=cfg):
+            with (
+                patch("deerflow.sandbox.sandbox_provider.get_app_config", return_value=cfg),
+                patch("deerflow.config.get_app_config", return_value=cfg),
+            ):
                 provider = get_sandbox_provider()
                 provider.acquire()
 

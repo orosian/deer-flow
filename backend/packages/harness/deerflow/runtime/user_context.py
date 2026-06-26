@@ -184,7 +184,9 @@ def resolve_user_id(
     if isinstance(value, _AutoSentinel):
         user = _current_user.get()
         if user is None:
-            raise RuntimeError(f"{method_name} called with user_id=AUTO but no user context is set; pass an explicit user_id, set the contextvar via auth middleware, or opt out with user_id=None for migration/CLI paths.")
+            raise RuntimeError(
+                f"{method_name} called with user_id=AUTO but no user context is set; pass an explicit user_id, set the contextvar via auth middleware, or opt out with user_id=None for migration/CLI paths."
+            )
         # Coerce to ``str`` at the boundary: ``User.id`` is typed as
         # ``UUID`` for the API surface, but the persistence layer
         # stores ``user_id`` as ``String(64)`` and aiosqlite cannot

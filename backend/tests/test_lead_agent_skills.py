@@ -130,7 +130,9 @@ def test_get_skills_prompt_section_uses_explicit_config_for_enabled_skills(monke
     monkeypatch.setattr("deerflow.config.get_app_config", fail_get_app_config)
     monkeypatch.setattr(
         "deerflow.agents.lead_agent.prompt.get_or_new_skill_storage",
-        lambda app_config=None, **kwargs: __import__("types").SimpleNamespace(load_skills=lambda *, enabled_only: [_make_skill("explicit-skill")] if app_config is explicit_config else []),
+        lambda app_config=None, **kwargs: __import__("types").SimpleNamespace(
+            load_skills=lambda *, enabled_only: [_make_skill("explicit-skill")] if app_config is explicit_config else []
+        ),
     )
 
     result = get_skills_prompt_section(app_config=explicit_config)
@@ -149,7 +151,9 @@ def test_make_lead_agent_empty_skills_passed_correctly(monkeypatch):
     monkeypatch.setattr(lead_agent_module, "_resolve_model_name", lambda x=None, **kwargs: "default-model")
     monkeypatch.setattr(lead_agent_module, "create_chat_model", lambda **kwargs: "model")
     monkeypatch.setattr("deerflow.tools.get_available_tools", lambda **kwargs: [])
-    monkeypatch.setattr(lead_agent_module, "_load_enabled_skills_for_tool_policy", lambda available_skills, *, app_config: [])
+    monkeypatch.setattr(
+        lead_agent_module, "_load_enabled_skills_for_tool_policy", lambda available_skills, *, app_config: []
+    )
     monkeypatch.setattr(lead_agent_module, "build_middlewares", lambda *args, **kwargs: [])
     monkeypatch.setattr(lead_agent_module, "create_agent", lambda **kwargs: kwargs)
 
@@ -194,9 +198,18 @@ def test_make_lead_agent_filters_tools_from_available_skills(monkeypatch):
     monkeypatch.setattr(lead_agent_module, "build_middlewares", lambda *args, **kwargs: [])
     monkeypatch.setattr(lead_agent_module, "apply_prompt_template", lambda **kwargs: "mock_prompt")
     monkeypatch.setattr(lead_agent_module, "create_agent", lambda **kwargs: kwargs)
-    monkeypatch.setattr(lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=["restricted", "legacy"]))
-    monkeypatch.setattr(lead_agent_module, "_load_enabled_skills_for_tool_policy", lambda available_skills, *, app_config: [_make_skill("restricted", ["read_file"]), _make_skill("legacy", None)])
-    monkeypatch.setattr("deerflow.tools.get_available_tools", lambda **kwargs: [NamedTool("bash"), NamedTool("read_file"), NamedTool("web_search")])
+    monkeypatch.setattr(
+        lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=["restricted", "legacy"])
+    )
+    monkeypatch.setattr(
+        lead_agent_module,
+        "_load_enabled_skills_for_tool_policy",
+        lambda available_skills, *, app_config: [_make_skill("restricted", ["read_file"]), _make_skill("legacy", None)],
+    )
+    monkeypatch.setattr(
+        "deerflow.tools.get_available_tools",
+        lambda **kwargs: [NamedTool("bash"), NamedTool("read_file"), NamedTool("web_search")],
+    )
 
     mock_app_config = MagicMock()
     mock_app_config.get_model_config.return_value = SimpleNamespace(supports_thinking=False, supports_vision=False)
@@ -218,8 +231,14 @@ def test_make_lead_agent_all_legacy_skills_preserve_all_tools(monkeypatch):
     monkeypatch.setattr(lead_agent_module, "apply_prompt_template", lambda **kwargs: "mock_prompt")
     monkeypatch.setattr(lead_agent_module, "create_agent", lambda **kwargs: kwargs)
     monkeypatch.setattr(lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=None))
-    monkeypatch.setattr(lead_agent_module, "_load_enabled_skills_for_tool_policy", lambda available_skills, *, app_config: [_make_skill("legacy", None)])
-    monkeypatch.setattr("deerflow.tools.get_available_tools", lambda **kwargs: [NamedTool("bash"), NamedTool("read_file")])
+    monkeypatch.setattr(
+        lead_agent_module,
+        "_load_enabled_skills_for_tool_policy",
+        lambda available_skills, *, app_config: [_make_skill("legacy", None)],
+    )
+    monkeypatch.setattr(
+        "deerflow.tools.get_available_tools", lambda **kwargs: [NamedTool("bash"), NamedTool("read_file")]
+    )
 
     mock_app_config = MagicMock()
     mock_app_config.get_model_config.return_value = SimpleNamespace(supports_thinking=False, supports_vision=False)
@@ -241,8 +260,13 @@ def test_make_lead_agent_enforces_allowed_tools_when_skill_cache_is_cold(monkeyp
     monkeypatch.setattr(lead_agent_module, "build_middlewares", lambda *args, **kwargs: [])
     monkeypatch.setattr(lead_agent_module, "apply_prompt_template", lambda **kwargs: "mock_prompt")
     monkeypatch.setattr(lead_agent_module, "create_agent", lambda **kwargs: kwargs)
-    monkeypatch.setattr(lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=["restricted"]))
-    monkeypatch.setattr("deerflow.tools.get_available_tools", lambda **kwargs: [NamedTool("bash"), NamedTool("read_file"), NamedTool("web_search")])
+    monkeypatch.setattr(
+        lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=["restricted"])
+    )
+    monkeypatch.setattr(
+        "deerflow.tools.get_available_tools",
+        lambda **kwargs: [NamedTool("bash"), NamedTool("read_file"), NamedTool("web_search")],
+    )
 
     mock_app_config = MagicMock()
     mock_app_config.get_model_config.return_value = SimpleNamespace(supports_thinking=False, supports_vision=False)
@@ -270,7 +294,9 @@ def test_make_lead_agent_fails_closed_when_skill_policy_load_fails(monkeypatch):
     monkeypatch.setattr(lead_agent_module, "create_chat_model", lambda **kwargs: "model")
     create_agent_mock = MagicMock()
     monkeypatch.setattr(lead_agent_module, "create_agent", create_agent_mock)
-    monkeypatch.setattr(lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=["restricted"]))
+    monkeypatch.setattr(
+        lead_agent_module, "load_agent_config", lambda x: AgentConfig(name="test", skills=["restricted"])
+    )
 
     mock_app_config = MagicMock()
     mock_app_config.get_model_config.return_value = SimpleNamespace(supports_thinking=False, supports_vision=False)

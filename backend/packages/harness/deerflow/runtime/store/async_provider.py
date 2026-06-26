@@ -24,7 +24,13 @@ from collections.abc import AsyncIterator
 from langgraph.store.base import BaseStore
 
 from deerflow.config.app_config import AppConfig, get_app_config
-from deerflow.runtime.store.provider import POSTGRES_CONN_REQUIRED, POSTGRES_STORE_INSTALL, SQLITE_STORE_INSTALL, ensure_sqlite_parent_dir, resolve_sqlite_conn_str
+from deerflow.runtime.store.provider import (
+    POSTGRES_CONN_REQUIRED,
+    POSTGRES_STORE_INSTALL,
+    SQLITE_STORE_INSTALL,
+    ensure_sqlite_parent_dir,
+    resolve_sqlite_conn_str,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +112,9 @@ async def make_store(app_config: AppConfig | None = None) -> AsyncIterator[BaseS
     if app_config.checkpointer is None:
         from langgraph.store.memory import InMemoryStore
 
-        logger.warning("No 'checkpointer' section in config.yaml — using InMemoryStore for the store. Thread list will be lost on server restart. Configure a sqlite or postgres backend for persistence.")
+        logger.warning(
+            "No 'checkpointer' section in config.yaml — using InMemoryStore for the store. Thread list will be lost on server restart. Configure a sqlite or postgres backend for persistence."
+        )
         yield InMemoryStore()
         return
 

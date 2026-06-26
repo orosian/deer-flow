@@ -137,7 +137,9 @@ def e2e_env(tmp_path, monkeypatch):
     # 5. Ensure summarization is off (default, but be explicit)
     from deerflow.config.summarization_config import SummarizationConfig
 
-    monkeypatch.setattr("deerflow.config.summarization_config._summarization_config", SummarizationConfig(enabled=False))
+    monkeypatch.setattr(
+        "deerflow.config.summarization_config._summarization_config", SummarizationConfig(enabled=False)
+    )
 
     # 6. Exclude TitleMiddleware from the chain.
     #    It triggers an extra LLM call to generate a thread title, which adds
@@ -574,7 +576,9 @@ class TestSkillInstallation:
         """Create a minimal valid .skill archive."""
         skill_dir = tmp_path / "build" / skill_name
         skill_dir.mkdir(parents=True)
-        (skill_dir / "SKILL.md").write_text(f"---\nname: {skill_name}\ndescription: E2E test skill\n---\n\nTest content.\n")
+        (skill_dir / "SKILL.md").write_text(
+            f"---\nname: {skill_name}\ndescription: E2E test skill\n---\n\nTest content.\n"
+        )
         archive_path = tmp_path / f"{skill_name}.skill"
         with zipfile.ZipFile(archive_path, "w") as zf:
             for file in skill_dir.rglob("*"):

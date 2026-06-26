@@ -34,7 +34,11 @@ def _extract_reasoning_content(value: Any) -> str | object:
         return reasoning
 
     model_extra = getattr(value, "model_extra", None)
-    if isinstance(model_extra, Mapping) and "reasoning_content" in model_extra and model_extra["reasoning_content"] is not None:
+    if (
+        isinstance(model_extra, Mapping)
+        and "reasoning_content" in model_extra
+        and model_extra["reasoning_content"] is not None
+    ):
         return model_extra["reasoning_content"]
 
     return _MISSING

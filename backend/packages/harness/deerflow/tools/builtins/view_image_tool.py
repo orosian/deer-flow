@@ -113,7 +113,14 @@ def view_image_tool(
     expected_mime_type = _EXTENSION_TO_MIME.get(path.suffix.lower())
     if expected_mime_type is None:
         return Command(
-            update={"messages": [ToolMessage(f"Error: Unsupported image format: {path.suffix}. Supported formats: {', '.join(_EXTENSION_TO_MIME)}", tool_call_id=tool_call_id)]},
+            update={
+                "messages": [
+                    ToolMessage(
+                        f"Error: Unsupported image format: {path.suffix}. Supported formats: {', '.join(_EXTENSION_TO_MIME)}",
+                        tool_call_id=tool_call_id,
+                    )
+                ]
+            },
         )
 
     # Detect MIME type from file extension
@@ -125,11 +132,25 @@ def view_image_tool(
         image_size = path.stat().st_size
     except OSError as e:
         return Command(
-            update={"messages": [ToolMessage(f"Error reading image metadata: {_sanitize_image_error(e, thread_data)}", tool_call_id=tool_call_id)]},
+            update={
+                "messages": [
+                    ToolMessage(
+                        f"Error reading image metadata: {_sanitize_image_error(e, thread_data)}",
+                        tool_call_id=tool_call_id,
+                    )
+                ]
+            },
         )
     if image_size > _MAX_IMAGE_BYTES:
         return Command(
-            update={"messages": [ToolMessage(f"Error: Image file is too large: {image_size} bytes. Maximum supported size is {_MAX_IMAGE_BYTES} bytes", tool_call_id=tool_call_id)]},
+            update={
+                "messages": [
+                    ToolMessage(
+                        f"Error: Image file is too large: {image_size} bytes. Maximum supported size is {_MAX_IMAGE_BYTES} bytes",
+                        tool_call_id=tool_call_id,
+                    )
+                ]
+            },
         )
 
     # Read image file and convert to base64
@@ -138,17 +159,34 @@ def view_image_tool(
             image_data = f.read()
     except Exception as e:
         return Command(
-            update={"messages": [ToolMessage(f"Error reading image file: {_sanitize_image_error(e, thread_data)}", tool_call_id=tool_call_id)]},
+            update={
+                "messages": [
+                    ToolMessage(
+                        f"Error reading image file: {_sanitize_image_error(e, thread_data)}", tool_call_id=tool_call_id
+                    )
+                ]
+            },
         )
 
     detected_mime_type = _detect_image_mime(image_data)
     if detected_mime_type is None:
         return Command(
-            update={"messages": [ToolMessage("Error: File contents do not match a supported image format", tool_call_id=tool_call_id)]},
+            update={
+                "messages": [
+                    ToolMessage("Error: File contents do not match a supported image format", tool_call_id=tool_call_id)
+                ]
+            },
         )
     if detected_mime_type != expected_mime_type:
         return Command(
-            update={"messages": [ToolMessage(f"Error: Image contents are {detected_mime_type}, but file extension indicates {expected_mime_type}", tool_call_id=tool_call_id)]},
+            update={
+                "messages": [
+                    ToolMessage(
+                        f"Error: Image contents are {detected_mime_type}, but file extension indicates {expected_mime_type}",
+                        tool_call_id=tool_call_id,
+                    )
+                ]
+            },
         )
     mime_type = detected_mime_type
     image_base64 = base64.b64encode(image_data).decode("utf-8")
@@ -158,5 +196,8 @@ def view_image_tool(
     new_viewed_images = {image_path: {"base64": image_base64, "mime_type": mime_type}}
 
     return Command(
-        update={"viewed_images": new_viewed_images, "messages": [ToolMessage("Successfully read image", tool_call_id=tool_call_id)]},
+        update={
+            "viewed_images": new_viewed_images,
+            "messages": [ToolMessage("Successfully read image", tool_call_id=tool_call_id)],
+        },
     )

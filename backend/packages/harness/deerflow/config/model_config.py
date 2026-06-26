@@ -22,7 +22,9 @@ class ModelConfig(BaseModel):
         description="Structured output version for OpenAI responses content, e.g. responses/v1",
     )
     supports_thinking: bool = Field(default_factory=lambda: False, description="Whether the model supports thinking")
-    supports_reasoning_effort: bool = Field(default_factory=lambda: False, description="Whether the model supports reasoning effort")
+    supports_reasoning_effort: bool = Field(
+        default_factory=lambda: False, description="Whether the model supports reasoning effort"
+    )
     when_thinking_enabled: dict | None = Field(
         default_factory=lambda: None,
         description="Extra settings to be passed to the model when thinking is enabled",
@@ -31,7 +33,9 @@ class ModelConfig(BaseModel):
         default_factory=lambda: None,
         description="Extra settings to be passed to the model when thinking is disabled",
     )
-    supports_vision: bool = Field(default_factory=lambda: False, description="Whether the model supports vision/image inputs")
+    supports_vision: bool = Field(
+        default_factory=lambda: False, description="Whether the model supports vision/image inputs"
+    )
     stream_chunk_timeout: float | None = Field(
         default=None,
         description=(

@@ -37,8 +37,13 @@ def _fix_messages(messages: list) -> list:
         if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", []):
             xml_parts = []
             for tool in msg.tool_calls:
-                args_xml = " ".join(f"<parameter={html.escape(str(k), quote=False)}>{html.escape(v if isinstance(v, str) else json.dumps(v, ensure_ascii=False), quote=False)}</parameter>" for k, v in tool.get("args", {}).items())
-                xml_parts.append(f"<tool_call> <function={html.escape(str(tool['name']), quote=False)}> {args_xml} </function> </tool_call>")
+                args_xml = " ".join(
+                    f"<parameter={html.escape(str(k), quote=False)}>{html.escape(v if isinstance(v, str) else json.dumps(v, ensure_ascii=False), quote=False)}</parameter>"
+                    for k, v in tool.get("args", {}).items()
+                )
+                xml_parts.append(
+                    f"<tool_call> <function={html.escape(str(tool['name']), quote=False)}> {args_xml} </function> </tool_call>"
+                )
             full_text = f"{text}\n" + "\n".join(xml_parts) if text else "\n".join(xml_parts)
             fixed.append(AIMessage(content=full_text.strip() or " "))
             continue
@@ -239,11 +244,27 @@ class MindIEChatModel(ChatOpenAI):
                 chunk_size = 15
                 for i in range(0, len(content), chunk_size):
                     chunk_text = content[i : i + chunk_size]
-                    chunk_msg = AIMessageChunk(content=chunk_text, id=msg.id, response_metadata=msg.response_metadata if i == 0 else {})
-                    yield ChatGenerationChunk(message=chunk_msg, generation_info=gen.generation_info if i == 0 else None)
+                    chunk_msg = AIMessageChunk(
+                        content=chunk_text, id=msg.id, response_metadata=msg.response_metadata if i == 0 else {}
+                    )
+                    yield ChatGenerationChunk(
+                        message=chunk_msg, generation_info=gen.generation_info if i == 0 else None
+                    )
 
                 if standard_tool_calls:
-                    yield ChatGenerationChunk(message=AIMessageChunk(content="", id=msg.id, tool_calls=standard_tool_calls, invalid_tool_calls=getattr(msg, "invalid_tool_calls", [])))
+                    yield ChatGenerationChunk(
+                        message=AIMessageChunk(
+                            content="",
+                            id=msg.id,
+                            tool_calls=standard_tool_calls,
+                            invalid_tool_calls=getattr(msg, "invalid_tool_calls", []),
+                        )
+                    )
             else:
-                chunk_msg = AIMessageChunk(content=content, id=msg.id, tool_calls=standard_tool_calls, invalid_tool_calls=getattr(msg, "invalid_tool_calls", []))
+                chunk_msg = AIMessageChunk(
+                    content=content,
+                    id=msg.id,
+                    tool_calls=standard_tool_calls,
+                    invalid_tool_calls=getattr(msg, "invalid_tool_calls", []),
+                )
                 yield ChatGenerationChunk(message=chunk_msg, generation_info=gen.generation_info)

@@ -205,7 +205,9 @@ class DeerFlowSummarizationMiddleware(SummarizationMiddleware):
             return None
 
         messages_to_summarize, preserved_messages = self._partition_with_skill_rescue(messages, cutoff_index)
-        messages_to_summarize, preserved_messages = self._preserve_dynamic_context_reminders(messages_to_summarize, preserved_messages)
+        messages_to_summarize, preserved_messages = self._preserve_dynamic_context_reminders(
+            messages_to_summarize, preserved_messages
+        )
         self._fire_hooks(messages_to_summarize, preserved_messages, runtime)
         summary = self._create_summary(messages_to_summarize)
         new_messages = self._build_new_messages(summary)
@@ -231,7 +233,9 @@ class DeerFlowSummarizationMiddleware(SummarizationMiddleware):
             return None
 
         messages_to_summarize, preserved_messages = self._partition_with_skill_rescue(messages, cutoff_index)
-        messages_to_summarize, preserved_messages = self._preserve_dynamic_context_reminders(messages_to_summarize, preserved_messages)
+        messages_to_summarize, preserved_messages = self._preserve_dynamic_context_reminders(
+            messages_to_summarize, preserved_messages
+        )
         self._fire_hooks(messages_to_summarize, preserved_messages, runtime)
         summary = await self._acreate_summary(messages_to_summarize)
         new_messages = self._build_new_messages(summary)

@@ -147,7 +147,9 @@ def test_launcher_precreates_every_absolute_reload_exclude(name):
     assert absolute_excludes, f"{name}: expected at least one absolute reload-exclude"
 
     for value in absolute_excludes:
-        assert value in created, f"{name}: absolute reload-exclude {value!r} is never created via mkdir (created dirs: {sorted(created)})"
+        assert value in created, (
+            f"{name}: absolute reload-exclude {value!r} is never created via mkdir (created dirs: {sorted(created)})"
+        )
 
 
 @pytest.mark.parametrize("name", list(LAUNCHERS))
@@ -165,7 +167,9 @@ def test_sandbox_mkdir_precedes_uvicorn_launch(name):
 
     assert launch_idx is not None, f"{name}: could not locate the 'uv run uvicorn' launch line"
     assert mkdir_idx is not None, f"{name}: could not locate the sandbox mkdir line"
-    assert mkdir_idx < launch_idx, f"{name}: sandbox mkdir (line {mkdir_idx + 1}) must precede uvicorn launch (line {launch_idx + 1})"
+    assert mkdir_idx < launch_idx, (
+        f"{name}: sandbox mkdir (line {mkdir_idx + 1}) must precede uvicorn launch (line {launch_idx + 1})"
+    )
 
 
 def test_precreated_sandbox_artifacts_are_gitignored():

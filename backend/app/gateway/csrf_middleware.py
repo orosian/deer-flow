@@ -139,14 +139,23 @@ def _forwarded_param(request: Request, name: str) -> str | None:
 
 def _request_scheme(request: Request) -> str:
     """Resolve the original request scheme from trusted proxy headers."""
-    scheme = _forwarded_param(request, "proto") or _first_header_value(request.headers.get("x-forwarded-proto")) or request.url.scheme
+    scheme = (
+        _forwarded_param(request, "proto")
+        or _first_header_value(request.headers.get("x-forwarded-proto"))
+        or request.url.scheme
+    )
     return scheme.lower()
 
 
 def _request_origin(request: Request) -> str | None:
     """Build the origin for the URL the browser is targeting."""
     scheme = _request_scheme(request)
-    host = _forwarded_param(request, "host") or _first_header_value(request.headers.get("x-forwarded-host")) or request.headers.get("host") or request.url.netloc
+    host = (
+        _forwarded_param(request, "host")
+        or _first_header_value(request.headers.get("x-forwarded-host"))
+        or request.headers.get("host")
+        or request.url.netloc
+    )
 
     forwarded_port = _first_header_value(request.headers.get("x-forwarded-port"))
     if forwarded_port and ":" not in host.rsplit("]", 1)[-1]:
@@ -173,7 +182,9 @@ def is_allowed_auth_origin(request: Request) -> bool:
         return False
 
     request_origin = _request_origin(request)
-    return normalized_origin in _configured_cors_origins() or (request_origin is not None and normalized_origin == request_origin)
+    return normalized_origin in _configured_cors_origins() or (
+        request_origin is not None and normalized_origin == request_origin
+    )
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):

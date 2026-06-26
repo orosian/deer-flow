@@ -76,7 +76,9 @@ class TestJournalByModel:
     def test_lead_agent_call_lands_on_real_model(self) -> None:
         j = _journal()
         j.on_llm_end(
-            _make_llm_response(usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}, model_name="lead-model"),
+            _make_llm_response(
+                usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}, model_name="lead-model"
+            ),
             run_id=uuid4(),
             parent_run_id=None,
             tags=["lead_agent"],
@@ -92,13 +94,17 @@ class TestJournalByModel:
         """A middleware (e.g. title/summarization) on a different model gets its own bucket."""
         j = _journal()
         j.on_llm_end(
-            _make_llm_response(usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}, model_name="lead-model"),
+            _make_llm_response(
+                usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}, model_name="lead-model"
+            ),
             run_id=uuid4(),
             parent_run_id=None,
             tags=["lead_agent"],
         )
         j.on_llm_end(
-            _make_llm_response(usage={"input_tokens": 4, "output_tokens": 1, "total_tokens": 5}, model_name="title-model"),
+            _make_llm_response(
+                usage={"input_tokens": 4, "output_tokens": 1, "total_tokens": 5}, model_name="title-model"
+            ),
             run_id=uuid4(),
             parent_run_id=None,
             tags=["middleware:title"],
@@ -128,7 +134,9 @@ class TestJournalByModel:
         j = _journal()
         for _ in range(2):
             j.on_llm_end(
-                _make_llm_response(usage={"input_tokens": 7, "output_tokens": 3, "total_tokens": 10}, model_name="lead-model"),
+                _make_llm_response(
+                    usage={"input_tokens": 7, "output_tokens": 3, "total_tokens": 10}, model_name="lead-model"
+                ),
                 run_id=uuid4(),
                 parent_run_id=None,
                 tags=["lead_agent"],
@@ -144,7 +152,9 @@ class TestJournalByModel:
         j = _journal()
         # Lead emits 10 tokens on lead-model.
         j.on_llm_end(
-            _make_llm_response(usage={"input_tokens": 6, "output_tokens": 4, "total_tokens": 10}, model_name="lead-model"),
+            _make_llm_response(
+                usage={"input_tokens": 6, "output_tokens": 4, "total_tokens": 10}, model_name="lead-model"
+            ),
             run_id=uuid4(),
             parent_run_id=None,
             tags=["lead_agent"],
@@ -197,10 +207,20 @@ class TestJournalByModel:
         j = _journal()
         rid = uuid4()
         usage = {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
-        j.on_llm_end(_make_llm_response(usage=usage, model_name="lead-model"), run_id=rid, parent_run_id=None, tags=["lead_agent"])
+        j.on_llm_end(
+            _make_llm_response(usage=usage, model_name="lead-model"),
+            run_id=rid,
+            parent_run_id=None,
+            tags=["lead_agent"],
+        )
         # Same langchain run_id firing twice (real callbacks do this) must
         # not inflate either total_tokens or the per-model bucket.
-        j.on_llm_end(_make_llm_response(usage=usage, model_name="lead-model"), run_id=rid, parent_run_id=None, tags=["lead_agent"])
+        j.on_llm_end(
+            _make_llm_response(usage=usage, model_name="lead-model"),
+            run_id=rid,
+            parent_run_id=None,
+            tags=["lead_agent"],
+        )
         data = j.get_completion_data()
         assert data["total_tokens"] == 15
         assert data["token_usage_by_model"] == {
@@ -229,13 +249,24 @@ class TestJournalByModel:
         store = MemoryRunEventStore()
         j = RunJournal("r1", "t1", store, track_token_usage=False, flush_threshold=100)
         j.on_llm_end(
-            _make_llm_response(usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}, model_name="lead-model"),
+            _make_llm_response(
+                usage={"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}, model_name="lead-model"
+            ),
             run_id=uuid4(),
             parent_run_id=None,
             tags=["lead_agent"],
         )
         j.record_external_llm_usage_records(
-            [{"source_run_id": "sub", "caller": "subagent:x", "model_name": "sub-model", "input_tokens": 1, "output_tokens": 1, "total_tokens": 2}],
+            [
+                {
+                    "source_run_id": "sub",
+                    "caller": "subagent:x",
+                    "model_name": "sub-model",
+                    "input_tokens": 1,
+                    "output_tokens": 1,
+                    "total_tokens": 2,
+                }
+            ],
         )
         data = j.get_completion_data()
         assert data["token_usage_by_model"] == {}

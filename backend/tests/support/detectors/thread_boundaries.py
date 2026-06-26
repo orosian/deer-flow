@@ -356,7 +356,9 @@ class BoundaryVisitor(ast.NodeVisitor):
         if receiver_name is None:
             return False
         receiver_leaf = receiver_name.rsplit(".", 1)[-1]
-        return receiver_leaf in LANGCHAIN_INVOKE_RECEIVER_NAMES or receiver_leaf.endswith(LANGCHAIN_INVOKE_RECEIVER_SUFFIXES)
+        return receiver_leaf in LANGCHAIN_INVOKE_RECEIVER_NAMES or receiver_leaf.endswith(
+            LANGCHAIN_INVOKE_RECEIVER_SUFFIXES
+        )
 
     def _emit_rule(self, node: ast.AST, symbol: str, rule: _CallRule) -> None:
         self._emit(
@@ -462,7 +464,9 @@ def format_text(findings: Sequence[BoundaryFinding]) -> str:
 
     lines: list[str] = []
     for finding in findings:
-        lines.append(f"{finding.severity} {finding.category} {finding.path}:{finding.line}:{finding.column + 1} in {finding.function} async={str(finding.async_context).lower()}")
+        lines.append(
+            f"{finding.severity} {finding.category} {finding.path}:{finding.line}:{finding.column + 1} in {finding.function} async={str(finding.async_context).lower()}"
+        )
         lines.append(f"  symbol: {finding.symbol}")
         lines.append(f"  note: {finding.message}")
         if finding.code:
@@ -471,7 +475,11 @@ def format_text(findings: Sequence[BoundaryFinding]) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=("Detect async/thread boundary points for developer review. Findings are an inventory, not automatic bug decisions."))
+    parser = argparse.ArgumentParser(
+        description=(
+            "Detect async/thread boundary points for developer review. Findings are an inventory, not automatic bug decisions."
+        )
+    )
     parser.add_argument(
         "paths",
         nargs="*",

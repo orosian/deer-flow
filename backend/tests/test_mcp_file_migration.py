@@ -122,9 +122,14 @@ class TestLocalUriToVirtualPath:
 
     def test_missing_file_directory_and_remote_uri_are_ignored(self, tmp_path: Path, paths: Paths):
         with _patch_paths(paths):
-            assert mcp_tools._local_uri_to_virtual_path(str(tmp_path / "missing.png"), thread_id="t1", user_id="u1") is None
+            assert (
+                mcp_tools._local_uri_to_virtual_path(str(tmp_path / "missing.png"), thread_id="t1", user_id="u1")
+                is None
+            )
             assert mcp_tools._local_uri_to_virtual_path(str(tmp_path), thread_id="t1", user_id="u1") is None
-            assert mcp_tools._local_uri_to_virtual_path("https://example.com/a.png", thread_id="t1", user_id="u1") is None
+            assert (
+                mcp_tools._local_uri_to_virtual_path("https://example.com/a.png", thread_id="t1", user_id="u1") is None
+            )
 
     def test_symlink_escape_is_not_exposed(self, tmp_path: Path, paths: Paths):
         outside = tmp_path / "outside.txt"
@@ -149,7 +154,9 @@ class TestRewriteLocalPathsInText:
         text = "Saved as temp/page-2026-06-16T10-21-46-864Z.yml."
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert result == f"Saved as {VIRTUAL_PATH_PREFIX}/workspace/temp/page-2026-06-16T10-21-46-864Z.yml."
 
@@ -159,7 +166,9 @@ class TestRewriteLocalPathsInText:
         text = "Screenshot saved to artifacts/page.png"
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert result == f"Screenshot saved to {VIRTUAL_PATH_PREFIX}/workspace/artifacts/page.png"
 
@@ -198,7 +207,9 @@ class TestRewriteLocalPathsInText:
         text = "### Result\n- [Screenshot](.playwright-mcp/page.png)\npath: '.playwright-mcp/page.png'"
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert result.count(f"{VIRTUAL_PATH_PREFIX}/workspace/.playwright-mcp/page.png") == 2
         assert not paths.sandbox_outputs_dir("t1", user_id="u1").exists()
@@ -225,7 +236,9 @@ class TestRewriteLocalPathsInText:
         text = "Saved as page.yml"
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert result == text
 
@@ -269,9 +282,13 @@ class TestRewriteLocalPathsInText:
         text = "Saved temp/a.png and temp/b.png together."
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
-        assert result == (f"Saved {VIRTUAL_PATH_PREFIX}/workspace/temp/a.png and {VIRTUAL_PATH_PREFIX}/workspace/temp/b.png together.")
+        assert result == (
+            f"Saved {VIRTUAL_PATH_PREFIX}/workspace/temp/a.png and {VIRTUAL_PATH_PREFIX}/workspace/temp/b.png together."
+        )
 
     def test_markdown_link_in_parentheses_is_rewritten_without_eating_paren(self, paths: Paths):
         workspace = paths.sandbox_work_dir("t1", user_id="u1")
@@ -279,7 +296,9 @@ class TestRewriteLocalPathsInText:
         text = "See ![shot](temp/shot.png) now"
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert result == f"See ![shot]({VIRTUAL_PATH_PREFIX}/workspace/temp/shot.png) now"
 
@@ -288,7 +307,9 @@ class TestRewriteLocalPathsInText:
         text = "Saved as temp/never-created.png"
 
         with _patch_paths(paths):
-            result = mcp_tools._rewrite_local_paths_in_text(text, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            result = mcp_tools._rewrite_local_paths_in_text(
+                text, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert result == text
 
@@ -458,7 +479,9 @@ class TestConvertCallToolResultRewrites:
         )
 
         with _patch_paths(paths):
-            content, _ = mcp_tools._convert_call_tool_result(result, thread_id="t1", user_id="u1", source_base_dir=workspace)
+            content, _ = mcp_tools._convert_call_tool_result(
+                result, thread_id="t1", user_id="u1", source_base_dir=workspace
+            )
 
         assert content[0]["text"] == f"Saved as {VIRTUAL_PATH_PREFIX}/workspace/temp/page-2026-06-16T10-21-46-864Z.yml"
 
@@ -567,7 +590,9 @@ class TestConvertCallToolResultRewrites:
             mcp_tools._convert_call_tool_result(result, thread_id="t1", user_id="u1")
 
     def test_structured_content_becomes_artifact(self, paths: Paths):
-        result = CallToolResult(content=[TextContent(type="text", text="ok")], structuredContent={"k": "v"}, isError=False)
+        result = CallToolResult(
+            content=[TextContent(type="text", text="ok")], structuredContent={"k": "v"}, isError=False
+        )
 
         with _patch_paths(paths):
             _, artifact = mcp_tools._convert_call_tool_result(result, thread_id="t1", user_id="u1")

@@ -27,7 +27,9 @@ class McpOAuthConfigResponse(BaseModel):
 
     enabled: bool = Field(default=True, description="Whether OAuth token injection is enabled")
     token_url: str = Field(default="", description="OAuth token endpoint URL")
-    grant_type: Literal["client_credentials", "refresh_token"] = Field(default="client_credentials", description="OAuth grant type")
+    grant_type: Literal["client_credentials", "refresh_token"] = Field(
+        default="client_credentials", description="OAuth grant type"
+    )
     client_id: str | None = Field(default=None, description="OAuth client ID")
     client_secret: str | None = Field(default=None, description="OAuth client secret")
     refresh_token: str | None = Field(default=None, description="OAuth refresh token")
@@ -35,10 +37,14 @@ class McpOAuthConfigResponse(BaseModel):
     audience: str | None = Field(default=None, description="OAuth audience")
     token_field: str = Field(default="access_token", description="Token response field containing access token")
     token_type_field: str = Field(default="token_type", description="Token response field containing token type")
-    expires_in_field: str = Field(default="expires_in", description="Token response field containing expires-in seconds")
+    expires_in_field: str = Field(
+        default="expires_in", description="Token response field containing expires-in seconds"
+    )
     default_token_type: str = Field(default="Bearer", description="Default token type when response omits token_type")
     refresh_skew_seconds: int = Field(default=60, description="Refresh this many seconds before expiry")
-    extra_token_params: dict[str, str] = Field(default_factory=dict, description="Additional form params sent to token endpoint")
+    extra_token_params: dict[str, str] = Field(
+        default_factory=dict, description="Additional form params sent to token endpoint"
+    )
 
 
 class McpServerConfigResponse(BaseModel):
@@ -51,7 +57,9 @@ class McpServerConfigResponse(BaseModel):
     env: dict[str, str] = Field(default_factory=dict, description="Environment variables for the MCP server")
     url: str | None = Field(default=None, description="URL of the MCP server (for sse or http type)")
     headers: dict[str, str] = Field(default_factory=dict, description="HTTP headers to send (for sse or http type)")
-    oauth: McpOAuthConfigResponse | None = Field(default=None, description="OAuth configuration for MCP HTTP/SSE servers")
+    oauth: McpOAuthConfigResponse | None = Field(
+        default=None, description="OAuth configuration for MCP HTTP/SSE servers"
+    )
     description: str = Field(default="", description="Human-readable description of what this MCP server provides")
 
 
@@ -103,10 +111,17 @@ def _stdio_command_name(command: str | None, *, server_name: str) -> str:
 
     stripped = command.strip()
     has_path_separator = "/" in stripped or "\\" in stripped
-    if stripped != command or has_path_separator or any(ch.isspace() for ch in stripped) or any(ch in stripped for ch in _SHELL_METACHARS):
+    if (
+        stripped != command
+        or has_path_separator
+        or any(ch.isspace() for ch in stripped)
+        or any(ch in stripped for ch in _SHELL_METACHARS)
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(f"MCP server '{server_name}' command must be a single executable name; put parameters in args instead."),
+            detail=(
+                f"MCP server '{server_name}' command must be a single executable name; put parameters in args instead."
+            ),
         )
 
     return stripped
@@ -130,7 +145,9 @@ def _validate_mcp_update_request(request: McpConfigUpdateRequest) -> None:
             allowed = ", ".join(sorted(allowed_commands)) or "<none>"
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(f"MCP server '{name}' uses disallowed stdio command '{command_name}'. Allowed commands: {allowed}. Configure {_MCP_STDIO_COMMAND_ALLOWLIST_ENV} to extend this list."),
+                detail=(
+                    f"MCP server '{name}' uses disallowed stdio command '{command_name}'. Allowed commands: {allowed}. Configure {_MCP_STDIO_COMMAND_ALLOWLIST_ENV} to extend this list."
+                ),
             )
 
 
@@ -207,8 +224,16 @@ def _merge_preserving_secrets(
     merged_oauth = incoming.oauth
     if incoming.oauth is not None and existing.oauth is not None:
         # None = preserve (masked round-trip), "" = explicitly clear, else = new value
-        merged_client_secret = existing.oauth.client_secret if incoming.oauth.client_secret is None else (None if incoming.oauth.client_secret == "" else incoming.oauth.client_secret)
-        merged_refresh_token = existing.oauth.refresh_token if incoming.oauth.refresh_token is None else (None if incoming.oauth.refresh_token == "" else incoming.oauth.refresh_token)
+        merged_client_secret = (
+            existing.oauth.client_secret
+            if incoming.oauth.client_secret is None
+            else (None if incoming.oauth.client_secret == "" else incoming.oauth.client_secret)
+        )
+        merged_refresh_token = (
+            existing.oauth.refresh_token
+            if incoming.oauth.refresh_token is None
+            else (None if incoming.oauth.refresh_token == "" else incoming.oauth.refresh_token)
+        )
         merged_oauth = incoming.oauth.model_copy(
             update={
                 "client_secret": merged_client_secret,
@@ -255,7 +280,10 @@ async def get_mcp_configuration(request: Request) -> McpConfigResponse:
 
     config = get_extensions_config()
 
-    servers = {name: _mask_server_config(McpServerConfigResponse(**server.model_dump())) for name, server in config.mcp_servers.items()}
+    servers = {
+        name: _mask_server_config(McpServerConfigResponse(**server.model_dump()))
+        for name, server in config.mcp_servers.items()
+    }
     return McpConfigResponse(mcp_servers=servers)
 
 
@@ -263,7 +291,9 @@ async def get_mcp_configuration(request: Request) -> McpConfigResponse:
     "/mcp/cache/reset",
     response_model=McpCacheResetResponse,
     summary="Reset MCP Tools Cache",
-    description=("Reset cached MCP tools and pooled sessions process-wide so tools are reloaded on next use. This affects all threads and users in the current Gateway process."),
+    description=(
+        "Reset cached MCP tools and pooled sessions process-wide so tools are reloaded on next use. This affects all threads and users in the current Gateway process."
+    ),
 )
 async def reset_mcp_tools_cache_endpoint(request: Request) -> McpCacheResetResponse:
     """Reset cached MCP tools and persistent sessions process-wide.
@@ -375,7 +405,10 @@ async def update_mcp_configuration(request: Request, body: McpConfigUpdateReques
         # execution aligned after extensions_config.json changes.
         reloaded_config = reload_extensions_config()
         reset_mcp_tools_cache()
-        servers = {name: _mask_server_config(McpServerConfigResponse(**server.model_dump())) for name, server in reloaded_config.mcp_servers.items()}
+        servers = {
+            name: _mask_server_config(McpServerConfigResponse(**server.model_dump()))
+            for name, server in reloaded_config.mcp_servers.items()
+        }
         return McpConfigResponse(mcp_servers=servers)
 
     except HTTPException:

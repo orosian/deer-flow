@@ -130,7 +130,9 @@ def _discover_presets() -> list[dict[str, Any]]:
     try:
         from harness.application.preset_catalog import list_presets  # type: ignore[import-not-found]
     except ImportError:
-        logger.warning("graph-harness is not installed; GET /api/graph-presets will return an empty list. Install graph-harness (>=0.1,<2.0) and restart the gateway to enable the preset selector.")
+        logger.warning(
+            "graph-harness is not installed; GET /api/graph-presets will return an empty list. Install graph-harness (>=0.1,<2.0) and restart the gateway to enable the preset selector."
+        )
         return []
 
     entries = list_presets()

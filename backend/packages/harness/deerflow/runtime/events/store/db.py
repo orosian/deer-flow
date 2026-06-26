@@ -171,7 +171,9 @@ class DbRunEventStore(RunEventStore):
                         content=db_content,
                         event_metadata=metadata,
                         seq=seq,
-                        created_at=datetime.fromisoformat(e["created_at"]) if e.get("created_at") else datetime.now(UTC),
+                        created_at=datetime.fromisoformat(e["created_at"])
+                        if e.get("created_at")
+                        else datetime.now(UTC),
                     )
                     session.add(row)
                     rows.append(row)
@@ -271,7 +273,11 @@ class DbRunEventStore(RunEventStore):
         user_id: str | None | _AutoSentinel = AUTO,
     ):
         resolved_user_id = resolve_user_id(user_id, method_name="DbRunEventStore.count_messages")
-        stmt = select(func.count()).select_from(RunEventRow).where(RunEventRow.thread_id == thread_id, RunEventRow.category == "message")
+        stmt = (
+            select(func.count())
+            .select_from(RunEventRow)
+            .where(RunEventRow.thread_id == thread_id, RunEventRow.category == "message")
+        )
         if resolved_user_id is not None:
             stmt = stmt.where(RunEventRow.user_id == resolved_user_id)
         async with self._sf() as session:

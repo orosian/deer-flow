@@ -397,7 +397,9 @@ class TestBaseChannelOnOutbound:
 
         bus = MessageBus()
         ch = MinimalChannel(name="minimal", bus=bus, config={})
-        msg = InboundMessage(channel_name="minimal", chat_id="c1", user_id="u1", text="hello", files=[{"file_key": "k1"}])
+        msg = InboundMessage(
+            channel_name="minimal", chat_id="c1", user_id="u1", text="hello", files=[{"file_key": "k1"}]
+        )
 
         result = _run(ch.receive_file(msg, "thread-1"))
 

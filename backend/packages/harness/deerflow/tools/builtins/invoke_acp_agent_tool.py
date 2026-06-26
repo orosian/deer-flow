@@ -176,7 +176,9 @@ def build_invoke_acp_agent_tool(agents: dict) -> BaseTool:
             from acp import PROTOCOL_VERSION, Client, text_block
             from acp.schema import ClientCapabilities, Implementation
         except ImportError:
-            return "Error: agent-client-protocol package is not installed. Run `uv sync` to install project dependencies."
+            return (
+                "Error: agent-client-protocol package is not installed. Run `uv sync` to install project dependencies."
+            )
 
         class _CollectingClient(Client):
             """Minimal ACP Client that collects streamed text from session updates."""
@@ -201,9 +203,17 @@ def build_invoke_acp_agent_tool(agents: dict) -> BaseTool:
                 response = _build_permission_response(options, auto_approve=agent_config.auto_approve_permissions)
                 outcome = response.outcome.outcome
                 if outcome == "selected":
-                    logger.info("ACP permission auto-approved for tool call %s in session %s", tool_call.tool_call_id, session_id)
+                    logger.info(
+                        "ACP permission auto-approved for tool call %s in session %s",
+                        tool_call.tool_call_id,
+                        session_id,
+                    )
                 else:
-                    logger.warning("ACP permission denied for tool call %s in session %s (set auto_approve_permissions: true in config.yaml to enable)", tool_call.tool_call_id, session_id)
+                    logger.warning(
+                        "ACP permission denied for tool call %s in session %s (set auto_approve_permissions: true in config.yaml to enable)",
+                        tool_call.tool_call_id,
+                        session_id,
+                    )
                 return response
 
         client = _CollectingClient()
@@ -221,13 +231,17 @@ def build_invoke_acp_agent_tool(agents: dict) -> BaseTool:
             mcp_servers = []
         agent_env: dict[str, str] | None = None
         if agent_config.env:
-            agent_env = {k: (os.environ.get(v[1:], "") if v.startswith("$") else v) for k, v in agent_config.env.items()}
+            agent_env = {
+                k: (os.environ.get(v[1:], "") if v.startswith("$") else v) for k, v in agent_config.env.items()
+            }
 
         try:
             from acp import spawn_agent_process
 
             async with spawn_agent_process(client, cmd, *args, env=agent_env, cwd=physical_cwd) as (conn, proc):
-                logger.info("Spawning ACP agent '%s' with command '%s' and args %s in cwd %s", agent, cmd, args, physical_cwd)
+                logger.info(
+                    "Spawning ACP agent '%s' with command '%s' and args %s in cwd %s", agent, cmd, args, physical_cwd
+                )
                 await conn.initialize(
                     protocol_version=PROTOCOL_VERSION,
                     client_capabilities=ClientCapabilities(),

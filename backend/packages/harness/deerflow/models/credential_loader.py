@@ -188,7 +188,11 @@ def load_claude_code_credential() -> ClaudeCodeCredential | None:
             continue
         cred = _extract_claude_code_credential(data, "claude-cli-file")
         if cred:
-            source_label = "override path" if override_path_obj is not None and cred_path == override_path_obj else "plaintext file"
+            source_label = (
+                "override path"
+                if override_path_obj is not None and cred_path == override_path_obj
+                else "plaintext file"
+            )
             logger.info(f"Loaded Claude Code OAuth credential from {source_label} (expires_at={cred.expires_at})")
             return cred
 

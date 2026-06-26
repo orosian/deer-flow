@@ -164,12 +164,17 @@ async def test_runtime_config_store_chmod_failure_is_logged_not_fatal(tmp_path, 
         return real_chmod(self, mode, *args, **kwargs)
 
     def _save_with_failing_temp_chmod() -> None:
-        with caplog.at_level(logging.DEBUG, logger="app.channels.runtime_config_store"), mock.patch.object(Path, "chmod", chmod_spy):
+        with (
+            caplog.at_level(logging.DEBUG, logger="app.channels.runtime_config_store"),
+            mock.patch.object(Path, "chmod", chmod_spy),
+        ):
             store.set_provider_config("slack", {"enabled": True, "bot_token": "xoxb-ui"})
 
     await asyncio.to_thread(_save_with_failing_temp_chmod)
 
-    assert any("Unable to chmod temporary channel runtime config store" in record.getMessage() for record in caplog.records)
+    assert any(
+        "Unable to chmod temporary channel runtime config store" in record.getMessage() for record in caplog.records
+    )
     mode = await asyncio.to_thread(lambda: path.stat().st_mode & 0o777)
     assert mode == 0o600
     assert await asyncio.to_thread(store.get_provider_config, "slack") == {"enabled": True, "bot_token": "xoxb-ui"}

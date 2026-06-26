@@ -117,7 +117,8 @@ def get_tracing_config() -> TracingConfig:
                 enabled=_env_flag_preferred("LANGSMITH_TRACING", "LANGCHAIN_TRACING_V2", "LANGCHAIN_TRACING"),
                 api_key=_first_env_value("LANGSMITH_API_KEY", "LANGCHAIN_API_KEY"),
                 project=_first_env_value("LANGSMITH_PROJECT", "LANGCHAIN_PROJECT") or "deer-flow",
-                endpoint=_first_env_value("LANGSMITH_ENDPOINT", "LANGCHAIN_ENDPOINT") or "https://api.smith.langchain.com",
+                endpoint=_first_env_value("LANGSMITH_ENDPOINT", "LANGCHAIN_ENDPOINT")
+                or "https://api.smith.langchain.com",
             ),
             langfuse=LangfuseTracingConfig(
                 enabled=_env_flag_preferred("LANGFUSE_TRACING"),

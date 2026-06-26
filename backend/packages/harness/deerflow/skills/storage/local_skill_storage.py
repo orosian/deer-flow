@@ -109,7 +109,9 @@ class LocalSkillStorage(SkillStorage):
         # event loop; every filesystem phase around it runs in a worker thread.
         tmp = await asyncio.to_thread(tempfile.mkdtemp)
         try:
-            skill_dir, skill_name, target = await asyncio.to_thread(self._prepare_skill_archive, path, Path(tmp), custom_dir, archive_path)
+            skill_dir, skill_name, target = await asyncio.to_thread(
+                self._prepare_skill_archive, path, Path(tmp), custom_dir, archive_path
+            )
 
             await _scan_skill_archive_contents_or_raise(skill_dir, skill_name)
 
@@ -138,7 +140,9 @@ class LocalSkillStorage(SkillStorage):
         except OSError:
             logger.warning("Failed to clean up skill install temp dir %s", tmp, exc_info=True)
 
-    def _prepare_skill_archive(self, path: Path, tmp_path: Path, custom_dir: Path, archive_path: str | Path) -> tuple[Path, str, Path]:
+    def _prepare_skill_archive(
+        self, path: Path, tmp_path: Path, custom_dir: Path, archive_path: str | Path
+    ) -> tuple[Path, str, Path]:
         """Extract and validate the archive (blocking; runs off the event loop)."""
         import zipfile
 

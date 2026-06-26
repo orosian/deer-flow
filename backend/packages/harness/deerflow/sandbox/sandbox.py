@@ -83,7 +83,9 @@ class Sandbox(ABC):
         pass
 
     @abstractmethod
-    def glob(self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200) -> tuple[list[str], bool]:
+    def glob(
+        self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200
+    ) -> tuple[list[str], bool]:
         """Find paths that match a glob pattern under a root directory."""
         pass
 

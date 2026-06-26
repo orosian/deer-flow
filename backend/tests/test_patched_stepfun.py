@@ -283,7 +283,10 @@ def test_create_chat_result_reads_reasoning_from_sdk_object():
             }
 
     result = model._create_chat_result(FakeResponse())
-    assert result.generations[0].message.additional_kwargs["reasoning_content"] == "Reasoning stored on the SDK message object."
+    assert (
+        result.generations[0].message.additional_kwargs["reasoning_content"]
+        == "Reasoning stored on the SDK message object."
+    )
 
 
 def test_create_chat_result_noop_when_no_reasoning():

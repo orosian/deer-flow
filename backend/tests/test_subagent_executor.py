@@ -344,9 +344,13 @@ class TestAgentConstruction:
 
         def fake_get_or_new_skill_storage(*, app_config=None):
             captured["app_config"] = app_config
-            return SimpleNamespace(load_skills=lambda *, enabled_only: [SimpleNamespace(name="demo-skill", skill_file=skill_file)])
+            return SimpleNamespace(
+                load_skills=lambda *, enabled_only: [SimpleNamespace(name="demo-skill", skill_file=skill_file)]
+            )
 
-        monkeypatch.setattr(sys.modules["deerflow.skills.storage"], "get_or_new_skill_storage", fake_get_or_new_skill_storage)
+        monkeypatch.setattr(
+            sys.modules["deerflow.skills.storage"], "get_or_new_skill_storage", fake_get_or_new_skill_storage
+        )
 
         executor = SubagentExecutor(
             config=base_config,
@@ -381,7 +385,11 @@ class TestAgentConstruction:
         monkeypatch.setattr(
             sys.modules["deerflow.skills.storage"],
             "get_or_new_skill_storage",
-            lambda *, app_config=None: SimpleNamespace(load_skills=lambda *, enabled_only: [SimpleNamespace(name="my-skill", skill_file=skill_file, allowed_tools=None)]),
+            lambda *, app_config=None: SimpleNamespace(
+                load_skills=lambda *, enabled_only: [
+                    SimpleNamespace(name="my-skill", skill_file=skill_file, allowed_tools=None)
+                ]
+            ),
         )
 
         executor = SubagentExecutor(
@@ -464,7 +472,11 @@ class TestAgentConstruction:
         monkeypatch.setattr(
             sys.modules["deerflow.skills.storage"],
             "get_or_new_skill_storage",
-            lambda *, app_config=None: SimpleNamespace(load_skills=lambda *, enabled_only: [SimpleNamespace(name="my-skill", skill_file=skill_file, allowed_tools=None)]),
+            lambda *, app_config=None: SimpleNamespace(
+                load_skills=lambda *, enabled_only: [
+                    SimpleNamespace(name="my-skill", skill_file=skill_file, allowed_tools=None)
+                ]
+            ),
         )
 
         SubagentExecutor = classes["SubagentExecutor"]
@@ -502,7 +514,9 @@ class TestAgentConstruction:
             "get_or_new_skill_storage",
             lambda *, app_config=None: SimpleNamespace(load_skills=lambda *, enabled_only: []),
         )
-        monkeypatch.setattr(executor_module, "get_app_config", lambda: SimpleNamespace(tool_search=SimpleNamespace(enabled=True)))
+        monkeypatch.setattr(
+            executor_module, "get_app_config", lambda: SimpleNamespace(tool_search=SimpleNamespace(enabled=True))
+        )
 
         @as_tool
         def mcp_calc(expression: str) -> str:
@@ -543,7 +557,9 @@ class TestAgentConstruction:
             "get_or_new_skill_storage",
             lambda *, app_config=None: SimpleNamespace(load_skills=lambda *, enabled_only: []),
         )
-        monkeypatch.setattr(executor_module, "get_app_config", lambda: SimpleNamespace(tool_search=SimpleNamespace(enabled=False)))
+        monkeypatch.setattr(
+            executor_module, "get_app_config", lambda: SimpleNamespace(tool_search=SimpleNamespace(enabled=False))
+        )
 
         @as_tool
         def mcp_calc(expression: str) -> str:
@@ -588,7 +604,9 @@ class TestAgentConstruction:
             "get_or_new_skill_storage",
             lambda *, app_config=None: SimpleNamespace(load_skills=lambda *, enabled_only: []),
         )
-        monkeypatch.setattr(executor_module, "get_app_config", lambda: SimpleNamespace(tool_search=SimpleNamespace(enabled=True)))
+        monkeypatch.setattr(
+            executor_module, "get_app_config", lambda: SimpleNamespace(tool_search=SimpleNamespace(enabled=True))
+        )
 
         @as_tool
         def active_tool(x: str) -> str:
@@ -879,7 +897,11 @@ class TestAsyncExecutionPath:
         monkeypatch.setattr(
             sys.modules["deerflow.skills.storage"],
             "get_or_new_skill_storage",
-            lambda *, app_config=None: SimpleNamespace(load_skills=lambda *, enabled_only: [SimpleNamespace(name="regression-skill", skill_file=skill_dir / "SKILL.md", allowed_tools=None)]),
+            lambda *, app_config=None: SimpleNamespace(
+                load_skills=lambda *, enabled_only: [
+                    SimpleNamespace(name="regression-skill", skill_file=skill_dir / "SKILL.md", allowed_tools=None)
+                ]
+            ),
         )
 
         captured_states: list[dict] = []
@@ -905,9 +927,13 @@ class TestAsyncExecutionPath:
         initial_messages = captured_states[0]["messages"]
 
         system_messages = [m for m in initial_messages if isinstance(m, SystemMessage)]
-        assert len(system_messages) <= 1, f"Expected at most 1 SystemMessage but got {len(system_messages)}: {system_messages}"
+        assert len(system_messages) <= 1, (
+            f"Expected at most 1 SystemMessage but got {len(system_messages)}: {system_messages}"
+        )
         if system_messages:
-            assert initial_messages[0] is system_messages[0], "SystemMessage must be the first message in the conversation"
+            assert initial_messages[0] is system_messages[0], (
+                "SystemMessage must be the first message in the conversation"
+            )
             # The consolidated SystemMessage must carry both the system_prompt
             # and all skill content; nothing should be split across two messages.
             assert base_config.system_prompt in system_messages[0].content
@@ -927,7 +953,10 @@ class TestSkillAllowedTools:
         async def load_skills():
             return [_skill("a", ["bash"]), _skill("b", ["read_file"])]
 
-        with patch.object(executor, "_load_skills", load_skills), patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock:
+        with (
+            patch.object(executor, "_load_skills", load_skills),
+            patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock,
+        ):
             await executor._aexecute("Task")
 
         create_agent_mock.assert_called_once()
@@ -946,14 +975,19 @@ class TestSkillAllowedTools:
         async def load_skills():
             return [_skill("legacy-a", None), _skill("legacy-b", None)]
 
-        with patch.object(executor, "_load_skills", load_skills), patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock:
+        with (
+            patch.object(executor, "_load_skills", load_skills),
+            patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock,
+        ):
             await executor._aexecute("Task")
 
         assert [tool.name for tool in create_agent_mock.call_args.args[0]] == ["bash", "read_file", "web_search"]
         assert [tool.name for tool in executor.tools] == ["bash", "read_file", "web_search"]
 
     @pytest.mark.anyio
-    async def test_mixed_missing_allowed_tools_does_not_disable_explicit_restrictions(self, classes, base_config, mock_agent, msg):
+    async def test_mixed_missing_allowed_tools_does_not_disable_explicit_restrictions(
+        self, classes, base_config, mock_agent, msg
+    ):
         SubagentExecutor = classes["SubagentExecutor"]
 
         final_state = {"messages": [msg.human("Task"), msg.ai("Done", "msg-1")]}
@@ -964,14 +998,19 @@ class TestSkillAllowedTools:
         async def load_skills():
             return [_skill("legacy", None), _skill("restricted", ["bash"])]
 
-        with patch.object(executor, "_load_skills", load_skills), patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock:
+        with (
+            patch.object(executor, "_load_skills", load_skills),
+            patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock,
+        ):
             await executor._aexecute("Task")
 
         assert [tool.name for tool in create_agent_mock.call_args.args[0]] == ["bash"]
         assert [tool.name for tool in executor.tools] == ["bash", "read_file", "web_search"]
 
     @pytest.mark.anyio
-    async def test_mixed_missing_allowed_tools_order_does_not_disable_explicit_restrictions(self, classes, base_config, mock_agent, msg):
+    async def test_mixed_missing_allowed_tools_order_does_not_disable_explicit_restrictions(
+        self, classes, base_config, mock_agent, msg
+    ):
         SubagentExecutor = classes["SubagentExecutor"]
 
         final_state = {"messages": [msg.human("Task"), msg.ai("Done", "msg-1")]}
@@ -982,7 +1021,10 @@ class TestSkillAllowedTools:
         async def load_skills():
             return [_skill("restricted", ["bash"]), _skill("legacy", None)]
 
-        with patch.object(executor, "_load_skills", load_skills), patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock:
+        with (
+            patch.object(executor, "_load_skills", load_skills),
+            patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock,
+        ):
             await executor._aexecute("Task")
 
         assert [tool.name for tool in create_agent_mock.call_args.args[0]] == ["bash"]
@@ -1000,7 +1042,11 @@ class TestSkillAllowedTools:
         async def load_skills():
             return [_skill("empty", []), _skill("reader", ["read_file"])]
 
-        with patch.object(executor, "_load_skills", load_skills), patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock, caplog.at_level("INFO"):
+        with (
+            patch.object(executor, "_load_skills", load_skills),
+            patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock,
+            caplog.at_level("INFO"),
+        ):
             await executor._aexecute("Task")
 
         assert [tool.name for tool in create_agent_mock.call_args.args[0]] == ["read_file"]
@@ -1015,7 +1061,10 @@ class TestSkillAllowedTools:
         async def load_skills():
             raise RuntimeError("skill storage unavailable")
 
-        with patch.object(executor, "_load_skills", load_skills), patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock:
+        with (
+            patch.object(executor, "_load_skills", load_skills),
+            patch.object(executor, "_create_agent", return_value=mock_agent) as create_agent_mock,
+        ):
             result = await executor._aexecute("Task")
 
         assert result.status == classes["SubagentStatus"].FAILED
@@ -1098,7 +1147,9 @@ class TestSyncExecutionPath:
         assert result.result == "Thread pool result"
 
     @pytest.mark.anyio
-    async def test_execute_in_running_event_loop_calls_isolated_loop_directly(self, classes, base_config, mock_agent, msg):
+    async def test_execute_in_running_event_loop_calls_isolated_loop_directly(
+        self, classes, base_config, mock_agent, msg
+    ):
         """Test that execute() calls the isolated-loop helper directly in a running loop."""
         from deerflow.runtime.user_context import (
             get_effective_user_id,
@@ -1142,7 +1193,9 @@ class TestSyncExecutionPath:
         token = set_current_user(SimpleNamespace(id="alice"))
         try:
             with patch.object(executor, "_create_agent", return_value=mock_agent):
-                with patch.object(executor, "_execute_in_isolated_loop", side_effect=tracked_isolated_execute) as isolated:
+                with patch.object(
+                    executor, "_execute_in_isolated_loop", side_effect=tracked_isolated_execute
+                ) as isolated:
                     result = executor.execute("Task")
         finally:
             reset_current_user(token)
@@ -1156,7 +1209,9 @@ class TestSyncExecutionPath:
         assert result.result == "Async loop result"
 
     @pytest.mark.anyio
-    async def test_execute_in_running_event_loop_reuses_persistent_isolated_loop(self, classes, base_config, mock_agent, msg):
+    async def test_execute_in_running_event_loop_reuses_persistent_isolated_loop(
+        self, classes, base_config, mock_agent, msg
+    ):
         """Regression: repeated isolated executions should reuse one long-lived loop."""
         SubagentExecutor = classes["SubagentExecutor"]
         SubagentStatus = classes["SubagentStatus"]
@@ -1756,7 +1811,9 @@ class TestCooperativeCancellation:
         with (
             patch.object(executor_module._scheduler_pool, "submit", side_effect=run_inline),
             patch.object(executor, "_aexecute", side_effect=fake_aexecute),
-            patch.object(executor, "execute", side_effect=AssertionError("execute() should not be called by execute_async")),
+            patch.object(
+                executor, "execute", side_effect=AssertionError("execute() should not be called by execute_async")
+            ),
         ):
             task_id = executor.execute_async("Task")
 
@@ -1799,7 +1856,9 @@ class TestCooperativeCancellation:
             with (
                 patch.object(executor_module, "_scheduler_pool", scheduler),
                 patch.object(executor, "_aexecute", side_effect=fake_aexecute),
-                patch.object(executor, "execute", side_effect=AssertionError("execute() should not be called by execute_async")),
+                patch.object(
+                    executor, "execute", side_effect=AssertionError("execute() should not be called by execute_async")
+                ),
             ):
                 task_id = executor.execute_async("Task")
                 executor_module._scheduler_pool.shutdown(wait=True)
@@ -1861,7 +1920,10 @@ class TestCooperativeCancellation:
 
             return original_scheduler_submit(wrapper)
 
-        with patch.object(executor, "_aexecute", side_effect=blocking_aexecute), patch.object(executor_module._scheduler_pool, "submit", tracked_submit):
+        with (
+            patch.object(executor, "_aexecute", side_effect=blocking_aexecute),
+            patch.object(executor_module._scheduler_pool, "submit", tracked_submit),
+        ):
             task_id = executor.execute_async("Task")
 
             # Wait until _aexecute() is entered on the persistent loop.
@@ -1929,7 +1991,10 @@ class TestCooperativeCancellation:
             finally:
                 execution_done.set()
 
-        with patch.object(executor, "_create_agent", return_value=mock_agent), patch.object(executor, "_aexecute", tracked_aexecute):
+        with (
+            patch.object(executor, "_create_agent", return_value=mock_agent),
+            patch.object(executor, "_aexecute", tracked_aexecute),
+        ):
             task_id = executor.execute_async("Task")
             assert first_chunk_seen.wait(timeout=3), "stream did not yield initial chunk"
 
@@ -2109,8 +2174,12 @@ class TestSubagentTracingWiring:
         await executor._aexecute("do something")
 
         metadata = (fake_agent.captured_config or {}).get("metadata") or {}
-        assert metadata.get("langfuse_session_id") == "thread-trace-1", "subagent trace must inherit parent thread_id as session_id"
-        assert metadata.get("langfuse_user_id") == "alice", "subagent trace must carry the user_id captured at task_tool layer"
+        assert metadata.get("langfuse_session_id") == "thread-trace-1", (
+            "subagent trace must inherit parent thread_id as session_id"
+        )
+        assert metadata.get("langfuse_user_id") == "alice", (
+            "subagent trace must carry the user_id captured at task_tool layer"
+        )
         # Underscores are normalized to hyphens so the trace name matches the
         # lead-agent naming shape.
         assert metadata.get("langfuse_trace_name") == "subagent:general-purpose"

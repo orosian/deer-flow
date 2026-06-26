@@ -14,7 +14,14 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
 from app.gateway.authz import require_permission
-from app.gateway.deps import get_checkpointer, get_feedback_repo, get_run_event_store, get_run_manager, get_run_store, get_stream_bridge
+from app.gateway.deps import (
+    get_checkpointer,
+    get_feedback_repo,
+    get_run_event_store,
+    get_run_manager,
+    get_run_store,
+    get_stream_bridge,
+)
 from app.gateway.pagination import trim_run_message_page
 from app.gateway.routers.thread_runs import RunCreateRequest
 from app.gateway.services import sse_consumer, start_run, wait_for_run_completion

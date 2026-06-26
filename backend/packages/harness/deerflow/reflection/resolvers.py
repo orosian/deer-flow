@@ -43,7 +43,9 @@ def resolve_variable[T](
     try:
         module_path, variable_name = variable_path.rsplit(":", 1)
     except ValueError as err:
-        raise ImportError(f"{variable_path} doesn't look like a variable path. Example: parent_package_name.sub_package_name.module_name:variable_name") from err
+        raise ImportError(
+            f"{variable_path} doesn't look like a variable path. Example: parent_package_name.sub_package_name.module_name:variable_name"
+        ) from err
 
     try:
         module = import_module(module_path)
@@ -64,7 +66,11 @@ def resolve_variable[T](
     # Type validation
     if expected_type is not None:
         if not isinstance(variable, expected_type):
-            type_name = expected_type.__name__ if isinstance(expected_type, type) else " or ".join(t.__name__ for t in expected_type)
+            type_name = (
+                expected_type.__name__
+                if isinstance(expected_type, type)
+                else " or ".join(t.__name__ for t in expected_type)
+            )
             raise ValueError(f"{variable_path} is not an instance of {type_name}, got {type(variable).__name__}")
 
     return variable

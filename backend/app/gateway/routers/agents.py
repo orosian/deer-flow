@@ -84,11 +84,15 @@ def _require_agents_api_enabled() -> None:
     if not get_agents_api_config().enabled:
         raise HTTPException(
             status_code=403,
-            detail=("Custom-agent management API is disabled. Set agents_api.enabled=true to expose agent and user-profile routes over HTTP."),
+            detail=(
+                "Custom-agent management API is disabled. Set agents_api.enabled=true to expose agent and user-profile routes over HTTP."
+            ),
         )
 
 
-def _agent_config_to_response(agent_cfg: AgentConfig, include_soul: bool = False, *, user_id: str | None = None) -> AgentResponse:
+def _agent_config_to_response(
+    agent_cfg: AgentConfig, include_soul: bool = False, *, user_id: str | None = None
+) -> AgentResponse:
     """Convert AgentConfig to AgentResponse."""
     soul: str | None = None
     if include_soul:
@@ -121,7 +125,9 @@ async def list_agents() -> AgentsListResponse:
     user_id = get_effective_user_id()
     try:
         agents = list_custom_agents(user_id=user_id)
-        return AgentsListResponse(agents=[_agent_config_to_response(a, include_soul=True, user_id=user_id) for a in agents])
+        return AgentsListResponse(
+            agents=[_agent_config_to_response(a, include_soul=True, user_id=user_id) for a in agents]
+        )
     except Exception as e:
         logger.error(f"Failed to list agents: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to list agents: {str(e)}")
@@ -304,7 +310,9 @@ async def update_agent(name: str, request: AgentUpdateRequest) -> AgentResponse:
     if not agent_dir.exists() and paths.agent_dir(name).exists():
         raise HTTPException(
             status_code=409,
-            detail=(f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating."),
+            detail=(
+                f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating."
+            ),
         )
 
     try:
@@ -463,7 +471,9 @@ async def delete_agent(name: str) -> None:
     if outcome == "legacy":
         raise HTTPException(
             status_code=409,
-            detail=(f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before deleting."),
+            detail=(
+                f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before deleting."
+            ),
         )
     if outcome == "missing":
         raise HTTPException(status_code=404, detail=f"Agent '{name}' not found")

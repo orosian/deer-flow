@@ -65,7 +65,9 @@ class DeferredToolCatalog:
 
     @cached_property
     def hash(self) -> str:
-        canon = [{"name": t.name, "schema": convert_to_openai_function(t)} for t in sorted(self.tools, key=lambda t: t.name)]
+        canon = [
+            {"name": t.name, "schema": convert_to_openai_function(t)} for t in sorted(self.tools, key=lambda t: t.name)
+        ]
         blob = json.dumps(canon, sort_keys=True, ensure_ascii=False, default=str)
         return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
@@ -181,7 +183,9 @@ def build_deferred_tool_setup(filtered_tools: list[BaseTool], *, enabled: bool) 
     return DeferredToolSetup(build_tool_search_tool(catalog), catalog.names, catalog.hash)
 
 
-def assemble_deferred_tools(filtered_tools: list[BaseTool], *, enabled: bool) -> tuple[list[BaseTool], DeferredToolSetup]:
+def assemble_deferred_tools(
+    filtered_tools: list[BaseTool], *, enabled: bool
+) -> tuple[list[BaseTool], DeferredToolSetup]:
     """Build the final tool list + deferred setup from a POLICY-FILTERED list.
 
     Call AFTER tool-policy filtering so the deferred catalog never exposes a tool
@@ -194,7 +198,9 @@ def assemble_deferred_tools(filtered_tools: list[BaseTool], *, enabled: bool) ->
     """
     deferred_setup = build_deferred_tool_setup(filtered_tools, enabled=enabled)
     if enabled and not deferred_setup.deferred_names and any(is_mcp_tool(t) for t in filtered_tools):
-        raise RuntimeError("tool_search enabled and MCP tools survived policy filtering, but no deferred set was recovered - refusing to bind MCP schemas (fail-closed).")
+        raise RuntimeError(
+            "tool_search enabled and MCP tools survived policy filtering, but no deferred set was recovered - refusing to bind MCP schemas (fail-closed)."
+        )
     final_tools = list(filtered_tools)
     if deferred_setup.tool_search_tool:
         final_tools.append(deferred_setup.tool_search_tool)

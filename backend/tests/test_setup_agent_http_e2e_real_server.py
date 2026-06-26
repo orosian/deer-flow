@@ -276,7 +276,9 @@ def test_real_http_create_agent_lands_in_authenticated_user_dir(
                 "messages": [
                     {
                         "role": "user",
-                        "content": (f"The new custom agent name is {agent_name}. Help me design its SOUL.md before saving it."),
+                        "content": (
+                            f"The new custom agent name is {agent_name}. Help me design its SOUL.md before saving it."
+                        ),
                     }
                 ]
             },
@@ -323,4 +325,6 @@ def test_real_http_create_agent_lands_in_authenticated_user_dir(
         assert agent_name in soul_text, f"unexpected SOUL content: {soul_text!r}"
 
         # The smoking-gun assertion: the agent must NOT have landed in default/
-        assert not default_dir.exists(), f"REGRESSION: agent landed under users/default/{agent_name} instead of the authenticated user. Default-dir contents: {list(default_dir.rglob('*')) if default_dir.exists() else 'n/a'}"
+        assert not default_dir.exists(), (
+            f"REGRESSION: agent landed under users/default/{agent_name} instead of the authenticated user. Default-dir contents: {list(default_dir.rglob('*')) if default_dir.exists() else 'n/a'}"
+        )

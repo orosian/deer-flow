@@ -302,7 +302,9 @@ class TestLoopDetection:
 
         request_a = _make_request([AIMessage(content="hi")], runtime_a)
         mw.wrap_model_call(request_a, handler)
-        assert any(isinstance(message, HumanMessage) and message.name == "loop_warning" for message in captured[1].messages)
+        assert any(
+            isinstance(message, HumanMessage) and message.name == "loop_warning" for message in captured[1].messages
+        )
 
     def test_missing_run_id_uses_default_pending_scope(self):
         """When runtime has no run_id, warning handling falls back to the default run scope."""
@@ -320,7 +322,11 @@ class TestLoopDetection:
         captured, handler = _capture_handler()
         mw.wrap_model_call(request, handler)
 
-        loop_warnings = [message for message in captured[0].messages if isinstance(message, HumanMessage) and message.name == "loop_warning"]
+        loop_warnings = [
+            message
+            for message in captured[0].messages
+            if isinstance(message, HumanMessage) and message.name == "loop_warning"
+        ]
         assert len(loop_warnings) == 1
         assert "LOOP DETECTED" in loop_warnings[0].content
         assert not mw._pending_warnings.get(_pending_key(run_id="default"))
@@ -362,7 +368,11 @@ class TestLoopDetection:
 
         mw.wrap_model_call(request, handler)
 
-        loop_warnings = [message for message in captured[0].messages if isinstance(message, HumanMessage) and message.name == "loop_warning"]
+        loop_warnings = [
+            message
+            for message in captured[0].messages
+            if isinstance(message, HumanMessage) and message.name == "loop_warning"
+        ]
         assert len(loop_warnings) == 1
         assert loop_warnings[0].content == "first warning\n\nsecond warning"
 
@@ -593,7 +603,10 @@ class TestLoopDetectionAgentGraphIntegration:
         )
 
         assert len(model.seen_messages) == 4
-        loop_warnings_by_call = [[message for message in messages if isinstance(message, HumanMessage) and message.name == "loop_warning"] for messages in model.seen_messages]
+        loop_warnings_by_call = [
+            [message for message in messages if isinstance(message, HumanMessage) and message.name == "loop_warning"]
+            for messages in model.seen_messages
+        ]
         assert loop_warnings_by_call[0] == []
         assert loop_warnings_by_call[1] == []
         assert loop_warnings_by_call[2] == []
@@ -605,7 +618,11 @@ class TestLoopDetectionAgentGraphIntegration:
         assert fourth_request[-2].tool_call_id == "call_ls_2"
         assert fourth_request[-1] is loop_warnings_by_call[3][0]
 
-        persisted_loop_warnings = [message for message in result["messages"] if isinstance(message, HumanMessage) and message.name == "loop_warning"]
+        persisted_loop_warnings = [
+            message
+            for message in result["messages"]
+            if isinstance(message, HumanMessage) and message.name == "loop_warning"
+        ]
         assert persisted_loop_warnings == []
         assert result["messages"][-1].content == "final answer"
         assert mw._pending_warnings == {}
@@ -639,7 +656,10 @@ class TestLoopDetectionAgentGraphIntegration:
         )
 
         assert len(model.seen_messages) == 4
-        loop_warnings_by_call = [[message for message in messages if isinstance(message, HumanMessage) and message.name == "loop_warning"] for messages in model.seen_messages]
+        loop_warnings_by_call = [
+            [message for message in messages if isinstance(message, HumanMessage) and message.name == "loop_warning"]
+            for messages in model.seen_messages
+        ]
         assert loop_warnings_by_call[0] == []
         assert loop_warnings_by_call[1] == []
         assert loop_warnings_by_call[2] == []
@@ -651,7 +671,11 @@ class TestLoopDetectionAgentGraphIntegration:
         assert fourth_request[-2].tool_call_id == "call_async_ls_2"
         assert fourth_request[-1] is loop_warnings_by_call[3][0]
 
-        persisted_loop_warnings = [message for message in result["messages"] if isinstance(message, HumanMessage) and message.name == "loop_warning"]
+        persisted_loop_warnings = [
+            message
+            for message in result["messages"]
+            if isinstance(message, HumanMessage) and message.name == "loop_warning"
+        ]
         assert persisted_loop_warnings == []
         assert result["messages"][-1].content == "async final answer"
         assert mw._pending_warnings == {}

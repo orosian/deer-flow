@@ -33,7 +33,10 @@ from deerflow.agents.middlewares.loop_detection_middleware import LoopDetectionM
 from deerflow.agents.middlewares.memory_middleware import MemoryMiddleware
 from deerflow.agents.middlewares.safety_finish_reason_middleware import SafetyFinishReasonMiddleware
 from deerflow.agents.middlewares.subagent_limit_middleware import SubagentLimitMiddleware
-from deerflow.agents.middlewares.summarization_middleware import BeforeSummarizationHook, DeerFlowSummarizationMiddleware
+from deerflow.agents.middlewares.summarization_middleware import (
+    BeforeSummarizationHook,
+    DeerFlowSummarizationMiddleware,
+)
 from deerflow.agents.middlewares.title_middleware import TitleMiddleware
 from deerflow.agents.middlewares.todo_middleware import TodoMiddleware
 from deerflow.agents.middlewares.token_usage_middleware import TokenUsageMiddleware
@@ -72,7 +75,9 @@ def _resolve_model_name(requested_model_name: str | None = None, *, app_config: 
         return requested_model_name
 
     if requested_model_name and requested_model_name != default_model_name:
-        logger.warning(f"Model '{requested_model_name}' not found in config; fallback to default model '{default_model_name}'.")
+        logger.warning(
+            f"Model '{requested_model_name}' not found in config; fallback to default model '{default_model_name}'."
+        )
     return default_model_name
 
 
@@ -104,7 +109,9 @@ def _create_summarization_middleware(*, app_config: AppConfig | None = None) -> 
     # again at the model level would emit duplicate spans and break
     # ``session_id`` / ``user_id`` propagation.
     if config.model_name:
-        model = create_chat_model(name=config.model_name, thinking_enabled=False, app_config=resolved_app_config, attach_tracing=False)
+        model = create_chat_model(
+            name=config.model_name, thinking_enabled=False, app_config=resolved_app_config, attach_tracing=False
+        )
     else:
         model = create_chat_model(thinking_enabled=False, app_config=resolved_app_config, attach_tracing=False)
     model = model.with_config(tags=["middleware:summarize"])
@@ -435,9 +442,13 @@ def _make_lead_agent(config: RunnableConfig, *, app_config: AppConfig):
     model_config = resolved_app_config.get_model_config(model_name)
 
     if model_config is None:
-        raise ValueError("No chat model could be resolved. Please configure at least one model in config.yaml or provide a valid 'model_name'/'model' in the request.")
+        raise ValueError(
+            "No chat model could be resolved. Please configure at least one model in config.yaml or provide a valid 'model_name'/'model' in the request."
+        )
     if thinking_enabled and not model_config.supports_thinking:
-        logger.warning(f"Thinking mode is enabled but model '{model_name}' does not support it; fallback to non-thinking mode.")
+        logger.warning(
+            f"Thinking mode is enabled but model '{model_name}' does not support it; fallback to non-thinking mode."
+        )
         thinking_enabled = False
 
     logger.info(
@@ -487,11 +498,15 @@ def _make_lead_agent(config: RunnableConfig, *, app_config: AppConfig):
         # Special bootstrap agent with minimal prompt for initial custom agent creation flow
         # Keep the bootstrap skill set intentionally narrow so agent creation
         # remains deterministic before the custom agent's own config exists.
-        raw_tools = get_available_tools(model_name=model_name, subagent_enabled=subagent_enabled, app_config=resolved_app_config) + [setup_agent]
+        raw_tools = get_available_tools(
+            model_name=model_name, subagent_enabled=subagent_enabled, app_config=resolved_app_config
+        ) + [setup_agent]
         filtered = filter_tools_by_skill_allowed_tools(raw_tools, skills_for_tool_policy)
         final_tools, setup = assemble_deferred_tools(filtered, enabled=resolved_app_config.tool_search.enabled)
         return create_agent(
-            model=create_chat_model(name=model_name, thinking_enabled=thinking_enabled, app_config=resolved_app_config, attach_tracing=False),
+            model=create_chat_model(
+                name=model_name, thinking_enabled=thinking_enabled, app_config=resolved_app_config, attach_tracing=False
+            ),
             tools=final_tools,
             middleware=build_middlewares(
                 config,
@@ -514,11 +529,22 @@ def _make_lead_agent(config: RunnableConfig, *, app_config: AppConfig):
     # The default agent (no agent_name) does not see this tool.
     extra_tools = [update_agent] if agent_name else []
     # Default lead agent (unchanged behavior)
-    raw_tools = get_available_tools(model_name=model_name, groups=agent_config.tool_groups if agent_config else None, subagent_enabled=subagent_enabled, app_config=resolved_app_config)
+    raw_tools = get_available_tools(
+        model_name=model_name,
+        groups=agent_config.tool_groups if agent_config else None,
+        subagent_enabled=subagent_enabled,
+        app_config=resolved_app_config,
+    )
     filtered = filter_tools_by_skill_allowed_tools(raw_tools + extra_tools, skills_for_tool_policy)
     final_tools, setup = assemble_deferred_tools(filtered, enabled=resolved_app_config.tool_search.enabled)
     return create_agent(
-        model=create_chat_model(name=model_name, thinking_enabled=thinking_enabled, reasoning_effort=reasoning_effort, app_config=resolved_app_config, attach_tracing=False),
+        model=create_chat_model(
+            name=model_name,
+            thinking_enabled=thinking_enabled,
+            reasoning_effort=reasoning_effort,
+            app_config=resolved_app_config,
+            attach_tracing=False,
+        ),
         tools=final_tools,
         middleware=build_middlewares(
             config,

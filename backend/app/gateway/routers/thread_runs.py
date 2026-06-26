@@ -20,7 +20,15 @@ from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.gateway.authz import require_permission
-from app.gateway.deps import get_checkpointer, get_current_user, get_feedback_repo, get_run_event_store, get_run_manager, get_run_store, get_stream_bridge
+from app.gateway.deps import (
+    get_checkpointer,
+    get_current_user,
+    get_feedback_repo,
+    get_run_event_store,
+    get_run_manager,
+    get_run_store,
+    get_stream_bridge,
+)
 from app.gateway.pagination import trim_run_message_page
 from app.gateway.services import sse_consumer, start_run, wait_for_run_completion
 from deerflow.runtime import RunRecord, RunStatus, serialize_channel_values_for_api
@@ -40,7 +48,9 @@ class RunCreateRequest(BaseModel):
     command: dict[str, Any] | None = Field(default=None, description="LangGraph Command")
     metadata: dict[str, Any] | None = Field(default=None, description="Run metadata")
     config: dict[str, Any] | None = Field(default=None, description="RunnableConfig overrides")
-    context: dict[str, Any] | None = Field(default=None, description="DeerFlow context overrides (model_name, thinking_enabled, etc.)")
+    context: dict[str, Any] | None = Field(
+        default=None, description="DeerFlow context overrides (model_name, thinking_enabled, etc.)"
+    )
     webhook: str | None = Field(default=None, description="Completion callback URL")
     checkpoint_id: str | None = Field(default=None, description="Resume from checkpoint")
     checkpoint: dict[str, Any] | None = Field(default=None, description="Full checkpoint object")
@@ -51,7 +61,9 @@ class RunCreateRequest(BaseModel):
     stream_resumable: bool | None = Field(default=None, description="SSE resumable mode")
     on_disconnect: Literal["cancel", "continue"] = Field(default="cancel", description="Behaviour on SSE disconnect")
     on_completion: Literal["delete", "keep"] = Field(default="keep", description="Delete temp thread on completion")
-    multitask_strategy: Literal["reject", "rollback", "interrupt", "enqueue"] = Field(default="reject", description="Concurrency strategy")
+    multitask_strategy: Literal["reject", "rollback", "interrupt", "enqueue"] = Field(
+        default="reject", description="Concurrency strategy"
+    )
     after_seconds: float | None = Field(default=None, description="Delayed execution")
     if_not_exists: Literal["reject", "create"] = Field(default="create", description="Thread creation policy")
     feedback_keys: list[str] | None = Field(default=None, description="LangSmith feedback keys")

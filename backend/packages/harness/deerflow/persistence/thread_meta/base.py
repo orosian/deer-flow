@@ -54,7 +54,9 @@ class ThreadMetaStore(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def update_display_name(self, thread_id: str, display_name: str, *, user_id: str | None | _AutoSentinel = AUTO) -> None:
+    async def update_display_name(
+        self, thread_id: str, display_name: str, *, user_id: str | None | _AutoSentinel = AUTO
+    ) -> None:
         pass
 
     @abc.abstractmethod
@@ -62,7 +64,9 @@ class ThreadMetaStore(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def update_metadata(self, thread_id: str, metadata: dict, *, user_id: str | None | _AutoSentinel = AUTO) -> None:
+    async def update_metadata(
+        self, thread_id: str, metadata: dict, *, user_id: str | None | _AutoSentinel = AUTO
+    ) -> None:
         """Merge ``metadata`` into the thread's metadata field.
 
         Existing keys are overwritten by the new values; keys absent from
@@ -72,7 +76,9 @@ class ThreadMetaStore(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def update_owner(self, thread_id: str, owner_user_id: str, *, user_id: str | None | _AutoSentinel = AUTO) -> None:
+    async def update_owner(
+        self, thread_id: str, owner_user_id: str, *, user_id: str | None | _AutoSentinel = AUTO
+    ) -> None:
         """Move a thread metadata row to a new owner.
 
         Intended for trusted internal repair/migration paths. No-op if the

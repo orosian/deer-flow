@@ -111,7 +111,12 @@ def test_feishu_on_message_rich_text():
     event.event.sender.sender_id.open_id = "user_1"
 
     # Rich text content (topic group / post)
-    content_dict = {"content": [[{"tag": "text", "text": "Paragraph 1, part 1."}, {"tag": "text", "text": "Paragraph 1, part 2."}], [{"tag": "at", "text": "@bot"}, {"tag": "text", "text": " Paragraph 2."}]]}
+    content_dict = {
+        "content": [
+            [{"tag": "text", "text": "Paragraph 1, part 1."}, {"tag": "text", "text": "Paragraph 1, part 2."}],
+            [{"tag": "at", "text": "@bot"}, {"tag": "text", "text": " Paragraph 2."}],
+        ]
+    }
     event.event.message.content = json.dumps(content_dict)
 
     with pytest.MonkeyPatch.context() as m:
@@ -145,7 +150,9 @@ def test_feishu_receive_file_replaces_placeholders_in_order():
             files=[{"image_key": "img_key"}, {"file_key": "file_key"}],
         )
 
-        channel._receive_single_file = AsyncMock(side_effect=["/mnt/user-data/uploads/a.png", "/mnt/user-data/uploads/b.pdf"])
+        channel._receive_single_file = AsyncMock(
+            side_effect=["/mnt/user-data/uploads/a.png", "/mnt/user-data/uploads/b.pdf"]
+        )
 
         result = await channel.receive_file(msg, "thread_1")
 
@@ -249,7 +256,9 @@ def test_feishu_plain_reply_consumes_pending_clarification_topic():
     store = ChannelStore(path=Path(tempfile.mkdtemp()) / "store.json")
     store.set_thread_id("feishu", "chat_1", "deer-thread-1", topic_id="om_original", user_id="user_1")
     channel = FeishuChannel(bus, {"app_id": "test", "app_secret": "test", "channel_store": store})
-    channel._pending_clarifications[channel._pending_key("chat_1", "user_1")] = [_pending("om_original", thread_id="deer-thread-1", card_message_id="om_card")]
+    channel._pending_clarifications[channel._pending_key("chat_1", "user_1")] = [
+        _pending("om_original", thread_id="deer-thread-1", card_message_id="om_card")
+    ]
 
     with pytest.MonkeyPatch.context() as m:
         mock_make_inbound = MagicMock()
@@ -267,7 +276,9 @@ def test_feishu_plain_reply_consumes_pending_clarification_topic():
 def test_feishu_pending_clarification_is_consumed_once():
     bus = MessageBus()
     channel = FeishuChannel(bus, {"app_id": "test", "app_secret": "test"})
-    channel._pending_clarifications[channel._pending_key("chat_1", "user_1")] = [_pending("om_original", thread_id="deer-thread-1", card_message_id="om_card")]
+    channel._pending_clarifications[channel._pending_key("chat_1", "user_1")] = [
+        _pending("om_original", thread_id="deer-thread-1", card_message_id="om_card")
+    ]
 
     with pytest.MonkeyPatch.context() as m:
         created = []
@@ -298,7 +309,9 @@ def test_feishu_expired_pending_clarification_is_ignored(monkeypatch):
     bus = MessageBus()
     channel = FeishuChannel(bus, {"app_id": "test", "app_secret": "test"})
     monkeypatch.setattr("app.channels.feishu.time.time", lambda: 10_000.0)
-    channel._pending_clarifications[channel._pending_key("chat_1", "user_1")] = [_pending("om_original", thread_id="deer-thread-1", card_message_id="om_card", created_at=0.0)]
+    channel._pending_clarifications[channel._pending_key("chat_1", "user_1")] = [
+        _pending("om_original", thread_id="deer-thread-1", card_message_id="om_card", created_at=0.0)
+    ]
 
     with pytest.MonkeyPatch.context() as m:
         mock_make_inbound = MagicMock()
@@ -315,7 +328,9 @@ def test_feishu_command_does_not_consume_pending_clarification():
     bus = MessageBus()
     channel = FeishuChannel(bus, {"app_id": "test", "app_secret": "test"})
     key = channel._pending_key("chat_1", "user_1")
-    channel._pending_clarifications[key] = [_pending("om_original", thread_id="deer-thread-1", card_message_id="om_card")]
+    channel._pending_clarifications[key] = [
+        _pending("om_original", thread_id="deer-thread-1", card_message_id="om_card")
+    ]
 
     with pytest.MonkeyPatch.context() as m:
         mock_make_inbound = MagicMock()
@@ -427,7 +442,9 @@ def test_feishu_recognizes_all_known_slash_commands(command):
         channel._on_message(event)
 
         mock_make_inbound.assert_called_once()
-        assert mock_make_inbound.call_args[1]["msg_type"].value == "command", f"{command!r} should be classified as COMMAND"
+        assert mock_make_inbound.call_args[1]["msg_type"].value == "command", (
+            f"{command!r} should be classified as COMMAND"
+        )
 
 
 @pytest.mark.parametrize(

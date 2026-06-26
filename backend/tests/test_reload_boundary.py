@@ -95,7 +95,9 @@ def test_appconfig_descriptions_retain_original_field_documentation():
     for field_name, expected_substring in descriptions.items():
         description = AppConfig.model_fields[field_name].description or ""
         assert description.startswith(STARTUP_ONLY_PREFIX), f"AppConfig.{field_name} missing startup-only marker"
-        assert expected_substring in description, f"AppConfig.{field_name} description lost original field doc; got {description!r}"
+        assert expected_substring in description, (
+            f"AppConfig.{field_name} description lost original field doc; got {description!r}"
+        )
 
 
 def test_appconfig_schema_marks_registered_fields_with_prefix():
@@ -111,7 +113,9 @@ def test_appconfig_schema_marks_registered_fields_with_prefix():
             # assertion does not apply.
             continue
         description = schema_fields[field_path].description or ""
-        assert description.startswith(STARTUP_ONLY_PREFIX), f"AppConfig.{field_path} should have Field(description=) starting with {STARTUP_ONLY_PREFIX!r}, got {description!r}"
+        assert description.startswith(STARTUP_ONLY_PREFIX), (
+            f"AppConfig.{field_path} should have Field(description=) starting with {STARTUP_ONLY_PREFIX!r}, got {description!r}"
+        )
 
 
 def test_no_appconfig_field_uses_prefix_without_registration():
@@ -126,7 +130,9 @@ def test_no_appconfig_field_uses_prefix_without_registration():
         description = info.description or ""
         if not description.startswith(STARTUP_ONLY_PREFIX):
             continue
-        assert name in STARTUP_ONLY_FIELDS, f"AppConfig.{name} schema description starts with {STARTUP_ONLY_PREFIX!r} but the field is not listed in reload_boundary.STARTUP_ONLY_FIELDS — update the registry."
+        assert name in STARTUP_ONLY_FIELDS, (
+            f"AppConfig.{name} schema description starts with {STARTUP_ONLY_PREFIX!r} but the field is not listed in reload_boundary.STARTUP_ONLY_FIELDS — update the registry."
+        )
 
 
 def test_pydantic_field_descriptions_are_introspectable_at_runtime():

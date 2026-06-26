@@ -141,7 +141,9 @@ class LocalSandboxProvider(SandboxProvider):
                         continue
 
                     # Reject mounts that conflict with reserved container paths
-                    if any(container_path == p or container_path.startswith(p + "/") for p in _RESERVED_CONTAINER_PREFIXES):
+                    if any(
+                        container_path == p or container_path.startswith(p + "/") for p in _RESERVED_CONTAINER_PREFIXES
+                    ):
                         logger.warning(
                             "Mount container_path conflicts with reserved prefix, skipping: %s",
                             mount.container_path,

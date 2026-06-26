@@ -295,7 +295,9 @@ def build_run_config(
     if assistant_id and assistant_id != _DEFAULT_ASSISTANT_ID:
         normalized = assistant_id.strip().lower().replace("_", "-")
         if not normalized or not re.fullmatch(r"[a-z0-9-]+", normalized):
-            raise ValueError(f"Invalid assistant_id {assistant_id!r}: must contain only letters, digits, and hyphens after normalization.")
+            raise ValueError(
+                f"Invalid assistant_id {assistant_id!r}: must contain only letters, digits, and hyphens after normalization."
+            )
         configurable = config.setdefault("configurable", {})
         runtime_context = config.setdefault("context", {})
         explicit_agent_name: str | None = None

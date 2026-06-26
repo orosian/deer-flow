@@ -102,7 +102,16 @@ def strip_data_url_image_blocks(messages: list[dict[str, Any]]) -> list[dict[str
             continue
 
         # Filter out image_url blocks with data: scheme.
-        filtered = [block for block in content if not (isinstance(block, dict) and block.get("type") == "image_url" and isinstance(block.get("image_url"), dict) and str(block["image_url"].get("url", "")).startswith("data:"))]
+        filtered = [
+            block
+            for block in content
+            if not (
+                isinstance(block, dict)
+                and block.get("type") == "image_url"
+                and isinstance(block.get("image_url"), dict)
+                and str(block["image_url"].get("url", "")).startswith("data:")
+            )
+        ]
         result.append({**msg, "content": filtered})
     return result
 

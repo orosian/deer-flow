@@ -52,7 +52,9 @@ class CircuitBreakerConfig(BaseModel):
     """Configuration for the LLM Circuit Breaker."""
 
     failure_threshold: int = Field(default=5, description="Number of consecutive failures before tripping the circuit")
-    recovery_timeout_sec: int = Field(default=60, description="Time in seconds before attempting to recover the circuit")
+    recovery_timeout_sec: int = Field(
+        default=60, description="Time in seconds before attempting to recover the circuit"
+    )
 
 
 def _legacy_config_candidates() -> tuple[Path, ...]:
@@ -96,7 +98,9 @@ class AppConfig(BaseModel):
             field_doc="Logging level for deerflow and app modules (debug/info/warning/error); third-party libraries are not affected.",
         ),
     )
-    token_usage: TokenUsageConfig = Field(default_factory=TokenUsageConfig, description="Token usage tracking configuration")
+    token_usage: TokenUsageConfig = Field(
+        default_factory=TokenUsageConfig, description="Token usage tracking configuration"
+    )
     models: list[ModelConfig] = Field(default_factory=list, description="Available models")
     sandbox: SandboxConfig = Field(
         description=format_field_description(
@@ -107,19 +111,41 @@ class AppConfig(BaseModel):
     tools: list[ToolConfig] = Field(default_factory=list, description="Available tools")
     tool_groups: list[ToolGroupConfig] = Field(default_factory=list, description="Available tool groups")
     skills: SkillsConfig = Field(default_factory=SkillsConfig, description="Skills configuration")
-    skill_evolution: SkillEvolutionConfig = Field(default_factory=SkillEvolutionConfig, description="Agent-managed skill evolution configuration")
-    extensions: ExtensionsConfig = Field(default_factory=ExtensionsConfig, description="Extensions configuration (MCP servers and skills state)")
-    tool_output: ToolOutputConfig = Field(default_factory=ToolOutputConfig, description="Tool output budget protection configuration")
-    tool_search: ToolSearchConfig = Field(default_factory=ToolSearchConfig, description="Tool search / deferred loading configuration")
+    skill_evolution: SkillEvolutionConfig = Field(
+        default_factory=SkillEvolutionConfig, description="Agent-managed skill evolution configuration"
+    )
+    extensions: ExtensionsConfig = Field(
+        default_factory=ExtensionsConfig, description="Extensions configuration (MCP servers and skills state)"
+    )
+    tool_output: ToolOutputConfig = Field(
+        default_factory=ToolOutputConfig, description="Tool output budget protection configuration"
+    )
+    tool_search: ToolSearchConfig = Field(
+        default_factory=ToolSearchConfig, description="Tool search / deferred loading configuration"
+    )
     title: TitleConfig = Field(default_factory=TitleConfig, description="Automatic title generation configuration")
-    summarization: SummarizationConfig = Field(default_factory=SummarizationConfig, description="Conversation summarization configuration")
+    summarization: SummarizationConfig = Field(
+        default_factory=SummarizationConfig, description="Conversation summarization configuration"
+    )
     memory: MemoryConfig = Field(default_factory=MemoryConfig, description="Memory subsystem configuration")
-    agents_api: AgentsApiConfig = Field(default_factory=AgentsApiConfig, description="Custom-agent management API configuration")
-    acp_agents: dict[str, ACPAgentConfig] = Field(default_factory=dict, description="ACP-compatible agent configuration")
-    subagents: SubagentsAppConfig = Field(default_factory=SubagentsAppConfig, description="Subagent runtime configuration")
-    guardrails: GuardrailsConfig = Field(default_factory=GuardrailsConfig, description="Guardrail middleware configuration")
-    suggestions: SuggestionsConfig = Field(default_factory=SuggestionsConfig, description="Follow-up suggestions configuration.")
-    circuit_breaker: CircuitBreakerConfig = Field(default_factory=CircuitBreakerConfig, description="LLM circuit breaker configuration")
+    agents_api: AgentsApiConfig = Field(
+        default_factory=AgentsApiConfig, description="Custom-agent management API configuration"
+    )
+    acp_agents: dict[str, ACPAgentConfig] = Field(
+        default_factory=dict, description="ACP-compatible agent configuration"
+    )
+    subagents: SubagentsAppConfig = Field(
+        default_factory=SubagentsAppConfig, description="Subagent runtime configuration"
+    )
+    guardrails: GuardrailsConfig = Field(
+        default_factory=GuardrailsConfig, description="Guardrail middleware configuration"
+    )
+    suggestions: SuggestionsConfig = Field(
+        default_factory=SuggestionsConfig, description="Follow-up suggestions configuration."
+    )
+    circuit_breaker: CircuitBreakerConfig = Field(
+        default_factory=CircuitBreakerConfig, description="LLM circuit breaker configuration"
+    )
     channel_connections: ChannelConnectionsConfig = Field(
         default_factory=ChannelConnectionsConfig,
         description=format_field_description(
@@ -127,8 +153,13 @@ class AppConfig(BaseModel):
             field_doc="User-facing IM channel connection configuration.",
         ),
     )
-    loop_detection: LoopDetectionConfig = Field(default_factory=LoopDetectionConfig, description="Loop detection middleware configuration")
-    safety_finish_reason: SafetyFinishReasonConfig = Field(default_factory=SafetyFinishReasonConfig, description="Provider safety-filter finish_reason interception middleware configuration")
+    loop_detection: LoopDetectionConfig = Field(
+        default_factory=LoopDetectionConfig, description="Loop detection middleware configuration"
+    )
+    safety_finish_reason: SafetyFinishReasonConfig = Field(
+        default_factory=SafetyFinishReasonConfig,
+        description="Provider safety-filter finish_reason interception middleware configuration",
+    )
     model_config = ConfigDict(extra="allow")
     database: DatabaseConfig = Field(
         default_factory=DatabaseConfig,
@@ -192,7 +223,9 @@ class AppConfig(BaseModel):
         elif os.getenv("DEER_FLOW_CONFIG_PATH"):
             path = Path(os.getenv("DEER_FLOW_CONFIG_PATH"))
             if not Path.exists(path):
-                raise FileNotFoundError(f"Config file specified by environment variable `DEER_FLOW_CONFIG_PATH` not found at {path}")
+                raise FileNotFoundError(
+                    f"Config file specified by environment variable `DEER_FLOW_CONFIG_PATH` not found at {path}"
+                )
             return path
         else:
             project_config = existing_project_file(("config.yaml",))
@@ -202,7 +235,9 @@ class AppConfig(BaseModel):
             for path in _legacy_config_candidates():
                 if path.exists():
                     return path
-            raise FileNotFoundError("`config.yaml` file not found in the project root or legacy backend/repository root locations")
+            raise FileNotFoundError(
+                "`config.yaml` file not found in the project root or legacy backend/repository root locations"
+            )
 
     @classmethod
     def from_file(cls, config_path: str | None = None) -> Self:
@@ -266,8 +301,12 @@ class AppConfig(BaseModel):
         load_subagents_config_from_dict(config.subagents.model_dump())
         load_tool_search_config_from_dict(config.tool_search.model_dump())
         load_guardrails_config_from_dict(config.guardrails.model_dump())
-        load_checkpointer_config_from_dict(config.checkpointer.model_dump() if config.checkpointer is not None else None)
-        load_stream_bridge_config_from_dict(config.stream_bridge.model_dump() if config.stream_bridge is not None else None)
+        load_checkpointer_config_from_dict(
+            config.checkpointer.model_dump() if config.checkpointer is not None else None
+        )
+        load_stream_bridge_config_from_dict(
+            config.stream_bridge.model_dump() if config.stream_bridge is not None else None
+        )
         load_acp_config_from_dict({name: agent.model_dump() for name, agent in acp_agents.items()})
 
         if previous_checkpointer_config != config.checkpointer:
@@ -405,7 +444,9 @@ _ConfigSignature = tuple[float | None, int | None, str | None]
 _app_config_signature: _ConfigSignature | None = None
 _app_config_is_custom = False
 _current_app_config: ContextVar[AppConfig | None] = ContextVar("deerflow_current_app_config", default=None)
-_current_app_config_stack: ContextVar[tuple[AppConfig | None, ...]] = ContextVar("deerflow_current_app_config_stack", default=())
+_current_app_config_stack: ContextVar[tuple[AppConfig | None, ...]] = ContextVar(
+    "deerflow_current_app_config_stack", default=()
+)
 
 
 def _get_config_mtime(config_path: Path) -> float | None:
@@ -468,9 +509,16 @@ def get_app_config() -> AppConfig:
     current_mtime = _get_config_mtime(resolved_path)
     current_signature = _get_config_signature(resolved_path)
 
-    should_reload = _app_config is None or _app_config_path != resolved_path or _app_config_signature != current_signature
+    should_reload = (
+        _app_config is None or _app_config_path != resolved_path or _app_config_signature != current_signature
+    )
     if should_reload:
-        if _app_config_path == resolved_path and _app_config_mtime is not None and current_mtime is not None and _app_config_mtime != current_mtime:
+        if (
+            _app_config_path == resolved_path
+            and _app_config_mtime is not None
+            and current_mtime is not None
+            and _app_config_mtime != current_mtime
+        ):
             logger.info(
                 "Config file has been modified (mtime: %s -> %s), reloading AppConfig",
                 _app_config_mtime,

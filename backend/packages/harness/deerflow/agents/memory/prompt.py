@@ -230,7 +230,9 @@ def _get_tiktoken_encoding(encoding_name: str = "cl100k_base") -> tiktoken.Encod
     try:
         encoding = tiktoken.get_encoding(encoding_name)
     except Exception:
-        logger.warning("Failed to load tiktoken encoding %r; falling back to char-based estimation", encoding_name, exc_info=True)
+        logger.warning(
+            "Failed to load tiktoken encoding %r; falling back to char-based estimation", encoding_name, exc_info=True
+        )
         with _tiktoken_encoding_cache_lock:
             _tiktoken_encoding_cache[encoding_name] = (None, time.monotonic())
         return None
@@ -316,7 +318,9 @@ def _coerce_confidence(value: Any, default: float = 0.0) -> float:
     return max(0.0, min(1.0, confidence))
 
 
-def format_memory_for_injection(memory_data: dict[str, Any], max_tokens: int = 2000, *, use_tiktoken: bool = True) -> str:
+def format_memory_for_injection(
+    memory_data: dict[str, Any], max_tokens: int = 2000, *, use_tiktoken: bool = True
+) -> str:
     """Format memory data for injection into system prompt.
 
     Args:
@@ -378,7 +382,11 @@ def format_memory_for_injection(memory_data: dict[str, Any], max_tokens: int = 2
     facts_data = memory_data.get("facts", [])
     if isinstance(facts_data, list) and facts_data:
         ranked_facts = sorted(
-            (f for f in facts_data if isinstance(f, dict) and isinstance(f.get("content"), str) and f.get("content").strip()),
+            (
+                f
+                for f in facts_data
+                if isinstance(f, dict) and isinstance(f.get("content"), str) and f.get("content").strip()
+            ),
             key=lambda fact: _coerce_confidence(fact.get("confidence"), default=0.0),
             reverse=True,
         )
@@ -389,7 +397,11 @@ def format_memory_for_injection(memory_data: dict[str, Any], max_tokens: int = 2
         base_tokens = _count_tokens(base_text, use_tiktoken=use_tiktoken) if base_text else 0
         # Account for the separator between existing sections and the facts section.
         facts_header = "Facts:\n"
-        separator_tokens = _count_tokens("\n\n" + facts_header, use_tiktoken=use_tiktoken) if base_text else _count_tokens(facts_header, use_tiktoken=use_tiktoken)
+        separator_tokens = (
+            _count_tokens("\n\n" + facts_header, use_tiktoken=use_tiktoken)
+            if base_text
+            else _count_tokens(facts_header, use_tiktoken=use_tiktoken)
+        )
         running_tokens = base_tokens + separator_tokens
 
         fact_lines: list[str] = []

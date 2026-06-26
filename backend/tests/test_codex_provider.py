@@ -271,6 +271,8 @@ def test_parse_tool_call_arguments_invalid_json():
 
 def test_parse_tool_call_arguments_non_dict_json():
     model = _make_model()
-    parsed, err = model._parse_tool_call_arguments({"arguments": '["list", "not", "dict"]', "name": "t", "call_id": "c"})
+    parsed, err = model._parse_tool_call_arguments(
+        {"arguments": '["list", "not", "dict"]', "name": "t", "call_id": "c"}
+    )
     assert parsed is None
     assert err is not None

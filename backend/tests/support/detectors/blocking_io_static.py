@@ -354,7 +354,11 @@ class BlockingIOStaticVisitor(ast.NodeVisitor):
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         class_name = ".".join((*self.class_stack, node.name)) if self.class_stack else node.name
-        self.class_bases[class_name].update(canonical_name for base in node.bases if (canonical_name := self._canonical_name(dotted_name(base))) is not None)
+        self.class_bases[class_name].update(
+            canonical_name
+            for base in node.bases
+            if (canonical_name := self._canonical_name(dotted_name(base))) is not None
+        )
         self.class_stack.append(node.name)
         self.generic_visit(node)
         self.class_stack.pop()
@@ -556,14 +560,20 @@ def _looks_like_path_receiver_name(receiver_name: str | None) -> bool:
     if receiver_name is None:
         return False
     leaf = receiver_name.rsplit(".", 1)[-1].lower()
-    return leaf in {"path", "file_path", "dir_path", "target", "dest", "destination", "source"} or leaf.endswith(("_path", "_dir", "_file", "_root")) or "path" in leaf
+    return (
+        leaf in {"path", "file_path", "dir_path", "target", "dest", "destination", "source"}
+        or leaf.endswith(("_path", "_dir", "_file", "_root"))
+        or "path" in leaf
+    )
 
 
 def _is_path_annotation(annotation: ast.AST | None, canonical_name: Callable[[str | None], str | None]) -> bool:
     if annotation is None:
         return False
     if isinstance(annotation, ast.BinOp) and isinstance(annotation.op, ast.BitOr):
-        return _is_path_annotation(annotation.left, canonical_name) or _is_path_annotation(annotation.right, canonical_name)
+        return _is_path_annotation(annotation.left, canonical_name) or _is_path_annotation(
+            annotation.right, canonical_name
+        )
     name = dotted_name(annotation)
     canonical = canonical_name(name)
     if canonical in {"pathlib.Path", "Path"}:
@@ -573,7 +583,9 @@ def _is_path_annotation(annotation: ast.AST | None, canonical_name: Callable[[st
     return False
 
 
-def _path_like_argument_names(arguments: ast.arguments, canonical_name: Callable[[str | None], str | None]) -> Iterable[str]:
+def _path_like_argument_names(
+    arguments: ast.arguments, canonical_name: Callable[[str | None], str | None]
+) -> Iterable[str]:
     candidates = [*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs]
     if arguments.vararg is not None:
         candidates.append(arguments.vararg)
@@ -745,7 +757,9 @@ def scan_source(source: str, relative_path: str) -> list[BlockingIOStaticFinding
 
     visitor = BlockingIOStaticVisitor(relative_path, source_lines)
     visitor.visit(tree)
-    return sorted(_finalize_findings(visitor), key=lambda finding: (finding.path, finding.line, finding.column, finding.category))
+    return sorted(
+        _finalize_findings(visitor), key=lambda finding: (finding.path, finding.line, finding.column, finding.category)
+    )
 
 
 def scan_file(path: Path, *, repo_root: Path = REPO_ROOT) -> list[BlockingIOStaticFinding]:
@@ -796,14 +810,18 @@ def _scan_root(path: str) -> str:
     return parts[0] if parts else path
 
 
-def _format_counter(title: str, counter: Counter[str], *, limit: int | None = None, order: Sequence[str] | None = None) -> list[str]:
+def _format_counter(
+    title: str, counter: Counter[str], *, limit: int | None = None, order: Sequence[str] | None = None
+) -> list[str]:
     lines = [title]
     if order is None:
         items = sorted(counter.items(), key=lambda item: (-item[1], item[0]))
     else:
         ordered = [(name, counter[name]) for name in order if counter.get(name)]
         ordered_names = {name for name, _ in ordered}
-        extras = sorted((item for item in counter.items() if item[0] not in ordered_names), key=lambda item: (-item[1], item[0]))
+        extras = sorted(
+            (item for item in counter.items() if item[0] not in ordered_names), key=lambda item: (-item[1], item[0])
+        )
         items = ordered + extras
     if limit is not None:
         items = items[:limit]
@@ -821,7 +839,9 @@ def format_summary(findings: Sequence[BlockingIOStaticFinding], *, output_path: 
             "",
             *_format_counter("By category:", Counter(finding.category for finding in findings)),
             "",
-            *_format_counter("By priority:", Counter(finding.priority for finding in findings), order=("HIGH", "MEDIUM", "LOW")),
+            *_format_counter(
+                "By priority:", Counter(finding.priority for finding in findings), order=("HIGH", "MEDIUM", "LOW")
+            ),
             "",
             *_format_counter("By operation:", Counter(finding.operation for finding in findings)),
             "",
@@ -845,7 +865,9 @@ def format_text(findings: Sequence[BlockingIOStaticFinding]) -> str:
 
     lines: list[str] = []
     for finding in findings:
-        lines.append(f"{finding.priority} {finding.category}/{finding.operation} {finding.path}:{finding.line}:{finding.column + 1} in {finding.function} exposure={finding.exposure}")
+        lines.append(
+            f"{finding.priority} {finding.category}/{finding.operation} {finding.path}:{finding.line}:{finding.column + 1} in {finding.function} exposure={finding.exposure}"
+        )
         lines.append(f"  symbol: {finding.symbol}")
         lines.append(f"  reason: {_finding_reason(finding.operation, finding.exposure)}")
         if finding.code:
@@ -854,7 +876,11 @@ def format_text(findings: Sequence[BlockingIOStaticFinding]) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=("Statically inventory blocking IO calls that may block the backend asyncio event loop. Findings are prioritized review candidates, not automatic bug decisions."))
+    parser = argparse.ArgumentParser(
+        description=(
+            "Statically inventory blocking IO calls that may block the backend asyncio event loop. Findings are prioritized review candidates, not automatic bug decisions."
+        )
+    )
     parser.add_argument(
         "paths",
         nargs="*",

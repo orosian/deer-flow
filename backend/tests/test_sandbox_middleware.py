@@ -50,7 +50,9 @@ class _SandboxStub(Sandbox):
     def write_file(self, path: str, content: str, append: bool = False) -> None:
         return None
 
-    def glob(self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200) -> tuple[list[str], bool]:
+    def glob(
+        self, path: str, pattern: str, *, include_dirs: bool = False, max_results: int = 200
+    ) -> tuple[list[str], bool]:
         return [], False
 
     def grep(
@@ -139,7 +141,11 @@ async def test_abefore_agent_uses_async_provider_acquire() -> None:
     [
         (SandboxMiddleware(lazy_init=True), {}, Runtime(context={"thread_id": "thread-lazy"})),
         (SandboxMiddleware(lazy_init=False), {}, Runtime(context={})),
-        (SandboxMiddleware(lazy_init=False), {"sandbox": {"sandbox_id": "existing"}}, Runtime(context={"thread_id": "thread-existing"})),
+        (
+            SandboxMiddleware(lazy_init=False),
+            {"sandbox": {"sandbox_id": "existing"}},
+            Runtime(context={"thread_id": "thread-existing"}),
+        ),
     ],
 )
 async def test_abefore_agent_delegates_to_super_when_not_acquiring(
@@ -177,7 +183,9 @@ async def test_default_lazy_tool_acquisition_uses_async_provider() -> None:
             store=None,
         )
 
-        result = await ls_tool.ainvoke({"runtime": runtime, "description": "list workspace", "path": "/mnt/user-data/workspace"})
+        result = await ls_tool.ainvoke(
+            {"runtime": runtime, "description": "list workspace", "path": "/mnt/user-data/workspace"}
+        )
     finally:
         reset_sandbox_provider()
 

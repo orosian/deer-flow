@@ -67,7 +67,9 @@ def test_above_cap_returns_actionable_error():
     result = _call_write_file(content=payload)
 
     assert result.startswith("Error: write_file content")
-    assert "81920 bytes" in result or "82944 bytes" in result, "Error must report the actual content size so the LLM/operator can judge how much to trim or chunk."
+    assert "81920 bytes" in result or "82944 bytes" in result, (
+        "Error must report the actual content size so the LLM/operator can judge how much to trim or chunk."
+    )
     assert "str_replace" in result, "Error must point to str_replace as the preferred incremental-edit path."
     assert "append=True" in result, "Error must also surface the append-in-chunks alternative."
 

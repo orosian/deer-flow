@@ -49,7 +49,9 @@ DEFAULT_IDLE_TIMEOUT = 600  # 10 minutes in seconds
 DEFAULT_REPLICAS = 3  # Maximum concurrent sandbox containers
 IDLE_CHECK_INTERVAL = 60  # Check every 60 seconds
 THREAD_LOCK_EXECUTOR_WORKERS = min(32, (os.cpu_count() or 1) + 4)
-_THREAD_LOCK_EXECUTOR = ThreadPoolExecutor(max_workers=THREAD_LOCK_EXECUTOR_WORKERS, thread_name_prefix="sandbox-lock-wait")
+_THREAD_LOCK_EXECUTOR = ThreadPoolExecutor(
+    max_workers=THREAD_LOCK_EXECUTOR_WORKERS, thread_name_prefix="sandbox-lock-wait"
+)
 atexit.register(_THREAD_LOCK_EXECUTOR.shutdown, wait=False, cancel_futures=True)
 
 
@@ -496,7 +498,9 @@ class AioSandboxProvider(SandboxProvider):
             self._last_activity[existing_id] = time.time()
             return existing_id
 
-    def _reclaim_warm_pool_sandbox(self, thread_id: str | None, sandbox_id: str, *, post_lock: bool = False) -> str | None:
+    def _reclaim_warm_pool_sandbox(
+        self, thread_id: str | None, sandbox_id: str, *, post_lock: bool = False
+    ) -> str | None:
         """Promote a warm-pool sandbox back to active tracking if available."""
         if thread_id is None:
             return None
@@ -533,7 +537,9 @@ class AioSandboxProvider(SandboxProvider):
 
     def _recheck_cached_sandbox(self, thread_id: str, sandbox_id: str) -> str | None:
         """Re-check in-memory caches after acquiring the cross-process file lock."""
-        return self._reuse_in_process_sandbox(thread_id, post_lock=True) or self._reclaim_warm_pool_sandbox(thread_id, sandbox_id, post_lock=True)
+        return self._reuse_in_process_sandbox(thread_id, post_lock=True) or self._reclaim_warm_pool_sandbox(
+            thread_id, sandbox_id, post_lock=True
+        )
 
     def _register_discovered_sandbox(self, thread_id: str, info: SandboxInfo) -> str:
         """Track a sandbox discovered through the backend."""
@@ -603,7 +609,9 @@ class AioSandboxProvider(SandboxProvider):
 
         return sandbox, info, True
 
-    def _drop_unhealthy_sandbox(self, sandbox_id: str, reason: str, *, expected_info: SandboxInfo | None = None) -> None:
+    def _drop_unhealthy_sandbox(
+        self, sandbox_id: str, reason: str, *, expected_info: SandboxInfo | None = None
+    ) -> None:
         """Remove and destroy a sandbox after a definitive failed health check."""
         sandbox, info, removed = self._remove_tracked_sandbox(sandbox_id, expected_info=expected_info)
         if not removed:
@@ -640,7 +648,9 @@ class AioSandboxProvider(SandboxProvider):
         # All slots are occupied by active sandboxes — proceed anyway and log.
         # The replicas limit is a soft cap; we never forcibly stop a container
         # that is actively serving a thread.
-        logger.warning(f"All {replicas} replica slots are in active use; creating sandbox {sandbox_id} beyond the soft limit")
+        logger.warning(
+            f"All {replicas} replica slots are in active use; creating sandbox {sandbox_id} beyond the soft limit"
+        )
 
     # ── Core: acquire / get / release / shutdown ─────────────────────────
 

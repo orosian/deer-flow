@@ -442,7 +442,9 @@ async def run_agent(
 # ---------------------------------------------------------------------------
 
 
-async def _call_checkpointer_method(checkpointer: Any, async_name: str, sync_name: str, *args: Any, **kwargs: Any) -> Any:
+async def _call_checkpointer_method(
+    checkpointer: Any, async_name: str, sync_name: str, *args: Any, **kwargs: Any
+) -> Any:
     """Call a checkpointer method, supporting async and sync variants."""
     method = getattr(checkpointer, async_name, None) or getattr(checkpointer, sync_name, None)
     if method is None:
@@ -532,7 +534,9 @@ async def _rollback_to_pre_run_checkpoint(
             raise RuntimeError(f"Run {run_id} rollback failed: pending_write is not a 3-tuple: {item!r}")
         task_id, channel, value = item
         if not isinstance(channel, str):
-            raise RuntimeError(f"Run {run_id} rollback failed: pending_write has non-string channel: task_id={task_id!r}, channel={channel!r}")
+            raise RuntimeError(
+                f"Run {run_id} rollback failed: pending_write has non-string channel: task_id={task_id!r}, channel={channel!r}"
+            )
         writes_by_task.setdefault(str(task_id), []).append((channel, value))
 
     for task_id, writes in writes_by_task.items():

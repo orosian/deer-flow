@@ -289,7 +289,9 @@ async def login_local(
         _record_login_failure(client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=AuthErrorResponse(code=AuthErrorCode.INVALID_CREDENTIALS, message="Incorrect email or password").model_dump(),
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.INVALID_CREDENTIALS, message="Incorrect email or password"
+            ).model_dump(),
         )
 
     _record_login_success(client_ip)
@@ -314,7 +316,9 @@ async def register(request: Request, response: Response, body: RegisterRequest):
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=AuthErrorResponse(code=AuthErrorCode.EMAIL_ALREADY_EXISTS, message="Email already registered").model_dump(),
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.EMAIL_ALREADY_EXISTS, message="Email already registered"
+            ).model_dump(),
         )
 
     token = create_access_token(str(user.id), token_version=user.token_version)
@@ -355,10 +359,20 @@ async def change_password(request: Request, response: Response, body: ChangePass
         )
 
     if user.password_hash is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=AuthErrorResponse(code=AuthErrorCode.INVALID_CREDENTIALS, message="OAuth users cannot change password").model_dump())
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.INVALID_CREDENTIALS, message="OAuth users cannot change password"
+            ).model_dump(),
+        )
 
     if not await verify_password_async(body.current_password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=AuthErrorResponse(code=AuthErrorCode.INVALID_CREDENTIALS, message="Current password is incorrect").model_dump())
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.INVALID_CREDENTIALS, message="Current password is incorrect"
+            ).model_dump(),
+        )
 
     provider = get_local_provider()
 
@@ -366,7 +380,12 @@ async def change_password(request: Request, response: Response, body: ChangePass
     if body.new_email is not None:
         existing = await provider.get_user_by_email(body.new_email)
         if existing and str(existing.id) != str(user.id):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=AuthErrorResponse(code=AuthErrorCode.EMAIL_ALREADY_EXISTS, message="Email already in use").model_dump())
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=AuthErrorResponse(
+                    code=AuthErrorCode.EMAIL_ALREADY_EXISTS, message="Email already in use"
+                ).model_dump(),
+            )
         user.email = body.new_email
 
     # Update password + bump version
@@ -484,16 +503,22 @@ async def initialize_admin(request: Request, response: Response, body: Initializ
     if admin_count > 0:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=AuthErrorResponse(code=AuthErrorCode.SYSTEM_ALREADY_INITIALIZED, message="System already initialized").model_dump(),
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.SYSTEM_ALREADY_INITIALIZED, message="System already initialized"
+            ).model_dump(),
         )
 
     try:
-        user = await get_local_provider().create_user(email=body.email, password=body.password, system_role="admin", needs_setup=False)
+        user = await get_local_provider().create_user(
+            email=body.email, password=body.password, system_role="admin", needs_setup=False
+        )
     except ValueError:
         # DB unique-constraint race: another concurrent request beat us.
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=AuthErrorResponse(code=AuthErrorCode.SYSTEM_ALREADY_INITIALIZED, message="System already initialized").model_dump(),
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.SYSTEM_ALREADY_INITIALIZED, message="System already initialized"
+            ).model_dump(),
         )
 
     token = create_access_token(str(user.id), token_version=user.token_version)

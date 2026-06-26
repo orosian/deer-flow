@@ -52,7 +52,9 @@ def merge_artifacts(existing: list[str] | None, new: list[str] | None) -> list[s
     return list(dict.fromkeys(existing + new))
 
 
-def merge_viewed_images(existing: dict[str, ViewedImageData] | None, new: dict[str, ViewedImageData] | None) -> dict[str, ViewedImageData]:
+def merge_viewed_images(
+    existing: dict[str, ViewedImageData] | None, new: dict[str, ViewedImageData] | None
+) -> dict[str, ViewedImageData]:
     """Reducer for viewed_images dict - merges image dictionaries.
 
     Special case: If new is an empty dict {}, it clears the existing images.

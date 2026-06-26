@@ -303,7 +303,9 @@ class _MetricsAccumulator:
         # set *and* confirm dashboard consumers handle the new label)
         # rather than a silent schema drift.
         if reason not in _KNOWN_PRESET_FAILURE_REASONS:
-            raise ValueError(f"unknown preset_load_failure reason: {reason!r}; known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}")
+            raise ValueError(
+                f"unknown preset_load_failure reason: {reason!r}; known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}"
+            )
         with self._lock:
             self.preset_load_failure_total[reason] = self.preset_load_failure_total.get(reason, 0) + 1
 
@@ -375,7 +377,9 @@ def _load_graph_harness():
             load_preset,
         )
     except ImportError as exc:
-        raise RuntimeError("graph-harness is required for gh:* assistants but is not installed (missing 'harness.host')") from exc
+        raise RuntimeError(
+            "graph-harness is required for gh:* assistants but is not installed (missing 'harness.host')"
+        ) from exc
     try:
         check_host_api_compatible(_MIN_HOST_API_MAJOR)
     except HostApiVersionMismatch as exc:
@@ -384,7 +388,9 @@ def _load_graph_harness():
         # ``.actual`` attributes intact on ``exc.__cause__`` for log
         # consumers that want to distinguish a major mismatch from a
         # missing-package failure.
-        raise ImportError(f"graph-harness host API major version mismatch: installed={exc.actual!r}, this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; upgrade the adapter or downgrade the graph-harness package.") from exc
+        raise ImportError(
+            f"graph-harness host API major version mismatch: installed={exc.actual!r}, this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; upgrade the adapter or downgrade the graph-harness package."
+        ) from exc
     return compile_workflow, load_preset
 
 

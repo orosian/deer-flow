@@ -83,7 +83,15 @@ class TestClientInit:
     def test_custom_params(self, mock_app_config):
         mock_middleware = MagicMock()
         with patch("deerflow.client.get_app_config", return_value=mock_app_config):
-            c = DeerFlowClient(model_name="gpt-4", thinking_enabled=False, subagent_enabled=True, plan_mode=True, agent_name="test-agent", available_skills={"skill1", "skill2"}, middlewares=[mock_middleware])
+            c = DeerFlowClient(
+                model_name="gpt-4",
+                thinking_enabled=False,
+                subagent_enabled=True,
+                plan_mode=True,
+                agent_name="test-agent",
+                available_skills={"skill1", "skill2"},
+                middlewares=[mock_middleware],
+            )
         assert c._model_name == "gpt-4"
         assert c._thinking_enabled is False
         assert c._subagent_enabled is True
@@ -139,7 +147,9 @@ class TestConfigQueries:
         skill.category = "public"
         skill.enabled = True
 
-        with patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", return_value=[skill]) as mock_load:
+        with patch(
+            "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", return_value=[skill]
+        ) as mock_load:
             result = client.list_skills()
             mock_load.assert_called_once_with(enabled_only=False)
 
@@ -154,7 +164,9 @@ class TestConfigQueries:
         }
 
     def test_list_skills_enabled_only(self, client):
-        with patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", return_value=[]) as mock_load:
+        with patch(
+            "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", return_value=[]
+        ) as mock_load:
             client.list_skills(enabled_only=True)
             mock_load.assert_called_once_with(enabled_only=True)
 
@@ -382,7 +394,11 @@ class TestStream:
         # values snapshot with the fully assembled message — this matches
         # the shape LangGraph emits when ``stream_mode`` includes both
         # ``messages`` and ``values``.
-        assembled = AIMessage(content="Hel lo world!", id="ai-1", usage_metadata={"input_tokens": 3, "output_tokens": 4, "total_tokens": 7})
+        assembled = AIMessage(
+            content="Hel lo world!",
+            id="ai-1",
+            usage_metadata={"input_tokens": 3, "output_tokens": 4, "total_tokens": 7},
+        )
         agent = MagicMock()
         agent.stream.return_value = iter(
             [
@@ -411,7 +427,9 @@ class TestStream:
 
         # Three delta messages-tuple events, all with the same id, each
         # carrying only its own delta (not cumulative).
-        ai_text_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")]
+        ai_text_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")
+        ]
         assert [e.data["content"] for e in ai_text_events] == ["Hel", " lo ", "world!"]
         assert all(e.data["id"] == "ai-1" for e in ai_text_events)
 
@@ -465,9 +483,16 @@ class TestStream:
         ):
             events = list(client.stream("hi", thread_id="t-stream-kwargs"))
 
-        ai_events = [event for event in events if event.type == "messages-tuple" and event.data.get("type") == "ai" and event.data.get("id") == "ai-1"]
+        ai_events = [
+            event
+            for event in events
+            if event.type == "messages-tuple" and event.data.get("type") == "ai" and event.data.get("id") == "ai-1"
+        ]
         assert any(event.data.get("content") == "Hello!" for event in ai_events)
-        assert any(event.data.get("additional_kwargs", {}).get("token_usage_attribution", {}).get("kind") == "final_answer" for event in ai_events)
+        assert any(
+            event.data.get("additional_kwargs", {}).get("token_usage_attribution", {}).get("kind") == "final_answer"
+            for event in ai_events
+        )
 
     def test_stream_emits_new_additional_kwargs_after_prior_metadata(self, client):
         """stream() emits later attribution metadata even after earlier kwargs for the same id."""
@@ -509,7 +534,11 @@ class TestStream:
         ):
             events = list(client.stream("hi", thread_id="t-stream-kwargs-delta"))
 
-        ai_events = [event for event in events if event.type == "messages-tuple" and event.data.get("type") == "ai" and event.data.get("id") == "ai-1"]
+        ai_events = [
+            event
+            for event in events
+            if event.type == "messages-tuple" and event.data.get("type") == "ai" and event.data.get("id") == "ai-1"
+        ]
         metadata_events = [event for event in ai_events if event.data.get("additional_kwargs")]
 
         assert metadata_events[0].data["additional_kwargs"] == {"reasoning_content": "Thinking first."}
@@ -524,7 +553,10 @@ class TestStream:
                 ("messages", (AIMessageChunk(content="Hel", id="ai-1"), {})),
                 ("messages", (AIMessageChunk(content="lo ", id="ai-1"), {})),
                 ("messages", (AIMessageChunk(content="world!", id="ai-1"), {})),
-                ("values", {"messages": [HumanMessage(content="hi", id="h-1"), AIMessage(content="Hello world!", id="ai-1")]}),
+                (
+                    "values",
+                    {"messages": [HumanMessage(content="hi", id="h-1"), AIMessage(content="Hello world!", id="ai-1")]},
+                ),
             ]
         )
 
@@ -548,7 +580,15 @@ class TestStream:
                         {},
                     ),
                 ),
-                ("values", {"messages": [HumanMessage(content="ls", id="h-1"), ToolMessage(content="file.txt", id="tm-1", tool_call_id="tc-1", name="bash")]}),
+                (
+                    "values",
+                    {
+                        "messages": [
+                            HumanMessage(content="ls", id="h-1"),
+                            ToolMessage(content="file.txt", id="tm-1", tool_call_id="tc-1", name="bash"),
+                        ]
+                    },
+                ),
             ]
         )
 
@@ -633,7 +673,9 @@ class TestStream:
         ):
             events = list(client.stream("hi", thread_id="t-order-canary"))
 
-        ai_text_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")]
+        ai_text_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")
+        ]
         # Current behavior: 2 events (values synthesis + messages delta).
         # If a refactor makes dedup order-independent, this becomes 1 —
         # update the assertion AND the docstring above to record the
@@ -677,13 +719,27 @@ class TestStream:
         agent.stream.return_value = iter(
             [
                 ("messages", (AIMessageChunk(content="Hel", id="ai-1"), {})),
-                ("messages", (AIMessageChunk(content="lo", id="ai-1", usage_metadata={"input_tokens": 3, "output_tokens": 2, "total_tokens": 5}), {})),
+                (
+                    "messages",
+                    (
+                        AIMessageChunk(
+                            content="lo",
+                            id="ai-1",
+                            usage_metadata={"input_tokens": 3, "output_tokens": 2, "total_tokens": 5},
+                        ),
+                        {},
+                    ),
+                ),
                 (
                     "values",
                     {
                         "messages": [
                             HumanMessage(content="hi", id="h-1"),
-                            AIMessage(content="Hello", id="ai-1", usage_metadata={"input_tokens": 3, "output_tokens": 2, "total_tokens": 5}),
+                            AIMessage(
+                                content="Hello",
+                                id="ai-1",
+                                usage_metadata={"input_tokens": 3, "output_tokens": 2, "total_tokens": 5},
+                            ),
                         ]
                     },
                 ),
@@ -762,7 +818,9 @@ class TestStream:
             elapsed = time.monotonic() - start
 
         assert result == "x" * n
-        assert elapsed < 1.0, f"chat() took {elapsed:.3f}s for {n} chunks — possible O(n^2) regression (see PR #1974 commit 2 for the original fix)"
+        assert elapsed < 1.0, (
+            f"chat() took {elapsed:.3f}s for {n} chunks — possible O(n^2) regression (see PR #1974 commit 2 for the original fix)"
+        )
 
     def test_none_id_chunks_produce_duplicates_known_limitation(self, client):
         """Documents a known dedup limitation: ``messages`` chunks with ``id=None``.
@@ -822,7 +880,9 @@ class TestStream:
         ):
             events = list(client.stream("hi", thread_id="t-none-id-limitation"))
 
-        ai_text_events = [e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")]
+        ai_text_events = [
+            e for e in events if e.type == "messages-tuple" and e.data.get("type") == "ai" and e.data.get("content")
+        ]
         # KNOWN LIMITATION: 2 events for the same logical message.
         #   1) from messages chunk (id=None, NOT added to streamed_ids
         #      because of ``if msg_id:`` guard at client.py line ~522)
@@ -1126,7 +1186,14 @@ class TestThreadQueries:
         msg2 = AIMessage(content="Hi there", id="m2")
 
         cp1 = self._make_mock_checkpoint_tuple("t1", "c1", "2023-01-01T10:00:00Z", messages=[msg1])
-        cp2 = self._make_mock_checkpoint_tuple("t1", "c2", "2023-01-01T10:01:00Z", parent_id="c1", messages=[msg1, msg2], pending_writes=[("task_1", "messages", {"text": "pending"})])
+        cp2 = self._make_mock_checkpoint_tuple(
+            "t1",
+            "c2",
+            "2023-01-01T10:01:00Z",
+            parent_id="c1",
+            messages=[msg1, msg2],
+            pending_writes=[("task_1", "messages", {"text": "pending"})],
+        )
         cp3_no_ts = self._make_mock_checkpoint_tuple("t1", "c3", None)
 
         # checkpointer.list yields in reverse time or random order, test sorting
@@ -1273,7 +1340,10 @@ class TestSkillsManagement:
             client._agent = MagicMock()
 
             with (
-                patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", side_effect=[[skill], [updated_skill]]),
+                patch(
+                    "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills",
+                    side_effect=[[skill], [updated_skill]],
+                ),
                 patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=tmp_path),
                 patch("deerflow.client.get_extensions_config", return_value=ext_config),
                 patch("deerflow.client.reload_extensions_config"),
@@ -1466,7 +1536,10 @@ class TestUploads:
             uploads_dir = tmp_path / "uploads"
             uploads_dir.mkdir()
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.upload_files("thread-1", [src_file])
 
             assert result["success"] is True
@@ -1545,7 +1618,10 @@ class TestUploads:
             (uploads_dir / "a.txt").write_text("a")
             (uploads_dir / "b.txt").write_text("bb")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.list_uploads("thread-1")
 
             assert result["count"] == 2
@@ -1563,7 +1639,10 @@ class TestUploads:
             uploads_dir = Path(tmp)
             (uploads_dir / "delete-me.txt").write_text("gone")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.delete_upload("thread-1", "delete-me.txt")
 
             assert result["success"] is True
@@ -1579,7 +1658,10 @@ class TestUploads:
     def test_delete_upload_path_traversal(self, client):
         with tempfile.TemporaryDirectory() as tmp:
             uploads_dir = Path(tmp)
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 with pytest.raises(PathTraversalError):
                     client.delete_upload("thread-1", "../../etc/passwd")
 
@@ -1683,7 +1765,10 @@ class TestScenarioMultiTurnConversation:
         chunks = [
             {"messages": [HumanMessage(content="search", id="h-1"), ai_tc]},
             {"messages": [HumanMessage(content="search", id="h-1"), ai_tc, tool_r]},
-            {"messages": [HumanMessage(content="search", id="h-1"), ai_tc, tool_r, ai_final], "title": "LangGraph Search"},
+            {
+                "messages": [HumanMessage(content="search", id="h-1"), ai_tc, tool_r, ai_final],
+                "title": "LangGraph Search",
+            },
         ]
         agent = _make_agent_mock(chunks)
 
@@ -1736,18 +1821,41 @@ class TestScenarioToolChain:
             content="",
             id="ai-2",
             tool_calls=[
-                {"name": "write_file", "args": {"path": "/mnt/user-data/outputs/listing.txt", "content": "README.md\nsrc/"}, "id": "tc-2"},
+                {
+                    "name": "write_file",
+                    "args": {"path": "/mnt/user-data/outputs/listing.txt", "content": "README.md\nsrc/"},
+                    "id": "tc-2",
+                },
             ],
         )
-        write_result = ToolMessage(content="File written successfully.", id="tm-2", tool_call_id="tc-2", name="write_file")
+        write_result = ToolMessage(
+            content="File written successfully.", id="tm-2", tool_call_id="tc-2", name="write_file"
+        )
         ai_final = AIMessage(content="I listed the workspace and saved the output.", id="ai-3")
 
         chunks = [
             {"messages": [HumanMessage(content="list and save", id="h-1"), ai_bash]},
             {"messages": [HumanMessage(content="list and save", id="h-1"), ai_bash, bash_result]},
             {"messages": [HumanMessage(content="list and save", id="h-1"), ai_bash, bash_result, ai_write]},
-            {"messages": [HumanMessage(content="list and save", id="h-1"), ai_bash, bash_result, ai_write, write_result]},
-            {"messages": [HumanMessage(content="list and save", id="h-1"), ai_bash, bash_result, ai_write, write_result, ai_final]},
+            {
+                "messages": [
+                    HumanMessage(content="list and save", id="h-1"),
+                    ai_bash,
+                    bash_result,
+                    ai_write,
+                    write_result,
+                ]
+            },
+            {
+                "messages": [
+                    HumanMessage(content="list and save", id="h-1"),
+                    ai_bash,
+                    bash_result,
+                    ai_write,
+                    write_result,
+                    ai_final,
+                ]
+            },
         ]
         agent = _make_agent_mock(chunks)
 
@@ -1783,7 +1891,10 @@ class TestScenarioFileLifecycle:
             (tmp_path / "report.txt").write_text("quarterly report data")
             (tmp_path / "data.csv").write_text("a,b,c\n1,2,3")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 # Step 1: Upload
                 result = client.upload_files(
                     "t-lifecycle",
@@ -1828,7 +1939,10 @@ class TestScenarioFileLifecycle:
             src_file = tmp_path / "input.txt"
             src_file.write_text("raw data to process")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 uploaded = client.upload_files("t-artifact", [src_file])
                 assert len(uploaded["files"]) == 1
 
@@ -1929,7 +2043,10 @@ class TestScenarioConfigManagement:
 
             client._agent = MagicMock()  # Simulate re-created agent
             with (
-                patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", side_effect=[[skill], [toggled]]),
+                patch(
+                    "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills",
+                    side_effect=[[skill], [toggled]],
+                ),
                 patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
                 patch("deerflow.client.get_extensions_config", return_value=ext_config),
                 patch("deerflow.client.reload_extensions_config"),
@@ -2029,7 +2146,10 @@ class TestScenarioAgentRecreation:
         agents_created = []
 
         def fake_ensure(config):
-            key = tuple(config.get("configurable", {}).get(k) for k in ["model_name", "thinking_enabled", "is_plan_mode", "subagent_enabled"])
+            key = tuple(
+                config.get("configurable", {}).get(k)
+                for k in ["model_name", "thinking_enabled", "is_plan_mode", "subagent_enabled"]
+            )
             agents_created.append(key)
             client._agent = agent
 
@@ -2060,7 +2180,10 @@ class TestScenarioThreadIsolation:
             def get_dir(thread_id):
                 return uploads_a if thread_id == "thread-a" else uploads_b
 
-            with patch("deerflow.client.get_uploads_dir", side_effect=get_dir), patch("deerflow.client.ensure_uploads_dir", side_effect=get_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", side_effect=get_dir),
+                patch("deerflow.client.ensure_uploads_dir", side_effect=get_dir),
+            ):
                 client.upload_files("thread-a", [src_file])
 
                 files_a = client.list_uploads("thread-a")
@@ -2140,7 +2263,9 @@ class TestScenarioSkillInstallAndUse:
             # Create .skill archive
             skill_src = tmp_path / "my-analyzer"
             skill_src.mkdir()
-            (skill_src / "SKILL.md").write_text("---\nname: my-analyzer\ndescription: Analyze code\nlicense: MIT\n---\nAnalysis skill")
+            (skill_src / "SKILL.md").write_text(
+                "---\nname: my-analyzer\ndescription: Analyze code\nlicense: MIT\n---\nAnalysis skill"
+            )
             archive = tmp_path / "my-analyzer.skill"
             with zipfile.ZipFile(archive, "w") as zf:
                 zf.write(skill_src / "SKILL.md", "my-analyzer/SKILL.md")
@@ -2164,7 +2289,10 @@ class TestScenarioSkillInstallAndUse:
             installed_skill.category = "custom"
             installed_skill.enabled = True
 
-            with patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", return_value=[installed_skill]):
+            with patch(
+                "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills",
+                return_value=[installed_skill],
+            ):
                 skills_result = client.list_skills()
             assert any(s["name"] == "my-analyzer" for s in skills_result["skills"])
 
@@ -2184,7 +2312,10 @@ class TestScenarioSkillInstallAndUse:
             config_file.write_text("{}")
 
             with (
-                patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", side_effect=[[installed_skill], [disabled_skill]]),
+                patch(
+                    "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills",
+                    side_effect=[[installed_skill], [disabled_skill]],
+                ),
                 patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
                 patch("deerflow.client.get_extensions_config", return_value=ext_config),
                 patch("deerflow.client.reload_extensions_config"),
@@ -2286,7 +2417,10 @@ class TestScenarioEdgeCases:
                 patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
                 patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
                 patch("deerflow.utils.file_conversion.CONVERTIBLE_EXTENSIONS", {".pdf"}),
-                patch("deerflow.utils.file_conversion.convert_file_to_markdown", side_effect=Exception("conversion failed")),
+                patch(
+                    "deerflow.utils.file_conversion.convert_file_to_markdown",
+                    side_effect=Exception("conversion failed"),
+                ),
             ):
                 result = client.upload_files("t-pdf-fail", [pdf_file])
 
@@ -2455,7 +2589,10 @@ class TestGatewayConformance:
         src_file = tmp_path / "hello.txt"
         src_file.write_text("hello")
 
-        with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+        with (
+            patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+            patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+        ):
             result = client.upload_files("t-conform", [src_file])
 
         parsed = UploadResponse(**result)
@@ -2664,7 +2801,9 @@ class TestInstallSkillSecurity:
 
             with (
                 patch("deerflow.skills.storage._default_skill_storage", LocalSkillStorage(host_path=str(skills_root))),
-                patch("deerflow.skills.validation._validate_skill_frontmatter", return_value=(True, "OK", "dupe-skill")),
+                patch(
+                    "deerflow.skills.validation._validate_skill_frontmatter", return_value=(True, "OK", "dupe-skill")
+                ),
             ):
                 with pytest.raises(ValueError, match="already exists"):
                     client.install_skill(archive)
@@ -2704,7 +2843,10 @@ class TestInstallSkillSecurity:
 
             with (
                 patch("deerflow.skills.storage._default_skill_storage", LocalSkillStorage(host_path=str(skills_root))),
-                patch("deerflow.skills.validation._validate_skill_frontmatter", return_value=(False, "Missing name field", "")),
+                patch(
+                    "deerflow.skills.validation._validate_skill_frontmatter",
+                    return_value=(False, "Missing name field", ""),
+                ),
             ):
                 with pytest.raises(ValueError, match="Invalid skill"):
                     client.install_skill(archive)
@@ -2816,7 +2958,10 @@ class TestConfigUpdateErrors:
             config_file.write_text("{}")
 
             with (
-                patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", side_effect=[[skill], []]),
+                patch(
+                    "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills",
+                    side_effect=[[skill], []],
+                ),
                 patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
                 patch("deerflow.client.get_extensions_config", return_value=ext_config),
                 patch("deerflow.client.reload_extensions_config"),
@@ -2975,7 +3120,10 @@ class TestUploadDeleteSymlink:
                     pytest.skip("symlink creation requires Developer Mode or elevated privileges on Windows")
                 raise
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 # The resolved path of the symlink escapes uploads_dir,
                 # so path traversal check should catch it.
                 with pytest.raises(PathTraversalError):
@@ -2995,7 +3143,10 @@ class TestUploadDeleteSymlink:
             src_file = tmp_path / weird_name
             src_file.write_text("data")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.upload_files("thread-1", [src_file])
 
             assert result["success"] is True
@@ -3068,7 +3219,10 @@ class TestUploadDuplicateFilenames:
             (dir_a / "data.txt").write_text("version A")
             (dir_b / "data.txt").write_text("version B")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.upload_files("t-dup", [dir_a / "data.txt", dir_b / "data.txt"])
 
             assert result["success"] is True
@@ -3101,7 +3255,10 @@ class TestUploadDuplicateFilenames:
                 d.mkdir()
                 (d / "report.csv").write_text(f"from {name}")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.upload_files(
                     "t-triple",
                     [tmp_path / "x" / "report.csv", tmp_path / "y" / "report.csv", tmp_path / "z" / "report.csv"],
@@ -3121,7 +3278,10 @@ class TestUploadDuplicateFilenames:
             (tmp_path / "a.txt").write_text("aaa")
             (tmp_path / "b.txt").write_text("bbb")
 
-            with patch("deerflow.client.get_uploads_dir", return_value=uploads_dir), patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir):
+            with (
+                patch("deerflow.client.get_uploads_dir", return_value=uploads_dir),
+                patch("deerflow.client.ensure_uploads_dir", return_value=uploads_dir),
+            ):
                 result = client.upload_files("t-ok", [tmp_path / "a.txt", tmp_path / "b.txt"])
 
             assert result["success"] is True
@@ -3231,7 +3391,10 @@ class TestBugAgentInvalidationInconsistency:
             config_file.write_text("{}")
 
             with (
-                patch("deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills", side_effect=[[skill], [updated]]),
+                patch(
+                    "deerflow.skills.storage.local_skill_storage.LocalSkillStorage.load_skills",
+                    side_effect=[[skill], [updated]],
+                ),
                 patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
                 patch("deerflow.client.get_extensions_config", return_value=ext_config),
                 patch("deerflow.client.reload_extensions_config"),

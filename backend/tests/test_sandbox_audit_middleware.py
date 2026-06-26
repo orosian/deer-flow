@@ -18,7 +18,9 @@ from deerflow.agents.middlewares.sandbox_audit_middleware import (
 # ---------------------------------------------------------------------------
 
 
-def _make_request(command: str, workspace_path: str | None = "/tmp/workspace", thread_id: str = "thread-1") -> MagicMock:
+def _make_request(
+    command: str, workspace_path: str | None = "/tmp/workspace", thread_id: str = "thread-1"
+) -> MagicMock:
     """Build a minimal ToolCallRequest mock for the bash tool."""
     args = {"command": command}
     request = MagicMock()

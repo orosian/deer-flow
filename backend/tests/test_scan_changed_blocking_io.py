@@ -138,7 +138,9 @@ def test_new_async_caller_exposing_old_sync_helper_is_reported(tmp_path: Path, m
     """
     src = _write_python(tmp_path / "mod.py", _SYNC_HELPER_HEAD)
     head_findings = [f.to_dict() for f in static.scan_file(src, repo_root=tmp_path)]
-    read_text_line = next(f["location"]["line"] for f in head_findings if f["blocking_call"]["symbol"] == "path.read_text")
+    read_text_line = next(
+        f["location"]["line"] for f in head_findings if f["blocking_call"]["symbol"] == "path.read_text"
+    )
     added_lines = {line for line in range(1, len(src.read_text().splitlines()) + 1) if line > read_text_line}
 
     monkeypatch.setattr(changed, "changed_python_lines", lambda base, repo_root: {"mod.py": added_lines})

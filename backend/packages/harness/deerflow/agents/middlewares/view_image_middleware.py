@@ -158,7 +158,10 @@ class ViewImageMiddleware(AgentMiddleware[ViewImageMiddlewareState]):
         for msg in messages[assistant_idx + 1 :]:
             if isinstance(msg, HumanMessage):
                 content_str = str(msg.content)
-                if "Here are the images you've viewed" in content_str or "Here are the details of the images you've viewed" in content_str:
+                if (
+                    "Here are the images you've viewed" in content_str
+                    or "Here are the details of the images you've viewed" in content_str
+                ):
                     # Already added, don't add again
                     return False
 

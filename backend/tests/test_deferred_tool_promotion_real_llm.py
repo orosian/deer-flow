@@ -206,7 +206,9 @@ async def test_real_llm_promotes_then_invokes_with_subagent_reentry(monkeypatch:
     # tool layer. This is only possible if the promoted schema reached the
     # model in turn 2, despite the subagent-style re-entry in turn 1.
     calc_calls = [c for c in _calls if c.startswith("fake_calculator:")]
-    assert calc_calls, f"REGRESSION (#2884): the model never managed to call fake_calculator. All recorded tool calls: {_calls!r}. Final text: {final_text!r}"
+    assert calc_calls, (
+        f"REGRESSION (#2884): the model never managed to call fake_calculator. All recorded tool calls: {_calls!r}. Final text: {final_text!r}"
+    )
 
     # And the math should actually be done correctly (sanity that the LLM
     # really used the result, not just hallucinated the answer).

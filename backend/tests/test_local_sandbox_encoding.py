@@ -17,7 +17,12 @@ def test_read_file_uses_utf8_on_windows_locale(tmp_path, monkeypatch):
     path.write_text(text, encoding="utf-8")
     base = builtins.open
 
-    monkeypatch.setattr(local_sandbox, "open", lambda file, mode="r", *args, **kwargs: _open(base, file, mode, *args, **kwargs), raising=False)
+    monkeypatch.setattr(
+        local_sandbox,
+        "open",
+        lambda file, mode="r", *args, **kwargs: _open(base, file, mode, *args, **kwargs),
+        raising=False,
+    )
 
     assert LocalSandbox("t").read_file(str(path)) == text
 
@@ -27,7 +32,12 @@ def test_write_file_uses_utf8_on_windows_locale(tmp_path, monkeypatch):
     text = "emoji \U0001f600"
     base = builtins.open
 
-    monkeypatch.setattr(local_sandbox, "open", lambda file, mode="r", *args, **kwargs: _open(base, file, mode, *args, **kwargs), raising=False)
+    monkeypatch.setattr(
+        local_sandbox,
+        "open",
+        lambda file, mode="r", *args, **kwargs: _open(base, file, mode, *args, **kwargs),
+        raising=False,
+    )
 
     LocalSandbox("t").write_file(str(path), text)
 
@@ -36,7 +46,13 @@ def test_write_file_uses_utf8_on_windows_locale(tmp_path, monkeypatch):
 
 def test_get_shell_prefers_posix_shell_from_path_before_windows_fallback(monkeypatch):
     monkeypatch.setattr(local_sandbox.os, "name", "nt")
-    monkeypatch.setattr(LocalSandbox, "_find_first_available_shell", lambda candidates: r"C:\Program Files\Git\bin\sh.exe" if candidates == ("/bin/zsh", "/bin/bash", "/bin/sh", "sh") else None)
+    monkeypatch.setattr(
+        LocalSandbox,
+        "_find_first_available_shell",
+        lambda candidates: (
+            r"C:\Program Files\Git\bin\sh.exe" if candidates == ("/bin/zsh", "/bin/bash", "/bin/sh", "sh") else None
+        ),
+    )
 
     assert LocalSandbox._get_shell() == r"C:\Program Files\Git\bin\sh.exe"
 
@@ -86,7 +102,9 @@ def test_execute_command_uses_powershell_command_mode_on_windows(monkeypatch):
         return SimpleNamespace(stdout="ok", stderr="", returncode=0)
 
     monkeypatch.setattr(local_sandbox.os, "name", "nt")
-    monkeypatch.setattr(LocalSandbox, "_get_shell", staticmethod(lambda: r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"))
+    monkeypatch.setattr(
+        LocalSandbox, "_get_shell", staticmethod(lambda: r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe")
+    )
     monkeypatch.setattr(local_sandbox.subprocess, "run", fake_run)
 
     output = LocalSandbox("t").execute_command("Write-Output hello")

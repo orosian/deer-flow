@@ -149,7 +149,9 @@ def drive_gateway(app, *, prompt: str, context: dict) -> list[dict]:
         assert csrf, "register must set csrf_token cookie"
 
         thread_id = str(uuid.uuid4())
-        created = client.post("/api/threads", json={"thread_id": thread_id, "metadata": {}}, headers={"X-CSRF-Token": csrf})
+        created = client.post(
+            "/api/threads", json={"thread_id": thread_id, "metadata": {}}, headers={"X-CSRF-Token": csrf}
+        )
         assert created.status_code == 200, created.text
 
         body = {
@@ -159,6 +161,8 @@ def drive_gateway(app, *, prompt: str, context: dict) -> list[dict]:
             "context": context,
             "stream_mode": ["values"],
         }
-        with client.stream("POST", f"/api/threads/{thread_id}/runs/stream", json=body, headers={"X-CSRF-Token": csrf}) as resp:
+        with client.stream(
+            "POST", f"/api/threads/{thread_id}/runs/stream", json=body, headers={"X-CSRF-Token": csrf}
+        ) as resp:
             assert resp.status_code == 200, resp.read().decode()
             return sse_event_shapes(resp)

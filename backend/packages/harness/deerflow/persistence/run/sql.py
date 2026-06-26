@@ -167,7 +167,11 @@ class RunRepository(RunStore):
 
     async def update_model_name(self, run_id, model_name):
         async with self._sf() as session:
-            await session.execute(update(RunRow).where(RunRow.run_id == run_id).values(model_name=self._normalize_model_name(model_name), updated_at=datetime.now(UTC)))
+            await session.execute(
+                update(RunRow)
+                .where(RunRow.run_id == run_id)
+                .values(model_name=self._normalize_model_name(model_name), updated_at=datetime.now(UTC))
+            )
             await session.commit()
 
     async def delete(
@@ -193,7 +197,11 @@ class RunRepository(RunStore):
             before_dt = before
         else:
             before_dt = datetime.fromisoformat(before)
-        stmt = select(RunRow).where(RunRow.status == "pending", RunRow.created_at <= before_dt).order_by(RunRow.created_at.asc())
+        stmt = (
+            select(RunRow)
+            .where(RunRow.status == "pending", RunRow.created_at <= before_dt)
+            .order_by(RunRow.created_at.asc())
+        )
         async with self._sf() as session:
             result = await session.execute(stmt)
             return [self._row_to_dict(r) for r in result.scalars()]
@@ -302,7 +310,9 @@ class RunRepository(RunStore):
         if first_human_message is not None:
             values["first_human_message"] = first_human_message[:2000]
         async with self._sf() as session:
-            await session.execute(update(RunRow).where(RunRow.run_id == run_id, RunRow.status == "running").values(**values))
+            await session.execute(
+                update(RunRow).where(RunRow.run_id == run_id, RunRow.status == "running").values(**values)
+            )
             await session.commit()
 
     async def aggregate_tokens_by_thread(self, thread_id: str, *, include_active: bool = False) -> dict[str, Any]:

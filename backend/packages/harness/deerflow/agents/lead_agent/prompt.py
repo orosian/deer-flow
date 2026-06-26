@@ -181,7 +181,9 @@ Skip simple one-off tasks.
 """
 
 
-def _build_available_subagents_description(available_names: list[str], bash_available: bool, *, app_config: AppConfig | None = None) -> str:
+def _build_available_subagents_description(
+    available_names: list[str], bash_available: bool, *, app_config: AppConfig | None = None
+) -> str:
     """Dynamically build subagent type descriptions from registry.
 
     Mirrors Codex's pattern where agent_type_description is dynamically generated
@@ -191,7 +193,9 @@ def _build_available_subagents_description(available_names: list[str], bash_avai
     builtin_descriptions = {
         "general-purpose": "For ANY non-trivial task - web research, code exploration, file operations, analysis, etc.",
         "bash": (
-            "For command execution (git, build, test, deploy operations)" if bash_available else "Not available in the current sandbox configuration. Use direct file/web tools or switch to AioSandboxProvider for isolated shell access."
+            "For command execution (git, build, test, deploy operations)"
+            if bash_available
+            else "Not available in the current sandbox configuration. Use direct file/web tools or switch to AioSandboxProvider for isolated shell access."
         ),
     }
 
@@ -221,13 +225,19 @@ def _build_subagent_section(max_concurrent: int, *, app_config: AppConfig | None
         Formatted subagent section string.
     """
     n = max_concurrent
-    available_names = get_available_subagent_names(app_config=app_config) if app_config is not None else get_available_subagent_names()
+    available_names = (
+        get_available_subagent_names(app_config=app_config)
+        if app_config is not None
+        else get_available_subagent_names()
+    )
     bash_available = "bash" in available_names
 
     # Dynamically build subagent type descriptions from registry (aligned with Codex's
     # agent_type_description pattern where all registered roles are listed in the tool spec).
     available_subagents = _build_available_subagents_description(available_names, bash_available, app_config=app_config)
-    direct_tool_examples = "bash, ls, read_file, web_search, etc." if bash_available else "ls, read_file, web_search, etc."
+    direct_tool_examples = (
+        "bash, ls, read_file, web_search, etc." if bash_available else "ls, read_file, web_search, etc."
+    )
     direct_execution_example = (
         '# User asks: "Run the tests"\n# Thinking: Cannot decompose into parallel sub-tasks\n# → Execute directly\n\nbash("npm test")  # Direct execution, not task()'
         if bash_available
@@ -611,7 +621,11 @@ def _get_cached_skills_prompt_section(
     container_base_path: str,
     skill_evolution_section: str,
 ) -> str:
-    filtered = [(name, description, category, location) for name, description, category, location in skill_signature if available_skills_key is None or name in available_skills_key]
+    filtered = [
+        (name, description, category, location)
+        for name, description, category, location in skill_signature
+        if available_skills_key is None or name in available_skills_key
+    ]
     skills_list = ""
     if filtered:
         skill_items = "\n".join(
@@ -666,12 +680,17 @@ def get_skills_prompt_section(available_skills: set[str] | None = None, *, app_c
     if available_skills is not None and not any(skill.name in available_skills for skill in skills):
         return ""
 
-    skill_signature = tuple((skill.name, skill.description, skill.category, skill.get_container_file_path(container_base_path)) for skill in skills)
+    skill_signature = tuple(
+        (skill.name, skill.description, skill.category, skill.get_container_file_path(container_base_path))
+        for skill in skills
+    )
     available_key = tuple(sorted(available_skills)) if available_skills is not None else None
     if not skill_signature and available_key is not None:
         return ""
     skill_evolution_section = _build_skill_evolution_section(skill_evolution_enabled)
-    return _get_cached_skills_prompt_section(skill_signature, available_key, container_base_path, skill_evolution_section)
+    return _get_cached_skills_prompt_section(
+        skill_signature, available_key, container_base_path, skill_evolution_section
+    )
 
 
 def get_agent_soul(agent_name: str | None) -> str:

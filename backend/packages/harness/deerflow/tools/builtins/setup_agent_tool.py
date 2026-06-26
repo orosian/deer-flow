@@ -84,7 +84,11 @@ def setup_agent(
         return Command(
             update={
                 "created_agent_name": agent_name,
-                "messages": [ToolMessage(content=f"Agent '{agent_name}' created successfully!", tool_call_id=runtime.tool_call_id)],
+                "messages": [
+                    ToolMessage(
+                        content=f"Agent '{agent_name}' created successfully!", tool_call_id=runtime.tool_call_id
+                    )
+                ],
             }
         )
 

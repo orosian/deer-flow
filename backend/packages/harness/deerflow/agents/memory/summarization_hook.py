@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from deerflow.agents.memory.message_processing import detect_correction, detect_reinforcement, filter_messages_for_memory
+from deerflow.agents.memory.message_processing import (
+    detect_correction,
+    detect_reinforcement,
+    filter_messages_for_memory,
+)
 from deerflow.agents.memory.queue import get_memory_queue
 from deerflow.agents.middlewares.summarization_middleware import SummarizationEvent
 from deerflow.config.memory_config import get_memory_config

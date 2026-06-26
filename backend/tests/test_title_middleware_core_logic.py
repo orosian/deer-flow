@@ -225,7 +225,9 @@ class TestTitleMiddlewareCoreLogic:
 
         state = {
             "messages": [
-                HumanMessage(content="这是一个非常长的问题描述，需要被截断以形成fallback标题，而且这里继续补充更多上下文，确保超过本地fallback截断阈值"),
+                HumanMessage(
+                    content="这是一个非常长的问题描述，需要被截断以形成fallback标题，而且这里继续补充更多上下文，确保超过本地fallback截断阈值"
+                ),
                 AIMessage(content="回复"),
             ]
         }

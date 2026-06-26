@@ -232,7 +232,10 @@ class TestResolveAgentDirMemoryOnlyFallback:
         user_dir.mkdir(parents=True)
         (user_dir / "memory.json").write_text("{}", encoding="utf-8")
 
-        with patch("deerflow.config.agents_config.get_paths", return_value=_make_paths(tmp_path)), patch("deerflow.config.agents_config.get_effective_user_id", return_value="u1"):
+        with (
+            patch("deerflow.config.agents_config.get_paths", return_value=_make_paths(tmp_path)),
+            patch("deerflow.config.agents_config.get_effective_user_id", return_value="u1"),
+        ):
             result = resolve_agent_dir("my-agent", user_id="u1")
 
         assert result == legacy_dir
@@ -252,7 +255,10 @@ class TestResolveAgentDirMemoryOnlyFallback:
         (user_dir / "config.yaml").write_text("name: my-agent\nmodel: gpt-4\n", encoding="utf-8")
         (user_dir / "memory.json").write_text("{}", encoding="utf-8")
 
-        with patch("deerflow.config.agents_config.get_paths", return_value=_make_paths(tmp_path)), patch("deerflow.config.agents_config.get_effective_user_id", return_value="u1"):
+        with (
+            patch("deerflow.config.agents_config.get_paths", return_value=_make_paths(tmp_path)),
+            patch("deerflow.config.agents_config.get_effective_user_id", return_value="u1"),
+        ):
             result = resolve_agent_dir("my-agent", user_id="u1")
 
         assert result == user_dir
@@ -267,7 +273,10 @@ class TestResolveAgentDirMemoryOnlyFallback:
         user_dir.mkdir(parents=True)
         (user_dir / "memory.json").write_text("{}", encoding="utf-8")
 
-        with patch("deerflow.config.agents_config.get_paths", return_value=_make_paths(tmp_path)), patch("deerflow.config.agents_config.get_effective_user_id", return_value="u1"):
+        with (
+            patch("deerflow.config.agents_config.get_paths", return_value=_make_paths(tmp_path)),
+            patch("deerflow.config.agents_config.get_effective_user_id", return_value="u1"),
+        ):
             from deerflow.config.agents_config import load_agent_config
 
             cfg = load_agent_config("my-agent", user_id="u1")
@@ -467,7 +476,10 @@ def agent_client(tmp_path):
     paths_instance = _make_paths(tmp_path)
     previous_config = AgentsApiConfig(**get_agents_api_config().model_dump())
 
-    with patch("deerflow.config.agents_config.get_paths", return_value=paths_instance), patch.object(agents_router, "get_paths", return_value=paths_instance):
+    with (
+        patch("deerflow.config.agents_config.get_paths", return_value=paths_instance),
+        patch.object(agents_router, "get_paths", return_value=paths_instance),
+    ):
         set_agents_api_config(AgentsApiConfig(enabled=True))
         try:
             app = _make_test_app(tmp_path)
@@ -486,7 +498,10 @@ def disabled_agent_client(tmp_path):
     paths_instance = _make_paths(tmp_path)
     previous_config = AgentsApiConfig(**get_agents_api_config().model_dump())
 
-    with patch("deerflow.config.agents_config.get_paths", return_value=paths_instance), patch.object(agents_router, "get_paths", return_value=paths_instance):
+    with (
+        patch("deerflow.config.agents_config.get_paths", return_value=paths_instance),
+        patch.object(agents_router, "get_paths", return_value=paths_instance),
+    ):
         set_agents_api_config(AgentsApiConfig(enabled=False))
         try:
             app = _make_test_app(tmp_path)

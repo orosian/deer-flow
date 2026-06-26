@@ -301,7 +301,11 @@ class TokenUsageMiddleware(AgentMiddleware):
                             # AIMessage (multiple task calls in one response),
                             # or merge fresh from the original message.
                             existing_update = state_updates.get(dispatch_idx)
-                            prev = existing_update.usage_metadata if existing_update else (getattr(candidate, "usage_metadata", None) or {})
+                            prev = (
+                                existing_update.usage_metadata
+                                if existing_update
+                                else (getattr(candidate, "usage_metadata", None) or {})
+                            )
                             merged = {
                                 **prev,
                                 "input_tokens": prev.get("input_tokens", 0) + subagent_usage["input_tokens"],

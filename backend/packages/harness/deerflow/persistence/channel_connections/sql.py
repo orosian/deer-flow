@@ -150,8 +150,14 @@ class ChannelConnectionRepository:
             transferred_ids = [row_id for row_id in result.scalars()]
             if not transferred_ids:
                 return
-            await session.execute(update(ChannelConnectionRow).where(ChannelConnectionRow.id.in_(transferred_ids)).values(status="revoked"))
-            await session.execute(delete(ChannelCredentialRow).where(ChannelCredentialRow.connection_id.in_(transferred_ids)))
+            await session.execute(
+                update(ChannelConnectionRow)
+                .where(ChannelConnectionRow.id.in_(transferred_ids))
+                .values(status="revoked")
+            )
+            await session.execute(
+                delete(ChannelCredentialRow).where(ChannelCredentialRow.connection_id.in_(transferred_ids))
+            )
 
         stmt = select(ChannelConnectionRow).where(
             ChannelConnectionRow.owner_user_id == owner_user_id,
@@ -193,7 +199,11 @@ class ChannelConnectionRepository:
 
     async def list_connections(self, owner_user_id: str) -> list[dict[str, Any]]:
         async with self.session_factory() as session:
-            result = await session.execute(select(ChannelConnectionRow).where(ChannelConnectionRow.owner_user_id == owner_user_id).order_by(ChannelConnectionRow.updated_at.desc(), ChannelConnectionRow.id.desc()))
+            result = await session.execute(
+                select(ChannelConnectionRow)
+                .where(ChannelConnectionRow.owner_user_id == owner_user_id)
+                .order_by(ChannelConnectionRow.updated_at.desc(), ChannelConnectionRow.id.desc())
+            )
             return [self._connection_to_dict(row) for row in result.scalars()]
 
     async def disconnect_connection(self, *, connection_id: str, owner_user_id: str) -> bool:
@@ -222,8 +232,12 @@ class ChannelConnectionRepository:
             if not connection_ids:
                 return 0
 
-            await session.execute(update(ChannelConnectionRow).where(ChannelConnectionRow.id.in_(connection_ids)).values(status="revoked"))
-            await session.execute(delete(ChannelCredentialRow).where(ChannelCredentialRow.connection_id.in_(connection_ids)))
+            await session.execute(
+                update(ChannelConnectionRow).where(ChannelConnectionRow.id.in_(connection_ids)).values(status="revoked")
+            )
+            await session.execute(
+                delete(ChannelCredentialRow).where(ChannelCredentialRow.connection_id.in_(connection_ids))
+            )
             await session.commit()
             return len(connection_ids)
 
@@ -395,7 +409,10 @@ class ChannelConnectionRepository:
         except Exception:
             dialect = ""
         if dialect == "postgresql":
-            await session.execute(text("SELECT pg_advisory_xact_lock(:lock_key)"), {"lock_key": self._oauth_scope_lock_key(owner_user_id, provider)})
+            await session.execute(
+                text("SELECT pg_advisory_xact_lock(:lock_key)"),
+                {"lock_key": self._oauth_scope_lock_key(owner_user_id, provider)},
+            )
 
     @staticmethod
     def _oauth_scope_lock_key(owner_user_id: str, provider: str) -> int:
@@ -406,7 +423,9 @@ class ChannelConnectionRepository:
     async def delete_expired_oauth_states(self, *, now: datetime | None = None) -> int:
         current_time = now or datetime.now(UTC)
         async with self.session_factory() as session:
-            result = await session.execute(delete(ChannelOAuthStateRow).where(ChannelOAuthStateRow.expires_at < current_time))
+            result = await session.execute(
+                delete(ChannelOAuthStateRow).where(ChannelOAuthStateRow.expires_at < current_time)
+            )
             await session.commit()
             return int(result.rowcount or 0)
 

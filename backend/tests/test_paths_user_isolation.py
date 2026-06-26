@@ -125,10 +125,16 @@ class TestUserAgentDir:
         assert paths.user_agents_dir("alice") == paths.base_dir / "users" / "alice" / "agents"
 
     def test_user_agent_dir(self, paths: Paths):
-        assert paths.user_agent_dir("alice", "code-reviewer") == paths.base_dir / "users" / "alice" / "agents" / "code-reviewer"
+        assert (
+            paths.user_agent_dir("alice", "code-reviewer")
+            == paths.base_dir / "users" / "alice" / "agents" / "code-reviewer"
+        )
 
     def test_user_agent_dir_lowercases_name(self, paths: Paths):
-        assert paths.user_agent_dir("alice", "CodeReviewer") == paths.base_dir / "users" / "alice" / "agents" / "codereviewer"
+        assert (
+            paths.user_agent_dir("alice", "CodeReviewer")
+            == paths.base_dir / "users" / "alice" / "agents" / "codereviewer"
+        )
 
     def test_user_agent_dir_validates_user_id(self, paths: Paths):
         with pytest.raises(ValueError, match="Invalid user_id"):

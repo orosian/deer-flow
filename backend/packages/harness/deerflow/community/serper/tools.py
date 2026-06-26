@@ -50,7 +50,10 @@ def _coerce_max_results(value: object, default: int = 5, max_allowed: int = _SER
 def _missing_key_error(query: str, tool_name: str) -> str:
     if tool_name not in _api_key_warned:
         _api_key_warned.add(tool_name)
-        logger.warning("Serper API key is not set for '%s'. Set SERPER_API_KEY in your environment or provide api_key in config.yaml. Sign up at https://serper.dev", tool_name)
+        logger.warning(
+            "Serper API key is not set for '%s'. Set SERPER_API_KEY in your environment or provide api_key in config.yaml. Sign up at https://serper.dev",
+            tool_name,
+        )
     return json.dumps(
         {"error": "SERPER_API_KEY is not configured", "query": query},
         ensure_ascii=False,

@@ -72,7 +72,10 @@ def test_subagent_deferral_recipe_hides_then_promotes():
     assert "<available-deferred-tools>" in section
     assert "mcp_calc" in section and "mcp_other" in section
 
-    turn1 = AIMessage(content="", tool_calls=[{"name": "tool_search", "args": {"query": "select:mcp_calc"}, "id": "c1", "type": "tool_call"}])
+    turn1 = AIMessage(
+        content="",
+        tool_calls=[{"name": "tool_search", "args": {"query": "select:mcp_calc"}, "id": "c1", "type": "tool_call"}],
+    )
     turn2 = AIMessage(content="done")
     model = RecordingModel(messages=iter([turn1, turn2]))
 
@@ -88,7 +91,11 @@ def test_subagent_deferral_recipe_hides_then_promotes():
         state_schema=ThreadState,
     )
 
-    result = asyncio.run(graph.ainvoke({"messages": [SystemMessage(content=section), HumanMessage(content="use the deferred calculator")]}))
+    result = asyncio.run(
+        graph.ainvoke(
+            {"messages": [SystemMessage(content=section), HumanMessage(content="use the deferred calculator")]}
+        )
+    )
 
     assert len(bound) >= 2, f"expected >=2 model binds, got {bound}"
     # Turn 1: both deferred MCP tools hidden from the subagent's model binding.
@@ -143,11 +150,18 @@ def test_subagent_builder_emits_working_deferred_filter():
     # The exact call executor._create_agent makes. Pull the filter the builder
     # produced (not a hand-rolled one) so its wiring - deferred set + catalog hash -
     # is what's under test.
-    middlewares = build_subagent_runtime_middlewares(app_config=app_config, model_name="test-model", deferred_setup=setup)
+    middlewares = build_subagent_runtime_middlewares(
+        app_config=app_config, model_name="test-model", deferred_setup=setup
+    )
     deferred_filters = [m for m in middlewares if isinstance(m, DeferredToolFilterMiddleware)]
-    assert len(deferred_filters) == 1, f"builder must emit exactly one deferred filter, got {[type(m).__name__ for m in middlewares]}"
+    assert len(deferred_filters) == 1, (
+        f"builder must emit exactly one deferred filter, got {[type(m).__name__ for m in middlewares]}"
+    )
 
-    turn1 = AIMessage(content="", tool_calls=[{"name": "tool_search", "args": {"query": "select:mcp_calc"}, "id": "c1", "type": "tool_call"}])
+    turn1 = AIMessage(
+        content="",
+        tool_calls=[{"name": "tool_search", "args": {"query": "select:mcp_calc"}, "id": "c1", "type": "tool_call"}],
+    )
     turn2 = AIMessage(content="done")
     model = RecordingModel(messages=iter([turn1, turn2]))
 
@@ -162,7 +176,11 @@ def test_subagent_builder_emits_working_deferred_filter():
         system_prompt=None,
         state_schema=ThreadState,
     )
-    result = asyncio.run(graph.ainvoke({"messages": [SystemMessage(content=section), HumanMessage(content="use the deferred calculator")]}))
+    result = asyncio.run(
+        graph.ainvoke(
+            {"messages": [SystemMessage(content=section), HumanMessage(content="use the deferred calculator")]}
+        )
+    )
 
     assert len(bound) >= 2, f"expected >=2 model binds, got {bound}"
     # Turn 1: both deferred MCP tools hidden - the builder-produced filter is active.

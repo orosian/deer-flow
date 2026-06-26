@@ -131,9 +131,13 @@ class TestSubagentCheckpointerIsolation:
         executor._base_tools = []
 
         monkeypatch.setattr(executor_module, "create_chat_model", fake_create_chat_model)
-        monkeypatch.setattr(executor_module, "resolve_subagent_model_name", lambda config, parent, app_config=None: "test-model")
+        monkeypatch.setattr(
+            executor_module, "resolve_subagent_model_name", lambda config, parent, app_config=None: "test-model"
+        )
 
         result = executor._create_agent()
 
-        assert captured_kwargs.get("checkpointer") is False, f"Expected checkpointer=False in create_agent() kwargs, got: {captured_kwargs.get('checkpointer')!r}"
+        assert captured_kwargs.get("checkpointer") is False, (
+            f"Expected checkpointer=False in create_agent() kwargs, got: {captured_kwargs.get('checkpointer')!r}"
+        )
         assert result.checkpointer is False

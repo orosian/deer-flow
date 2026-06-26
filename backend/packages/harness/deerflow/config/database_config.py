@@ -40,11 +40,15 @@ from pydantic import BaseModel, Field
 class DatabaseConfig(BaseModel):
     backend: Literal["memory", "sqlite", "postgres"] = Field(
         default="memory",
-        description=("Storage backend for both checkpointer and application data. 'memory' for development (no persistence across restarts), 'sqlite' for single-node deployment, 'postgres' for production multi-node deployment."),
+        description=(
+            "Storage backend for both checkpointer and application data. 'memory' for development (no persistence across restarts), 'sqlite' for single-node deployment, 'postgres' for production multi-node deployment."
+        ),
     )
     sqlite_dir: str = Field(
         default=".deer-flow/data",
-        description=("Directory for the SQLite database file. Both checkpointer and application data share {sqlite_dir}/deerflow.db."),
+        description=(
+            "Directory for the SQLite database file. Both checkpointer and application data share {sqlite_dir}/deerflow.db."
+        ),
     )
     postgres_url: str = Field(
         default="",

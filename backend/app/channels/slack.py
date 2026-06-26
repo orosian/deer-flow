@@ -90,7 +90,9 @@ class SlackChannel(Channel):
         app_token = self.config.get("app_token", "")
 
         if self.config.get("event_delivery") == "http":
-            logger.error("Slack HTTP Events mode is not supported by this channel adapter; use Socket Mode with app_token")
+            logger.error(
+                "Slack HTTP Events mode is not supported by this channel adapter; use Socket Mode with app_token"
+            )
             return
 
         if not bot_token or not app_token:
@@ -203,7 +205,9 @@ class SlackChannel(Channel):
             if isinstance(user_id, str) and user_id:
                 self._bot_user_id = user_id
         except Exception:
-            logger.warning("[Slack] failed to resolve bot user id; app mention text may include the bot mention", exc_info=True)
+            logger.warning(
+                "[Slack] failed to resolve bot user id; app mention text may include the bot mention", exc_info=True
+            )
 
     async def _get_web_client_for_message(self, msg: OutboundMessage):
         if msg.connection_id and self._connection_repo is not None:
@@ -269,7 +273,9 @@ class SlackChannel(Channel):
                 return
 
             if self._bot_user_id is None:
-                authorization = next((item for item in req.payload.get("authorizations", []) if isinstance(item, dict)), None)
+                authorization = next(
+                    (item for item in req.payload.get("authorizations", []) if isinstance(item, dict)), None
+                )
                 user_id = authorization.get("user_id") if authorization else None
                 if isinstance(user_id, str) and user_id:
                     self._bot_user_id = user_id
@@ -353,7 +359,9 @@ class SlackChannel(Channel):
             if self._connection_repo is None:
                 asyncio.run_coroutine_threadsafe(self.bus.publish_inbound(inbound), self._loop)
             else:
-                asyncio.run_coroutine_threadsafe(self._publish_inbound_with_connection(inbound, team_id=team_id), self._loop)
+                asyncio.run_coroutine_threadsafe(
+                    self._publish_inbound_with_connection(inbound, team_id=team_id), self._loop
+                )
 
     async def _publish_inbound_with_connection(self, inbound, *, team_id: str | None = None) -> None:
         inbound = await self._attach_connection_identity(inbound, team_id=team_id)
@@ -381,7 +389,9 @@ class SlackChannel(Channel):
 
         user_id = str(event.get("user") or "")
         if not user_id or not team_id:
-            await self._post_connection_reply(channel_id, "Slack connection could not be completed from this message.", thread_ts)
+            await self._post_connection_reply(
+                channel_id, "Slack connection could not be completed from this message.", thread_ts
+            )
             return True
 
         await self._connection_repo.upsert_connection(

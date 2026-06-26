@@ -61,7 +61,9 @@ class SubagentLimitMiddleware(AgentMiddleware[AgentState]):
         truncated_tool_calls = [tc for i, tc in enumerate(tool_calls) if i not in indices_to_drop]
 
         dropped_count = len(indices_to_drop)
-        logger.warning(f"Truncated {dropped_count} excess task tool call(s) from model response (limit: {self.max_concurrent})")
+        logger.warning(
+            f"Truncated {dropped_count} excess task tool call(s) from model response (limit: {self.max_concurrent})"
+        )
 
         # Replace the AIMessage with truncated tool_calls (same id triggers replacement)
         updated_msg = clone_ai_message_with_tool_calls(last_msg, truncated_tool_calls)

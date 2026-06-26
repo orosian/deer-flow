@@ -42,4 +42,6 @@ def test_gateway_defaults_to_single_worker():
 def test_gateway_worker_count_remains_overridable():
     """The worker count must stay configurable, not hard-coded to 1."""
     command = _gateway_command()
-    assert "${GATEWAY_WORKERS:-1}" in command, f"worker count must use ${{GATEWAY_WORKERS:-1}} so operators can override it; got: {command}"
+    assert "${GATEWAY_WORKERS:-1}" in command, (
+        f"worker count must use ${{GATEWAY_WORKERS:-1}} so operators can override it; got: {command}"
+    )

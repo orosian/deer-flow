@@ -164,7 +164,11 @@ async def get_artifact(thread_id: str, path: str, request: Request, download: bo
         cache_headers = {"Cache-Control": "private, max-age=300"}
         download_name = Path(internal_path).name or actual_skill_path.stem
         if download or mime_type in ACTIVE_CONTENT_MIME_TYPES:
-            return Response(content=content, media_type=mime_type or "application/octet-stream", headers=_build_attachment_headers(download_name, cache_headers))
+            return Response(
+                content=content,
+                media_type=mime_type or "application/octet-stream",
+                headers=_build_attachment_headers(download_name, cache_headers),
+            )
 
         if mime_type and mime_type.startswith("text/"):
             return PlainTextResponse(content=content.decode("utf-8"), media_type=mime_type, headers=cache_headers)
@@ -188,12 +192,22 @@ async def get_artifact(thread_id: str, path: str, request: Request, download: bo
     mime_type, _ = mimetypes.guess_type(actual_path)
 
     if download:
-        return FileResponse(path=actual_path, filename=actual_path.name, media_type=mime_type, headers=_build_attachment_headers(actual_path.name))
+        return FileResponse(
+            path=actual_path,
+            filename=actual_path.name,
+            media_type=mime_type,
+            headers=_build_attachment_headers(actual_path.name),
+        )
 
     # Always force download for active content types to prevent script execution
     # in the application origin when users open generated artifacts.
     if mime_type in ACTIVE_CONTENT_MIME_TYPES:
-        return FileResponse(path=actual_path, filename=actual_path.name, media_type=mime_type, headers=_build_attachment_headers(actual_path.name))
+        return FileResponse(
+            path=actual_path,
+            filename=actual_path.name,
+            media_type=mime_type,
+            headers=_build_attachment_headers(actual_path.name),
+        )
 
     if mime_type and mime_type.startswith("text/"):
         return PlainTextResponse(content=actual_path.read_text(encoding="utf-8"), media_type=mime_type)
@@ -201,4 +215,8 @@ async def get_artifact(thread_id: str, path: str, request: Request, download: bo
     if await is_text_file_by_content(actual_path):
         return PlainTextResponse(content=actual_path.read_text(encoding="utf-8"), media_type=mime_type)
 
-    return Response(content=actual_path.read_bytes(), media_type=mime_type, headers={"Content-Disposition": _build_content_disposition("inline", actual_path.name)})
+    return Response(
+        content=actual_path.read_bytes(),
+        media_type=mime_type,
+        headers={"Content-Disposition": _build_content_disposition("inline", actual_path.name)},
+    )

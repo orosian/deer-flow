@@ -287,7 +287,9 @@ def test_task_tool_propagates_tool_groups_to_subagent(monkeypatch):
 
     assert output == "Task Succeeded. Result: done"
     # The key assertion: groups should be propagated from parent metadata
-    get_available_tools.assert_called_once_with(model_name="ark-model", groups=parent_tool_groups, subagent_enabled=False)
+    get_available_tools.assert_called_once_with(
+        model_name="ark-model", groups=parent_tool_groups, subagent_enabled=False
+    )
 
 
 def test_task_tool_uses_subagent_model_override_for_tool_loading(monkeypatch):
@@ -515,7 +517,11 @@ def test_task_tool_runtime_none_passes_groups_none(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -549,7 +555,11 @@ def test_task_tool_returns_timed_out_message(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -585,7 +595,11 @@ def test_task_tool_polling_safety_timeout(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -621,7 +635,11 @@ def test_cleanup_called_on_completed(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -661,7 +679,11 @@ def test_cleanup_called_on_failed(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -701,7 +723,11 @@ def test_cleanup_called_on_timed_out(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -758,7 +784,11 @@ def test_cleanup_not_called_on_polling_safety_timeout(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -826,7 +856,11 @@ def test_cleanup_scheduled_on_cancellation(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -895,7 +929,11 @@ def test_cancelled_cleanup_stops_after_timeout(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
     monkeypatch.setattr(task_tool_module, "get_stream_writer", lambda: events.append)
@@ -959,7 +997,11 @@ def test_cancellation_wait_uses_subagent_polling_budget(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
     monkeypatch.setattr(task_tool_module, "get_background_task_result", get_result)
@@ -1000,7 +1042,11 @@ def test_cancellation_calls_request_cancel(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -1053,7 +1099,11 @@ def test_task_tool_returns_cancelled_message(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
 
@@ -1094,7 +1144,15 @@ def test_cancellation_reports_subagent_usage(monkeypatch):
 
     # Terminal result with token usage collected after cancellation processing
     cancel_result = _make_result(FakeSubagentStatus.CANCELLED, error="Cancelled by user")
-    cancel_result.token_usage_records = [{"source_run_id": "sub-run-1", "caller": "subagent:gp", "input_tokens": 50, "output_tokens": 25, "total_tokens": 75}]
+    cancel_result.token_usage_records = [
+        {
+            "source_run_id": "sub-run-1",
+            "caller": "subagent:gp",
+            "input_tokens": 50,
+            "output_tokens": 25,
+            "total_tokens": 75,
+        }
+    ]
     cancel_result.usage_reported = False
 
     poll_count = 0
@@ -1126,7 +1184,11 @@ def test_cancellation_reports_subagent_usage(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
     monkeypatch.setattr(task_tool_module, "get_background_task_result", get_result)
@@ -1173,10 +1235,27 @@ def test_terminal_events_include_usage(monkeypatch, status, expected_type):
     events = []
 
     records = [
-        {"source_run_id": "r1", "caller": "subagent:general-purpose", "input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
-        {"source_run_id": "r2", "caller": "subagent:general-purpose", "input_tokens": 200, "output_tokens": 80, "total_tokens": 280},
+        {
+            "source_run_id": "r1",
+            "caller": "subagent:general-purpose",
+            "input_tokens": 100,
+            "output_tokens": 50,
+            "total_tokens": 150,
+        },
+        {
+            "source_run_id": "r2",
+            "caller": "subagent:general-purpose",
+            "input_tokens": 200,
+            "output_tokens": 80,
+            "total_tokens": 280,
+        },
     ]
-    result = _make_result(status, result="ok" if status == FakeSubagentStatus.COMPLETED else None, error="err" if status != FakeSubagentStatus.COMPLETED else None, token_usage_records=records)
+    result = _make_result(
+        status,
+        result="ok" if status == FakeSubagentStatus.COMPLETED else None,
+        error="err" if status != FakeSubagentStatus.COMPLETED else None,
+        token_usage_records=records,
+    )
 
     monkeypatch.setattr(task_tool_module, "SubagentStatus", FakeSubagentStatus)
     monkeypatch.setattr(task_tool_module, "get_subagent_config", lambda _: config)
@@ -1258,7 +1337,11 @@ def test_subagent_usage_cache_is_skipped_when_token_usage_is_disabled(monkeypatc
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
     monkeypatch.setattr(task_tool_module, "get_background_task_result", lambda _: result)
     monkeypatch.setattr(task_tool_module, "get_stream_writer", lambda: lambda _: None)
@@ -1289,9 +1372,15 @@ def test_subagent_usage_cache_is_cleared_when_polling_raises(monkeypatch):
     monkeypatch.setattr(
         task_tool_module,
         "SubagentExecutor",
-        type("DummyExecutor", (), {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id}),
+        type(
+            "DummyExecutor",
+            (),
+            {"__init__": lambda self, **kwargs: None, "execute_async": lambda self, prompt, task_id=None: task_id},
+        ),
     )
-    monkeypatch.setattr(task_tool_module, "get_background_task_result", MagicMock(side_effect=RuntimeError("poll failed")))
+    monkeypatch.setattr(
+        task_tool_module, "get_background_task_result", MagicMock(side_effect=RuntimeError("poll failed"))
+    )
     monkeypatch.setattr(task_tool_module, "get_stream_writer", lambda: lambda _: None)
     monkeypatch.setattr("deerflow.tools.get_available_tools", MagicMock(return_value=[]))
 

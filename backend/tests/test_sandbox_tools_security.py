@@ -39,8 +39,13 @@ _THREAD_DATA = {
 
 
 def test_replace_virtual_path_maps_virtual_root_and_subpaths() -> None:
-    assert Path(replace_virtual_path("/mnt/user-data/workspace/a.txt", _THREAD_DATA)).as_posix() == "/tmp/deer-flow/threads/t1/user-data/workspace/a.txt"
-    assert Path(replace_virtual_path("/mnt/user-data", _THREAD_DATA)).as_posix() == "/tmp/deer-flow/threads/t1/user-data"
+    assert (
+        Path(replace_virtual_path("/mnt/user-data/workspace/a.txt", _THREAD_DATA)).as_posix()
+        == "/tmp/deer-flow/threads/t1/user-data/workspace/a.txt"
+    )
+    assert (
+        Path(replace_virtual_path("/mnt/user-data", _THREAD_DATA)).as_posix() == "/tmp/deer-flow/threads/t1/user-data"
+    )
 
 
 def test_replace_virtual_path_preserves_trailing_slash() -> None:
@@ -522,7 +527,9 @@ def test_bash_tool_blocks_relative_traversal_before_host_execution(monkeypatch) 
 
     monkeypatch.setattr(
         "deerflow.sandbox.tools.ensure_sandbox_initialized",
-        lambda runtime: SimpleNamespace(execute_command=lambda command: pytest.fail("unsafe command should not execute")),
+        lambda runtime: SimpleNamespace(
+            execute_command=lambda command: pytest.fail("unsafe command should not execute")
+        ),
     )
     monkeypatch.setattr("deerflow.sandbox.tools.ensure_thread_directories_exist", lambda runtime: None)
     monkeypatch.setattr("deerflow.sandbox.tools.is_host_bash_allowed", lambda: True)

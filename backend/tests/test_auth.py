@@ -594,7 +594,12 @@ def test_rate_limiter_blocks_after_max_failures():
 
 def test_rate_limiter_resets_on_success():
     """Successful login clears the failure counter."""
-    from app.gateway.routers.auth import _check_rate_limit, _login_attempts, _record_login_failure, _record_login_success
+    from app.gateway.routers.auth import (
+        _check_rate_limit,
+        _login_attempts,
+        _record_login_failure,
+        _record_login_success,
+    )
 
     _login_attempts.clear()
     ip = "10.0.0.2"

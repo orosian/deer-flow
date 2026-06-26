@@ -203,7 +203,9 @@ async def test_langgraph_runtime_drains_runs_before_closing_checkpointer(monkeyp
 
     assert "runs_drained" in events, "langgraph_runtime never drained in-flight runs on shutdown"
     assert "checkpointer_closed" in events
-    assert events.index("runs_drained") < events.index("checkpointer_closed"), f"runs must be drained before the checkpointer pool is closed; got order {events}"
+    assert events.index("runs_drained") < events.index("checkpointer_closed"), (
+        f"runs must be drained before the checkpointer pool is closed; got order {events}"
+    )
 
 
 @pytest.mark.asyncio
@@ -268,7 +270,9 @@ async def test_drain_flushes_real_graph_checkpoint_before_close():
         # ... and only then close it (mirrors langgraph_runtime's ExitStack).
         saver.close()
 
-        assert saver.writes_after_close == [], f"a checkpoint write raced a closed checkpointer: {saver.writes_after_close}"
+        assert saver.writes_after_close == [], (
+            f"a checkpoint write raced a closed checkpointer: {saver.writes_after_close}"
+        )
         # The final checkpoint landed before close.
         snapshot = await saver.aget_tuple(thread_cfg)
         assert snapshot is not None
@@ -309,7 +313,9 @@ async def test_shutdown_preserves_status_of_run_completed_during_drain():
 
         assert record.status == RunStatus.success, f"shutdown overwrote in-memory status: {record.status}"
         persisted = await store.get(record.run_id)
-        assert persisted is not None and persisted["status"] == "success", f"shutdown overwrote persisted status: {persisted}"
+        assert persisted is not None and persisted["status"] == "success", (
+            f"shutdown overwrote persisted status: {persisted}"
+        )
     finally:
         if not record.task.done():
             record.task.cancel()

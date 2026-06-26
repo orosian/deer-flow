@@ -95,7 +95,9 @@ async def _mark_latest_recovered_threads_error(
         try:
             latest_runs = await run_manager.list_by_thread(thread_id, user_id=None, limit=1)
         except Exception:
-            logger.warning("Failed to find latest run for thread %s during run reconciliation", thread_id, exc_info=True)
+            logger.warning(
+                "Failed to find latest run for thread %s during run reconciliation", thread_id, exc_info=True
+            )
             continue
         if not latest_runs or latest_runs[0].run_id not in recovered_run_ids:
             continue
@@ -317,7 +319,9 @@ def get_local_provider() -> LocalAuthProvider:
 
         sf = get_session_factory()
         if sf is None:
-            raise RuntimeError("get_local_provider() called before init_engine_from_config(); cannot access users table")
+            raise RuntimeError(
+                "get_local_provider() called before init_engine_from_config(); cannot access users table"
+            )
         _cached_repo = SQLiteUserRepository(sf)
     if _cached_local_provider is None:
         from app.gateway.auth.local_provider import LocalAuthProvider
@@ -356,7 +360,9 @@ async def get_current_user_from_request(request: Request):
     if isinstance(payload, TokenError):
         raise HTTPException(
             status_code=401,
-            detail=AuthErrorResponse(code=token_error_to_code(payload), message=f"Token error: {payload.value}").model_dump(),
+            detail=AuthErrorResponse(
+                code=token_error_to_code(payload), message=f"Token error: {payload.value}"
+            ).model_dump(),
         )
 
     provider = get_local_provider()
@@ -371,7 +377,9 @@ async def get_current_user_from_request(request: Request):
     if user.token_version != payload.ver:
         raise HTTPException(
             status_code=401,
-            detail=AuthErrorResponse(code=AuthErrorCode.TOKEN_INVALID, message="Token revoked (password changed)").model_dump(),
+            detail=AuthErrorResponse(
+                code=AuthErrorCode.TOKEN_INVALID, message="Token revoked (password changed)"
+            ).model_dump(),
         )
 
     return user

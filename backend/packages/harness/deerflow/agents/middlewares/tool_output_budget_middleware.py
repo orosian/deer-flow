@@ -350,7 +350,9 @@ def _budget_content(
             try:
                 provider = get_sandbox_provider()
             except Exception:
-                logger.exception("Failed to get sandbox provider for tool-output externalization; falling back to inline truncation")
+                logger.exception(
+                    "Failed to get sandbox provider for tool-output externalization; falling back to inline truncation"
+                )
             if provider is not None and getattr(provider, "uses_thread_data_mounts", False):
                 # Host-mounted sandbox: host outputs path is bind-mounted into
                 # the sandbox at the same virtual path, so writing host-side is

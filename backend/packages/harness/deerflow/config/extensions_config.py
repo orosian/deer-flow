@@ -25,11 +25,17 @@ class McpOAuthConfig(BaseModel):
     scope: str | None = Field(default=None, description="OAuth scope")
     audience: str | None = Field(default=None, description="OAuth audience (provider-specific)")
     token_field: str = Field(default="access_token", description="Field name containing access token in token response")
-    token_type_field: str = Field(default="token_type", description="Field name containing token type in token response")
-    expires_in_field: str = Field(default="expires_in", description="Field name containing expiry (seconds) in token response")
+    token_type_field: str = Field(
+        default="token_type", description="Field name containing token type in token response"
+    )
+    expires_in_field: str = Field(
+        default="expires_in", description="Field name containing expiry (seconds) in token response"
+    )
     default_token_type: str = Field(default="Bearer", description="Default token type when missing in token response")
     refresh_skew_seconds: int = Field(default=60, description="Refresh token this many seconds before expiry")
-    extra_token_params: dict[str, str] = Field(default_factory=dict, description="Additional form params sent to token endpoint")
+    extra_token_params: dict[str, str] = Field(
+        default_factory=dict, description="Additional form params sent to token endpoint"
+    )
     model_config = ConfigDict(extra="allow")
 
 
@@ -118,7 +124,9 @@ class ExtensionsConfig(BaseModel):
         elif os.getenv("DEER_FLOW_EXTENSIONS_CONFIG_PATH"):
             path = Path(os.getenv("DEER_FLOW_EXTENSIONS_CONFIG_PATH"))
             if not path.exists():
-                raise FileNotFoundError(f"Extensions config file specified by environment variable `DEER_FLOW_EXTENSIONS_CONFIG_PATH` not found at {path}")
+                raise FileNotFoundError(
+                    f"Extensions config file specified by environment variable `DEER_FLOW_EXTENSIONS_CONFIG_PATH` not found at {path}"
+                )
             return path
         else:
             project_config = existing_project_file(("extensions_config.json", "mcp_config.json"))

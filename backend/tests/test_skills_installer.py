@@ -201,7 +201,9 @@ class TestInstallSkillFromArchive:
     def test_installed_skill_tree_is_readable_by_sandbox_mount(self, tmp_path):
         zip_path = tmp_path / "test-skill.skill"
         with zipfile.ZipFile(zip_path, "w") as zf:
-            zf.writestr("test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n")
+            zf.writestr(
+                "test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n"
+            )
             zf.writestr("test-skill/references/guide.md", "# Guide\n")
         skills_root = tmp_path / "skills"
         skills_root.mkdir()
@@ -243,7 +245,9 @@ class TestInstallSkillFromArchive:
     def test_scans_support_files_and_scripts_before_install(self, tmp_path, monkeypatch):
         zip_path = tmp_path / "test-skill.skill"
         with zipfile.ZipFile(zip_path, "w") as zf:
-            zf.writestr("test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n")
+            zf.writestr(
+                "test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n"
+            )
             zf.writestr("test-skill/references/guide.md", "# Guide\n")
             zf.writestr("test-skill/templates/prompt.txt", "Use care.\n")
             zf.writestr("test-skill/scripts/run.sh", "#!/bin/sh\necho ok\n")
@@ -289,7 +293,9 @@ class TestInstallSkillFromArchive:
     def test_nested_skill_markdown_prevents_install(self, tmp_path):
         zip_path = tmp_path / "test-skill.skill"
         with zipfile.ZipFile(zip_path, "w") as zf:
-            zf.writestr("test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n")
+            zf.writestr(
+                "test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n"
+            )
             zf.writestr("test-skill/references/other/SKILL.md", "# Nested skill\n")
         skills_root = tmp_path / "skills"
         skills_root.mkdir()
@@ -302,7 +308,9 @@ class TestInstallSkillFromArchive:
     def test_script_warn_prevents_install(self, tmp_path, monkeypatch):
         zip_path = tmp_path / "test-skill.skill"
         with zipfile.ZipFile(zip_path, "w") as zf:
-            zf.writestr("test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n")
+            zf.writestr(
+                "test-skill/SKILL.md", "---\nname: test-skill\ndescription: A test skill\n---\n\n# test-skill\n"
+            )
             zf.writestr("test-skill/scripts/run.sh", "#!/bin/sh\necho ok\n")
         skills_root = tmp_path / "skills"
         skills_root.mkdir()

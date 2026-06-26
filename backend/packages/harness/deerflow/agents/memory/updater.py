@@ -43,7 +43,9 @@ def _create_empty_memory() -> dict[str, Any]:
     return create_empty_memory()
 
 
-def _save_memory_to_file(memory_data: dict[str, Any], agent_name: str | None = None, *, user_id: str | None = None) -> bool:
+def _save_memory_to_file(
+    memory_data: dict[str, Any], agent_name: str | None = None, *, user_id: str | None = None
+) -> bool:
     """Backward-compatible wrapper around the configured memory storage save path."""
     return get_memory_storage().save(memory_data, agent_name, user_id=user_id)
 
@@ -58,7 +60,9 @@ def reload_memory_data(agent_name: str | None = None, *, user_id: str | None = N
     return get_memory_storage().reload(agent_name, user_id=user_id)
 
 
-def import_memory_data(memory_data: dict[str, Any], agent_name: str | None = None, *, user_id: str | None = None) -> dict[str, Any]:
+def import_memory_data(
+    memory_data: dict[str, Any], agent_name: str | None = None, *, user_id: str | None = None
+) -> dict[str, Any]:
     """Persist imported memory data via storage provider.
 
     Args:
@@ -284,7 +288,11 @@ def _normalize_memory_update_data(update_data: dict[str, Any]) -> dict[str, Any]
     history = update_data.get("history")
     new_facts = update_data.get("newFacts")
     facts_to_remove = update_data.get("factsToRemove")
-    normalized_facts_to_remove = [fact_id for fact_id in facts_to_remove if isinstance(fact_id, str)] if isinstance(facts_to_remove, list) else []
+    normalized_facts_to_remove = (
+        [fact_id for fact_id in facts_to_remove if isinstance(fact_id, str)]
+        if isinstance(facts_to_remove, list)
+        else []
+    )
     normalized_new_facts = []
     dropped_new_fact = not isinstance(new_facts, list)
     if isinstance(new_facts, list):
@@ -415,7 +423,9 @@ class MemoryUpdater:
                 "Record the confirmed approach, style, or preference as a fact with category "
                 '"preference" or "behavior" and confidence >= 0.9 when appropriate.'
             )
-            correction_hint = (correction_hint + "\n" + reinforcement_hint).strip() if correction_hint else reinforcement_hint
+            correction_hint = (
+                (correction_hint + "\n" + reinforcement_hint).strip() if correction_hint else reinforcement_hint
+            )
 
         return correction_hint
 
@@ -642,7 +652,11 @@ class MemoryUpdater:
             current_memory["facts"] = [f for f in current_memory.get("facts", []) if f.get("id") not in facts_to_remove]
 
         # Add new facts
-        existing_fact_keys = {fact_key for fact_key in (_fact_content_key(fact.get("content")) for fact in current_memory.get("facts", [])) if fact_key is not None}
+        existing_fact_keys = {
+            fact_key
+            for fact_key in (_fact_content_key(fact.get("content")) for fact in current_memory.get("facts", []))
+            if fact_key is not None
+        }
         new_facts = update_data.get("newFacts", [])
         for fact in new_facts:
             confidence = fact.get("confidence", 0.5)
@@ -706,4 +720,6 @@ def update_memory_from_conversation(
         True if successful, False otherwise.
     """
     updater = MemoryUpdater()
-    return updater.update_memory(messages, thread_id, agent_name, correction_detected, reinforcement_detected, user_id=user_id)
+    return updater.update_memory(
+        messages, thread_id, agent_name, correction_detected, reinforcement_detected, user_id=user_id
+    )

@@ -369,7 +369,10 @@ class TestMindIEInit:
 
 class TestGenerate:
     def test_generate_calls_fix_messages_and_patch(self):
-        with patch("deerflow.models.mindie_provider.ChatOpenAI._generate") as mock_super_gen, patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch("deerflow.models.mindie_provider.ChatOpenAI._generate") as mock_super_gen,
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             mock_super_gen.return_value = _make_chat_result("hello")
             model = MindIEChatModel.__new__(MindIEChatModel)
 
@@ -390,7 +393,10 @@ class TestGenerate:
 class TestAGenerate:
     @pytest.mark.asyncio
     async def test_agenerate_patches_result(self):
-        with patch("deerflow.models.mindie_provider.ChatOpenAI._agenerate", new_callable=AsyncMock) as mock_ag, patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch("deerflow.models.mindie_provider.ChatOpenAI._agenerate", new_callable=AsyncMock) as mock_ag,
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             mock_ag.return_value = _make_chat_result("world\\nfoo")
             model = MindIEChatModel.__new__(MindIEChatModel)
 
@@ -419,7 +425,10 @@ class TestAStream:
             for char in ["hel", "lo"]:
                 yield ChatGenerationChunk(message=AIMessageChunk(content=char))
 
-        with patch("deerflow.models.mindie_provider.ChatOpenAI._astream", side_effect=fake_stream), patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch("deerflow.models.mindie_provider.ChatOpenAI._astream", side_effect=fake_stream),
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             model = MindIEChatModel.__new__(MindIEChatModel)
             chunks = await self._collect(model._astream([HumanMessage(content="hi")]))
 
@@ -433,7 +442,10 @@ class TestAStream:
         async def fake_stream(*args, **kwargs):
             yield ChatGenerationChunk(message=AIMessageChunk(content="a\\nb"))
 
-        with patch("deerflow.models.mindie_provider.ChatOpenAI._astream", side_effect=fake_stream), patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch("deerflow.models.mindie_provider.ChatOpenAI._astream", side_effect=fake_stream),
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             model = MindIEChatModel.__new__(MindIEChatModel)
             chunks = await self._collect(model._astream([HumanMessage(content="x")]))
 
@@ -441,12 +453,17 @@ class TestAStream:
 
     @pytest.mark.asyncio
     async def test_with_tools_fake_streams_text_in_chunks(self):
-        with patch.object(MindIEChatModel, "_agenerate", new_callable=AsyncMock) as mock_ag, patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch.object(MindIEChatModel, "_agenerate", new_callable=AsyncMock) as mock_ag,
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             long_text = "A" * 50
             mock_ag.return_value = _make_chat_result(long_text)
             model = MindIEChatModel.__new__(MindIEChatModel)
 
-            chunks = await self._collect(model._astream([HumanMessage(content="q")], tools=[{"type": "function", "function": {"name": "dummy"}}]))
+            chunks = await self._collect(
+                model._astream([HumanMessage(content="q")], tools=[{"type": "function", "function": {"name": "dummy"}}])
+            )
 
         full = "".join(c.message.content for c in chunks)
         assert full == long_text
@@ -455,11 +472,16 @@ class TestAStream:
     @pytest.mark.asyncio
     async def test_with_tools_emits_tool_call_chunk(self):
         tool_calls = [{"name": "fn", "args": {}, "id": "c1"}]
-        with patch.object(MindIEChatModel, "_agenerate", new_callable=AsyncMock) as mock_ag, patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch.object(MindIEChatModel, "_agenerate", new_callable=AsyncMock) as mock_ag,
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             mock_ag.return_value = _make_chat_result("ok", tool_calls=tool_calls)
             model = MindIEChatModel.__new__(MindIEChatModel)
 
-            chunks = await self._collect(model._astream([HumanMessage(content="q")], tools=[{"type": "function", "function": {"name": "fn"}}]))
+            chunks = await self._collect(
+                model._astream([HumanMessage(content="q")], tools=[{"type": "function", "function": {"name": "fn"}}])
+            )
 
         tool_chunks = [c for c in chunks if getattr(c.message, "tool_calls", [])]
         assert tool_chunks, "No chunk carried tool_calls"
@@ -468,10 +490,15 @@ class TestAStream:
     @pytest.mark.asyncio
     async def test_with_tools_empty_text_still_emits_tool_chunk(self):
         tool_calls = [{"name": "x", "args": {}, "id": "c2"}]
-        with patch.object(MindIEChatModel, "_agenerate", new_callable=AsyncMock) as mock_ag, patch.object(MindIEChatModel, "__init__", return_value=None):
+        with (
+            patch.object(MindIEChatModel, "_agenerate", new_callable=AsyncMock) as mock_ag,
+            patch.object(MindIEChatModel, "__init__", return_value=None),
+        ):
             mock_ag.return_value = _make_chat_result("", tool_calls=tool_calls)
             model = MindIEChatModel.__new__(MindIEChatModel)
 
-            chunks = await self._collect(model._astream([HumanMessage(content="q")], tools=[{"type": "function", "function": {"name": "x"}}]))
+            chunks = await self._collect(
+                model._astream([HumanMessage(content="q")], tools=[{"type": "function", "function": {"name": "x"}}])
+            )
 
         assert any(getattr(c.message, "tool_calls", []) for c in chunks)

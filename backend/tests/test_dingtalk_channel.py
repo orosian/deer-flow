@@ -573,7 +573,9 @@ class TestSendRouting:
 
             await channel.send(msg)
 
-            channel._send_group_message.assert_awaited_once_with("test_key", "conv_001", "Hello Group", at_user_ids=["user_001"])
+            channel._send_group_message.assert_awaited_once_with(
+                "test_key", "conv_001", "Hello Group", at_user_ids=["user_001"]
+            )
             channel._send_p2p_message.assert_not_awaited()
 
         _run(go())

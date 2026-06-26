@@ -17,8 +17,18 @@ logger = logging.getLogger(__name__)
 class InfoQuestClient:
     """Client for interacting with the InfoQuest web search and fetch API."""
 
-    def __init__(self, fetch_time: int = -1, fetch_timeout: int = -1, fetch_navigation_timeout: int = -1, search_time_range: int = -1, image_search_time_range: int = -1, image_size: str = "i"):
-        logger.info("\n============================================\n🚀 BytePlus InfoQuest Client Initialization 🚀\n============================================")
+    def __init__(
+        self,
+        fetch_time: int = -1,
+        fetch_timeout: int = -1,
+        fetch_navigation_timeout: int = -1,
+        search_time_range: int = -1,
+        image_search_time_range: int = -1,
+        image_size: str = "i",
+    ):
+        logger.info(
+            "\n============================================\n🚀 BytePlus InfoQuest Client Initialization 🚀\n============================================"
+        )
 
         self.fetch_time = fetch_time
         self.fetch_timeout = fetch_timeout
@@ -68,7 +78,12 @@ class InfoQuestClient:
             # Check if status code is not 200
             if response.status_code != 200:
                 error_message = f"fetch API returned status {response.status_code}: {response.text}"
-                logger.debug("InfoQuest Crawler fetch API return status %d: %s for URL: %s", response.status_code, response.text, url)
+                logger.debug(
+                    "InfoQuest Crawler fetch API return status %d: %s for URL: %s",
+                    response.status_code,
+                    response.text,
+                    url,
+                )
                 return f"Error: {error_message}"
 
             # Check for empty response
@@ -86,7 +101,10 @@ class InfoQuestClient:
                     return response_data["reader_result"]
                 elif "content" in response_data:
                     # Fallback to content field if reader_result is not available
-                    logger.debug("reader_result missing in JSON response, falling back to content field: %s", response_data["content"])
+                    logger.debug(
+                        "reader_result missing in JSON response, falling back to content field: %s",
+                        response_data["content"],
+                    )
                     return response_data["content"]
                 else:
                     # If neither field exists, return the original response
@@ -99,7 +117,11 @@ class InfoQuestClient:
             # Print partial response for debugging
             if logger.isEnabledFor(logging.DEBUG):
                 response_sample = response.text[:200] + ("..." if len(response.text) > 200 else "")
-                logger.debug("Successfully received response, content length: %d bytes, first 200 chars: %s", len(response.text), response_sample)
+                logger.debug(
+                    "Successfully received response, content length: %d bytes, first 200 chars: %s",
+                    len(response.text),
+                    response_sample,
+                )
             return response.text
         except Exception as e:
             error_message = f"fetch API failed: {str(e)}"
@@ -171,7 +193,9 @@ class InfoQuestClient:
         response_json = response.json()
         if logger.isEnabledFor(logging.DEBUG):
             response_sample = json.dumps(response_json)[:200] + ("..." if len(json.dumps(response_json)) > 200 else "")
-            logger.debug(f"Search API request completed successfully | service=InfoQuest | status=success | response_sample={response_sample}")
+            logger.debug(
+                f"Search API request completed successfully | service=InfoQuest | status=success | response_sample={response_sample}"
+            )
 
         return response_json
 
@@ -227,7 +251,9 @@ class InfoQuestClient:
                         seen_urls.add(url)
                         clean_results.append(clean_result)
                         counts["news"] += 1
-        logger.debug(f"Results processing completed | total_results={len(clean_results)} | pages={counts['pages']} | news_items={counts['news']} | unique_urls={len(seen_urls)}")
+        logger.debug(
+            f"Results processing completed | total_results={len(clean_results)} | pages={counts['pages']} | news_items={counts['news']} | unique_urls={len(seen_urls)}"
+        )
 
         return clean_results
 
@@ -264,13 +290,18 @@ class InfoQuestClient:
 
                 result_json = json.dumps(cleaned_results, indent=2, ensure_ascii=False)
 
-                logger.debug(f"InfoQuest Web-Search - Search tool execution completed | mode=synchronous | results_count={len(cleaned_results)}")
+                logger.debug(
+                    f"InfoQuest Web-Search - Search tool execution completed | mode=synchronous | results_count={len(cleaned_results)}"
+                )
                 return result_json
 
             elif "content" in raw_results:
                 # Fallback to content field if search_result is not available
                 error_message = "web search API return wrong format"
-                logger.error("web search API return wrong format, no search_result nor content field found in JSON response, content: %s", raw_results["content"])
+                logger.error(
+                    "web search API return wrong format, no search_result nor content field found in JSON response, content: %s",
+                    raw_results["content"],
+                )
                 return f"Error: {error_message}"
             else:
                 # If neither field exists, return the original response
@@ -308,7 +339,9 @@ class InfoQuestClient:
                             counts["images"] += 1
                     if "title" in result:
                         clean_result["title"] = result["title"]
-        logger.debug(f"Results processing completed | total_results={len(clean_results)} | images={counts['images']} | unique_urls={len(seen_urls)}")
+        logger.debug(
+            f"Results processing completed | total_results={len(clean_results)} | images={counts['images']} | unique_urls={len(seen_urls)}"
+        )
 
         return clean_results
 
@@ -346,7 +379,9 @@ class InfoQuestClient:
         response_json = response.json()
         if logger.isEnabledFor(logging.DEBUG):
             response_sample = json.dumps(response_json)[:200] + ("..." if len(json.dumps(response_json)) > 200 else "")
-            logger.debug(f"Image Search API request completed successfully | service=InfoQuest | status=success | response_sample={response_sample}")
+            logger.debug(
+                f"Image Search API request completed successfully | service=InfoQuest | status=success | response_sample={response_sample}"
+            )
 
         return response_json
 
@@ -385,20 +420,29 @@ class InfoQuestClient:
 
                 result_json = json.dumps(cleaned_results, indent=2, ensure_ascii=False)
 
-                logger.debug(f"InfoQuest Image Search - Image search tool execution completed | mode=synchronous | results_count={len(cleaned_results)}")
+                logger.debug(
+                    f"InfoQuest Image Search - Image search tool execution completed | mode=synchronous | results_count={len(cleaned_results)}"
+                )
                 return result_json
 
             elif "content" in raw_results:
                 # Fallback to content field if search_result is not available
                 error_message = "image search API return wrong format"
-                logger.error("image search API return wrong format, no search_result nor content field found in JSON response, content: %s", raw_results["content"])
+                logger.error(
+                    "image search API return wrong format, no search_result nor content field found in JSON response, content: %s",
+                    raw_results["content"],
+                )
                 return f"Error: {error_message}"
             else:
                 # If neither field exists, return the original response
-                logger.warning("InfoQuest Image Search - Neither search_result nor content field found in JSON response")
+                logger.warning(
+                    "InfoQuest Image Search - Neither search_result nor content field found in JSON response"
+                )
                 return json.dumps(raw_results, indent=2, ensure_ascii=False)
 
         except Exception as e:
-            error_message = f"InfoQuest Image Search - Image search tool execution failed | mode=synchronous | error={str(e)}"
+            error_message = (
+                f"InfoQuest Image Search - Image search tool execution failed | mode=synchronous | error={str(e)}"
+            )
             logger.error(error_message)
             return f"Error: {error_message}"

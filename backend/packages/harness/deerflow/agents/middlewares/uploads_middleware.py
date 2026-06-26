@@ -105,7 +105,9 @@ class UploadsMiddleware(AgentMiddleware[UploadsMiddlewareState]):
                 lines.append("  No structural headings detected. Document begins with:")
                 for text in preview:
                     lines.append(f"    > {text}")
-            lines.append("  Use `grep` to search for keywords (e.g. `grep(pattern='keyword', path='/mnt/user-data/uploads/')`).")
+            lines.append(
+                "  Use `grep` to search for keywords (e.g. `grep(pattern='keyword', path='/mnt/user-data/uploads/')`)."
+            )
         lines.append("")
 
     def _create_files_message(self, new_files: list[dict], historical_files: list[dict]) -> str:
@@ -138,12 +140,16 @@ class UploadsMiddleware(AgentMiddleware[UploadsMiddlewareState]):
                 self._format_file_entry(file, lines)
 
         lines.append("To work with these files:")
-        lines.append("- Read from the file first — use the outline line numbers and `read_file` to locate relevant sections.")
+        lines.append(
+            "- Read from the file first — use the outline line numbers and `read_file` to locate relevant sections."
+        )
         lines.append("- Use `grep` to search for keywords when you are not sure which section to look at")
         lines.append("  (e.g. `grep(pattern='revenue', path='/mnt/user-data/uploads/')`).")
         lines.append("- Use `glob` to find files by name pattern")
         lines.append("  (e.g. `glob(pattern='**/*.md', path='/mnt/user-data/uploads/')`).")
-        lines.append("- Only fall back to web search if the file content is clearly insufficient to answer the question.")
+        lines.append(
+            "- Only fall back to web search if the file content is clearly insufficient to answer the question."
+        )
         lines.append("</uploaded_files>")
 
         return "\n".join(lines)
@@ -259,7 +265,9 @@ class UploadsMiddleware(AgentMiddleware[UploadsMiddlewareState]):
         if not new_files and not historical_files:
             return None
 
-        logger.debug(f"New files: {[f['filename'] for f in new_files]}, historical: {[f['filename'] for f in historical_files]}")
+        logger.debug(
+            f"New files: {[f['filename'] for f in new_files]}, historical: {[f['filename'] for f in historical_files]}"
+        )
 
         # Create files message and prepend to the last human message content
         files_message = self._create_files_message(new_files, historical_files)

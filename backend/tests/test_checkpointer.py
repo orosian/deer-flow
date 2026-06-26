@@ -343,7 +343,9 @@ class TestGetCheckpointer:
         mock_cm.__exit__ = MagicMock(return_value=False)
 
         mock_saver_cls = MagicMock()
-        mock_saver_cls.from_conn_string = MagicMock(side_effect=lambda *a, **kw: (call_order.append("connect"), mock_cm)[1])
+        mock_saver_cls.from_conn_string = MagicMock(
+            side_effect=lambda *a, **kw: (call_order.append("connect"), mock_cm)[1]
+        )
 
         mock_module = MagicMock()
         mock_module.SqliteSaver = mock_saver_cls
@@ -664,7 +666,10 @@ class TestAsyncCheckpointer:
     async def test_database_sqlite_creates_parent_dir_via_to_thread(self):
         """Unified database SQLite setup should also move path IO off the event loop."""
         from deerflow.config.database_config import DatabaseConfig
-        from deerflow.runtime.checkpointer.async_provider import _prepare_database_sqlite_checkpointer_path, make_checkpointer
+        from deerflow.runtime.checkpointer.async_provider import (
+            _prepare_database_sqlite_checkpointer_path,
+            make_checkpointer,
+        )
 
         db_config = DatabaseConfig(backend="sqlite", sqlite_dir="relative-data")
         mock_config = MagicMock()

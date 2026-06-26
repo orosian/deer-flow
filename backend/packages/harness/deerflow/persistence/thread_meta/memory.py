@@ -101,7 +101,9 @@ class MemoryThreadMetaStore(ThreadMetaStore):
             return True
         return record_user_id == user_id
 
-    async def update_display_name(self, thread_id: str, display_name: str, *, user_id: str | None | _AutoSentinel = AUTO) -> None:
+    async def update_display_name(
+        self, thread_id: str, display_name: str, *, user_id: str | None | _AutoSentinel = AUTO
+    ) -> None:
         record = await self._get_owned_record(thread_id, user_id, "MemoryThreadMetaStore.update_display_name")
         if record is None:
             return
@@ -117,7 +119,9 @@ class MemoryThreadMetaStore(ThreadMetaStore):
         record["updated_at"] = now_iso()
         await self._store.aput(THREADS_NS, thread_id, record)
 
-    async def update_metadata(self, thread_id: str, metadata: dict, *, user_id: str | None | _AutoSentinel = AUTO) -> None:
+    async def update_metadata(
+        self, thread_id: str, metadata: dict, *, user_id: str | None | _AutoSentinel = AUTO
+    ) -> None:
         record = await self._get_owned_record(thread_id, user_id, "MemoryThreadMetaStore.update_metadata")
         if record is None:
             return
@@ -127,7 +131,9 @@ class MemoryThreadMetaStore(ThreadMetaStore):
         record["updated_at"] = now_iso()
         await self._store.aput(THREADS_NS, thread_id, record)
 
-    async def update_owner(self, thread_id: str, owner_user_id: str, *, user_id: str | None | _AutoSentinel = AUTO) -> None:
+    async def update_owner(
+        self, thread_id: str, owner_user_id: str, *, user_id: str | None | _AutoSentinel = AUTO
+    ) -> None:
         record = await self._get_owned_record(thread_id, user_id, "MemoryThreadMetaStore.update_owner")
         if record is None:
             return

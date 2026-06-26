@@ -244,7 +244,9 @@ def _load_fixture(fixture_path: str) -> dict[str, deque[AIMessage]]:
         input_hash = turn["input_hash"]
         (message,) = messages_from_dict([turn["output"]])
         if not isinstance(message, AIMessage):
-            raise ValueError(f"replay fixture {fixture_path!r} turn {index} output is {type(message).__name__}, expected AIMessage")
+            raise ValueError(
+                f"replay fixture {fixture_path!r} turn {index} output is {type(message).__name__}, expected AIMessage"
+            )
         table.setdefault(input_hash, deque()).append(message)
     return table
 

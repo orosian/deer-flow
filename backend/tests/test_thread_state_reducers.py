@@ -126,7 +126,9 @@ class TestThreadStateAnnotations:
         hints = get_type_hints(ThreadState, include_extras=True)
         todos_hint = hints["todos"]
         assert hasattr(todos_hint, "__metadata__"), "ThreadState.todos must be Annotated with a reducer"
-        assert merge_todos in todos_hint.__metadata__, "ThreadState.todos must be wired to merge_todos reducer (see #3123)"
+        assert merge_todos in todos_hint.__metadata__, (
+            "ThreadState.todos must be wired to merge_todos reducer (see #3123)"
+        )
 
     def test_artifacts_field_is_wired_to_merge_artifacts(self):
         """Sanity check that existing reducer wiring is preserved."""

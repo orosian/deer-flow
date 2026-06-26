@@ -30,7 +30,9 @@ class TestThreadDataMiddleware:
         result = middleware.before_agent(state={}, runtime=runtime)
 
         assert result is not None
-        assert _as_posix(result["thread_data"]["workspace_path"]).endswith("threads/thread-from-config/user-data/workspace")
+        assert _as_posix(result["thread_data"]["workspace_path"]).endswith(
+            "threads/thread-from-config/user-data/workspace"
+        )
         assert runtime.context is None
 
     def test_before_agent_uses_thread_id_from_configurable_when_context_missing_thread_id(self, tmp_path, monkeypatch):

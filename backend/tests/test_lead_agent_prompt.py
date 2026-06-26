@@ -128,7 +128,11 @@ def test_apply_prompt_template_threads_explicit_app_config_without_global_config
 
     monkeypatch.setattr("deerflow.config.get_app_config", fail_get_app_config)
     monkeypatch.setattr("deerflow.config.memory_config.get_memory_config", fail_get_memory_config)
-    monkeypatch.setattr(prompt_module, "get_or_new_skill_storage", lambda app_config=None: SimpleNamespace(load_skills=lambda enabled_only=True: []))
+    monkeypatch.setattr(
+        prompt_module,
+        "get_or_new_skill_storage",
+        lambda app_config=None: SimpleNamespace(load_skills=lambda enabled_only=True: []),
+    )
     monkeypatch.setattr(prompt_module, "get_agent_soul", lambda agent_name=None: "")
 
     prompt = prompt_module.apply_prompt_template(app_config=explicit_config)
@@ -167,7 +171,11 @@ def test_apply_prompt_template_threads_explicit_app_config_to_subagents_without_
 
     monkeypatch.setattr("deerflow.config.get_app_config", fail_get_app_config)
     monkeypatch.setattr("deerflow.config.subagents_config.get_subagents_app_config", fail_get_subagents_app_config)
-    monkeypatch.setattr(prompt_module, "get_or_new_skill_storage", lambda app_config=None: SimpleNamespace(load_skills=lambda enabled_only=True: []))
+    monkeypatch.setattr(
+        prompt_module,
+        "get_or_new_skill_storage",
+        lambda app_config=None: SimpleNamespace(load_skills=lambda enabled_only=True: []),
+    )
     monkeypatch.setattr(prompt_module, "get_agent_soul", lambda agent_name=None: "")
 
     prompt = prompt_module.apply_prompt_template(subagent_enabled=True, app_config=explicit_config)
@@ -192,7 +200,9 @@ def test_build_acp_section_uses_explicit_app_config_without_global_config(monkey
 
 def test_get_memory_context_uses_explicit_app_config_without_global_config(monkeypatch):
     explicit_config = SimpleNamespace(
-        memory=SimpleNamespace(enabled=True, injection_enabled=True, max_injection_tokens=1234, token_counting="tiktoken"),
+        memory=SimpleNamespace(
+            enabled=True, injection_enabled=True, max_injection_tokens=1234, token_counting="tiktoken"
+        ),
     )
     captured: dict[str, object] = {}
 
@@ -243,7 +253,11 @@ def test_refresh_skills_system_prompt_cache_async_reloads_immediately(monkeypatc
         )
 
     state = {"skills": [make_skill("first-skill")]}
-    monkeypatch.setattr(prompt_module, "get_or_new_skill_storage", lambda **kwargs: __import__("types").SimpleNamespace(load_skills=lambda *, enabled_only: list(state["skills"])))
+    monkeypatch.setattr(
+        prompt_module,
+        "get_or_new_skill_storage",
+        lambda **kwargs: __import__("types").SimpleNamespace(load_skills=lambda *, enabled_only: list(state["skills"])),
+    )
     _set_skills_cache_state()
 
     try:
@@ -348,7 +362,13 @@ def test_clear_cache_does_not_spawn_parallel_refresh_workers(monkeypatch, tmp_pa
 
         return [make_skill(f"skill-{current_call}")]
 
-    monkeypatch.setattr(prompt_module, "get_or_new_skill_storage", lambda **kwargs: __import__("types").SimpleNamespace(load_skills=lambda *, enabled_only: fake_load_skills(enabled_only=enabled_only)))
+    monkeypatch.setattr(
+        prompt_module,
+        "get_or_new_skill_storage",
+        lambda **kwargs: __import__("types").SimpleNamespace(
+            load_skills=lambda *, enabled_only: fake_load_skills(enabled_only=enabled_only)
+        ),
+    )
     _set_skills_cache_state()
 
     try:

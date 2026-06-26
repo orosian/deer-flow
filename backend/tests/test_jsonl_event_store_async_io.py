@@ -67,7 +67,12 @@ async def test_concurrent_puts_produce_unique_monotonic_seqs():
     """10 concurrent puts on the same thread must yield distinct, monotonic seq values."""
     with tempfile.TemporaryDirectory() as tmp:
         store = _make_store(Path(tmp))
-        results = await asyncio.gather(*[store.put(thread_id="t1", run_id=f"r{i}", event_type="trace", category="trace", content=f"msg{i}") for i in range(10)])
+        results = await asyncio.gather(
+            *[
+                store.put(thread_id="t1", run_id=f"r{i}", event_type="trace", category="trace", content=f"msg{i}")
+                for i in range(10)
+            ]
+        )
     seqs = sorted(r["seq"] for r in results)
     assert seqs == list(range(1, 11)), f"Expected 1-10, got {seqs}"
 
@@ -78,8 +83,12 @@ async def test_concurrent_puts_different_threads_independent_seqs():
     with tempfile.TemporaryDirectory() as tmp:
         store = _make_store(Path(tmp))
         t1_results, t2_results = await asyncio.gather(
-            asyncio.gather(*[store.put(thread_id="t1", run_id="r1", event_type="trace", category="trace") for _ in range(5)]),
-            asyncio.gather(*[store.put(thread_id="t2", run_id="r2", event_type="trace", category="trace") for _ in range(5)]),
+            asyncio.gather(
+                *[store.put(thread_id="t1", run_id="r1", event_type="trace", category="trace") for _ in range(5)]
+            ),
+            asyncio.gather(
+                *[store.put(thread_id="t2", run_id="r2", event_type="trace", category="trace") for _ in range(5)]
+            ),
         )
     t1_seqs = sorted(r["seq"] for r in t1_results)
     t2_seqs = sorted(r["seq"] for r in t2_results)
@@ -96,7 +105,10 @@ async def test_concurrent_puts_different_threads_independent_seqs():
 async def test_put_batch_seqs_are_monotonic():
     with tempfile.TemporaryDirectory() as tmp:
         store = _make_store(Path(tmp))
-        events = [{"thread_id": "t1", "run_id": "r1", "event_type": "trace", "category": "trace", "content": str(i)} for i in range(5)]
+        events = [
+            {"thread_id": "t1", "run_id": "r1", "event_type": "trace", "category": "trace", "content": str(i)}
+            for i in range(5)
+        ]
         results = await store.put_batch(events)
     seqs = [r["seq"] for r in results]
     assert seqs == sorted(seqs)
@@ -168,7 +180,9 @@ async def test_list_messages_reads_written_records():
 async def test_count_messages_accurate_after_concurrent_writes():
     with tempfile.TemporaryDirectory() as tmp:
         store = _make_store(Path(tmp))
-        await asyncio.gather(*[store.put(thread_id="t1", run_id="r1", event_type="human_message", category="message") for _ in range(7)])
+        await asyncio.gather(
+            *[store.put(thread_id="t1", run_id="r1", event_type="human_message", category="message") for _ in range(7)]
+        )
         count = await store.count_messages("t1")
     assert count == 7
 

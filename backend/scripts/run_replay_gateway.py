@@ -27,7 +27,9 @@ sys.path.insert(0, str(_BACKEND / "tests"))  # replay_provider + build_config_ya
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8011)
-    parser.add_argument("--fixture", default=str(_BACKEND / "tests" / "fixtures" / "replay" / "write_read_file.ultra.json"))
+    parser.add_argument(
+        "--fixture", default=str(_BACKEND / "tests" / "fixtures" / "replay" / "write_read_file.ultra.json")
+    )
     parser.add_argument("--cors", default="http://localhost:3000")
     args = parser.parse_args()
 
@@ -46,7 +48,9 @@ def main() -> int:
     os.environ.setdefault("AUTH_JWT_SECRET", "ci-replay-secret")
     os.environ["GATEWAY_CORS_ORIGINS"] = args.cors
     # Child / dynamic imports (resolve_class) search PYTHONPATH too.
-    os.environ["PYTHONPATH"] = os.pathsep.join(p for p in (str(_BACKEND), str(_BACKEND / "tests"), os.environ.get("PYTHONPATH", "")) if p)
+    os.environ["PYTHONPATH"] = os.pathsep.join(
+        p for p in (str(_BACKEND), str(_BACKEND / "tests"), os.environ.get("PYTHONPATH", "")) if p
+    )
 
     import uvicorn
 

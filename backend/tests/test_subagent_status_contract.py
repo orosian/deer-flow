@@ -53,7 +53,9 @@ def test_extract_subagent_status_matches_contract(case):
     unrecognised.
     """
     status = extract_subagent_status(case["content"])
-    assert status == case["expected_status"], f"case {case['name']!r}: expected {case['expected_status']!r}, got {status!r}"
+    assert status == case["expected_status"], (
+        f"case {case['name']!r}: expected {case['expected_status']!r}, got {status!r}"
+    )
 
 
 def test_make_subagent_additional_kwargs_includes_status():

@@ -68,7 +68,9 @@ def test_to_json_api_key_is_masked():
     model = _make_model()
     result = model.to_json()
     api_key_value = result["kwargs"].get("api_key") or result["kwargs"].get("openai_api_key")
-    assert api_key_value is None or isinstance(api_key_value, dict), f"API key must not be plain text, got: {api_key_value!r}"
+    assert api_key_value is None or isinstance(api_key_value, dict), (
+        f"API key must not be plain text, got: {api_key_value!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

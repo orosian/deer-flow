@@ -104,7 +104,9 @@ def test_grep_tool_truncates_results(tmp_path, monkeypatch) -> None:
 
     monkeypatch.setattr("deerflow.sandbox.tools.ensure_sandbox_initialized", lambda runtime: LocalSandbox(id="local"))
     # Prevent config.yaml tool config from overriding the caller-supplied max_results=2.
-    monkeypatch.setattr("deerflow.sandbox.tools.get_app_config", lambda: SimpleNamespace(get_tool_config=lambda name: None))
+    monkeypatch.setattr(
+        "deerflow.sandbox.tools.get_app_config", lambda: SimpleNamespace(get_tool_config=lambda name: None)
+    )
 
     result = grep_tool.func(
         runtime=runtime,
@@ -242,7 +244,11 @@ def test_aio_sandbox_glob_parses_json(monkeypatch) -> None:
     monkeypatch.setattr(
         sandbox._client.file,
         "find_files",
-        lambda **kwargs: SimpleNamespace(data=SimpleNamespace(files=["/mnt/user-data/workspace/app.py", "/mnt/user-data/workspace/node_modules/skip.py"])),
+        lambda **kwargs: SimpleNamespace(
+            data=SimpleNamespace(
+                files=["/mnt/user-data/workspace/app.py", "/mnt/user-data/workspace/node_modules/skip.py"]
+            )
+        ),
     )
 
     matches, truncated = sandbox.glob("/mnt/user-data/workspace", "**/*.py")
