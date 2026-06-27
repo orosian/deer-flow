@@ -19,7 +19,11 @@ def _build_missing_dependency_hint(module_path: str, err: ImportError) -> str:
     if package_name is None:
         package_name = MODULE_TO_PACKAGE_HINTS.get(missing_module, missing_module.replace("_", "-"))
 
-    return f"Missing dependency '{missing_module}'. Install it with `uv add {package_name}` (or `pip install {package_name}`), then restart DeerFlow."
+    return (
+        f"Missing dependency '{missing_module}'. Install it with "
+        f"`uv add {package_name}` (or `pip install {package_name}`), "
+        f"then restart DeerFlow."
+    )
 
 
 def resolve_variable[T](
@@ -44,7 +48,8 @@ def resolve_variable[T](
         module_path, variable_name = variable_path.rsplit(":", 1)
     except ValueError as err:
         raise ImportError(
-            f"{variable_path} doesn't look like a variable path. Example: parent_package_name.sub_package_name.module_name:variable_name"
+            f"{variable_path} doesn't look like a variable path. "
+            f"Example: parent_package_name.sub_package_name.module_name:variable_name"
         ) from err
 
     try:

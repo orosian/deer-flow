@@ -36,8 +36,16 @@ logger = logging.getLogger(__name__)
 # Error message constants — imported by aio.provider too
 # ---------------------------------------------------------------------------
 
-SQLITE_INSTALL = "langgraph-checkpoint-sqlite is required for the SQLite checkpointer. Install it with: uv add langgraph-checkpoint-sqlite"
-POSTGRES_INSTALL = "langgraph-checkpoint-postgres is required for the PostgreSQL checkpointer. Install the package extra with: pip install 'deerflow-harness[postgres]' (or use: uv sync --all-packages --extra postgres when developing locally)"
+SQLITE_INSTALL = (
+    "langgraph-checkpoint-sqlite is required for the SQLite checkpointer. "
+    "Install it with: uv add langgraph-checkpoint-sqlite"
+)
+POSTGRES_INSTALL = (
+    "langgraph-checkpoint-postgres is required for the PostgreSQL checkpointer. "
+    "Install the package extra with: "
+    "pip install 'deerflow-harness[postgres]' "
+    "(or use: uv sync --all-packages --extra postgres when developing locally)"
+)
 POSTGRES_CONN_REQUIRED = "checkpointer.connection_string is required for the postgres backend"
 
 # ---------------------------------------------------------------------------

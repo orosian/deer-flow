@@ -196,7 +196,8 @@ async def _scan_skill_archive_contents_or_raise(skill_dir: Path, skill_name: str
             continue
         if path.name == "SKILL.md":
             raise SkillSecurityScanError(
-                f"Security scan failed for skill '{skill_name}': nested SKILL.md is not allowed at {skill_name}/{rel_path.as_posix()}"
+                f"Security scan failed for skill '{skill_name}': "
+                f"nested SKILL.md is not allowed at {skill_name}/{rel_path.as_posix()}"
             )
         if not _should_scan_support_file(rel_path):
             continue

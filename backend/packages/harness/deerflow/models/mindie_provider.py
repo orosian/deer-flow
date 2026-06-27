@@ -38,11 +38,16 @@ def _fix_messages(messages: list) -> list:
             xml_parts = []
             for tool in msg.tool_calls:
                 args_xml = " ".join(
-                    f"<parameter={html.escape(str(k), quote=False)}>{html.escape(v if isinstance(v, str) else json.dumps(v, ensure_ascii=False), quote=False)}</parameter>"
+                    (
+                        f"<parameter={html.escape(str(k), quote=False)}>"
+                        f"{html.escape(v if isinstance(v, str) else json.dumps(v, ensure_ascii=False), quote=False)}"
+                        f"</parameter>"
+                    )
                     for k, v in tool.get("args", {}).items()
                 )
                 xml_parts.append(
-                    f"<tool_call> <function={html.escape(str(tool['name']), quote=False)}> {args_xml} </function> </tool_call>"
+                    f"<tool_call> <function={html.escape(str(tool['name']), quote=False)}>"
+                    f" {args_xml} </function> </tool_call>"
                 )
             full_text = f"{text}\n" + "\n".join(xml_parts) if text else "\n".join(xml_parts)
             fixed.append(AIMessage(content=full_text.strip() or " "))

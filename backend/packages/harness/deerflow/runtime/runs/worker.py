@@ -536,7 +536,8 @@ async def _rollback_to_pre_run_checkpoint(
         task_id, channel, value = item
         if not isinstance(channel, str):
             raise RuntimeError(
-                f"Run {run_id} rollback failed: pending_write has non-string channel: task_id={task_id!r}, channel={channel!r}"
+                f"Run {run_id} rollback failed: pending_write has non-string channel: "
+                f"task_id={task_id!r}, channel={channel!r}"
             )
         writes_by_task.setdefault(str(task_id), []).append((channel, value))
 

@@ -327,7 +327,8 @@ class LocalSandbox(Sandbox):
                 return shell
 
             raise RuntimeError(
-                "No suitable shell executable found. Tried /bin/zsh, /bin/bash, /bin/sh, `sh` on PATH, then PowerShell and cmd.exe fallbacks for Windows."
+                "No suitable shell executable found. Tried /bin/zsh, /bin/bash, /bin/sh, "
+                "`sh` on PATH, then PowerShell and cmd.exe fallbacks for Windows."
             )
 
         raise RuntimeError("No suitable shell executable found. Tried /bin/zsh, /bin/bash, /bin/sh, and `sh` on PATH.")

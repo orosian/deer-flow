@@ -239,7 +239,8 @@ class CodexChatModel(BaseChatModel):
                         raise
                     wait_ms = 2000 * (1 << (attempt - 1))
                     logger.warning(
-                        f"Codex API error {e.response.status_code}, retrying {attempt}/{self.retry_max_attempts} after {wait_ms}ms"
+                        f"Codex API error {e.response.status_code}, "
+                        f"retrying {attempt}/{self.retry_max_attempts} after {wait_ms}ms"
                     )
                     time.sleep(wait_ms / 1000)
                 else:

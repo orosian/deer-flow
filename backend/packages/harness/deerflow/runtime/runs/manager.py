@@ -570,7 +570,8 @@ class RunManager:
         async with self._lock:
             if multitask_strategy not in _supported_strategies:
                 raise UnsupportedStrategyError(
-                    f"Multitask strategy '{multitask_strategy}' is not yet supported. Supported strategies: {', '.join(_supported_strategies)}"
+                    f"Multitask strategy '{multitask_strategy}' is not yet supported. "
+                    f"Supported strategies: {', '.join(_supported_strategies)}"
                 )
 
             inflight = [

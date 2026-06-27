@@ -251,6 +251,7 @@ class SkillStorage(ABC):
             return
         if self.public_skill_exists(name):
             raise ValueError(
-                f"'{name}' is a built-in skill. To customise it, create a new skill with the same name under skills/custom/."
+                f"'{name}' is a built-in skill. To customise it, "
+                f"create a new skill with the same name under skills/custom/."
             )
         raise FileNotFoundError(f"Custom skill '{name}' not found.")

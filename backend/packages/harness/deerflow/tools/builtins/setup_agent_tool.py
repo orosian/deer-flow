@@ -25,7 +25,8 @@ def setup_agent(
     Args:
         soul: Full SOUL.md content defining the agent's personality and behavior.
         description: One-line description of what the agent does.
-        skills: Optional list of skill names this agent should use. None means use all enabled skills, empty list means no skills.
+        skills: Optional list of skill names this agent should use.
+            None means use all enabled skills, empty list means no skills.
     """
 
     # Reject empty / whitespace-only soul before touching the filesystem.

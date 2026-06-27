@@ -207,7 +207,9 @@ class LocalSkillStorage(SkillStorage):
                 if not isinstance(e, PermissionError) and e.errno not in {errno.EACCES, errno.EPERM, errno.EROFS}:
                     raise
                 logger.warning(
-                    "Skipping delete history write for custom skill %s due to readonly/permission failure; continuing with skill directory removal: %s",
+                    "Skipping delete history write for custom skill %s "
+                    "due to readonly/permission failure; "
+                    "continuing with skill directory removal: %s",
                     name,
                     e,
                 )
