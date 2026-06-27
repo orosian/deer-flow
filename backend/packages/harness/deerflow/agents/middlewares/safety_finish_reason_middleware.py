@@ -86,7 +86,8 @@ class SafetyFinishReasonMiddleware(AgentMiddleware[AgentState]):
 
         if not config.detectors:
             raise ValueError(
-                "safety_finish_reason.detectors must be omitted (use built-ins) or contain at least one entry; use enabled=false to disable the middleware entirely."
+                "safety_finish_reason.detectors must be omitted (use built-ins) or contain at least "
+                "one entry; use enabled=false to disable the middleware entirely."
             )
 
         from deerflow.reflection import resolve_variable
@@ -98,7 +99,8 @@ class SafetyFinishReasonMiddleware(AgentMiddleware[AgentState]):
             detector = detector_cls(**kwargs)
             if not isinstance(detector, SafetyTerminationDetector):
                 raise TypeError(
-                    f"{entry.use} did not produce a SafetyTerminationDetector (got {type(detector).__name__}); ensure it has a `name` attribute and a `detect(message)` method"
+                    f"{entry.use} did not produce a SafetyTerminationDetector (got {type(detector).__name__}); "
+                    "ensure it has a `name` attribute and a `detect(message)` method"
                 )
             detectors.append(detector)
         return cls(detectors=detectors)

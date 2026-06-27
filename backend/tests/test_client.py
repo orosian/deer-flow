@@ -819,7 +819,8 @@ class TestStream:
 
         assert result == "x" * n
         assert elapsed < 1.0, (
-            f"chat() took {elapsed:.3f}s for {n} chunks — possible O(n^2) regression (see PR #1974 commit 2 for the original fix)"
+            f"chat() took {elapsed:.3f}s for {n} chunks — possible O(n^2) regression "
+            "(see PR #1974 commit 2 for the original fix)"
         )
 
     def test_none_id_chunks_produce_duplicates_known_limitation(self, client):

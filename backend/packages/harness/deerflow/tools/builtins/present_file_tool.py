@@ -100,10 +100,12 @@ def present_file_tool(
 
     Notes:
     - You should call this tool after creating files and moving them to the `/mnt/user-data/outputs` directory.
-    - This tool can be safely called in parallel with other tools. State updates are handled by a reducer to prevent conflicts.
+    - This tool can be safely called in parallel with other tools.
+      State updates are handled by a reducer to prevent conflicts.
 
     Args:
-        filepaths: List of absolute file paths to present to the user. **Only** files in `/mnt/user-data/outputs` can be presented.
+        filepaths: List of absolute file paths to present to the user.
+            **Only** files in `/mnt/user-data/outputs` can be presented.
     """
     try:
         normalized_paths = [_normalize_presented_filepath(runtime, filepath) for filepath in filepaths]

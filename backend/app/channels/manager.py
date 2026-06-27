@@ -66,7 +66,10 @@ THREAD_BUSY_MESSAGE = (
 BOUND_IDENTITY_REQUIRED_MESSAGE = (
     "Connect this channel from DeerFlow Settings, complete the in-channel connect step, then send your message again."
 )
-BOUND_IDENTITY_UNAVAILABLE_MESSAGE = "Channel connection verification is temporarily unavailable. Please try again later or contact the DeerFlow operator."
+BOUND_IDENTITY_UNAVAILABLE_MESSAGE = (
+    "Channel connection verification is temporarily unavailable. "
+    "Please try again later or contact the DeerFlow operator."
+)
 INBOUND_DEDUPE_TTL_SECONDS = 10 * 60
 INBOUND_DEDUPE_MAX_ENTRIES = 4096
 # Only server-stable provider message ids: client-generated ids (client_msg_id,
@@ -205,7 +208,8 @@ def _normalize_custom_agent_name(raw_value: str) -> str:
         )
     if not CUSTOM_AGENT_NAME_PATTERN.fullmatch(normalized):
         raise InvalidChannelSessionConfigError(
-            f"Invalid channel session assistant_id {raw_value!r}. Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens."
+            f"Invalid channel session assistant_id {raw_value!r}. "
+            "Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens."
         )
     return normalized
 
@@ -578,7 +582,10 @@ def _resolve_slash_skill_command(
             return None
         if not skill.enabled:
             return _SlashSkillCommandResolution(
-                failure_message=f"Skill `/{reference.name}` is installed but disabled. Enable it before using slash activation."
+                failure_message=(
+                    f"Skill `/{reference.name}` is installed but disabled. "
+                    "Enable it before using slash activation."
+                )
             )
         if available_skills is not None and reference.name not in available_skills:
             return _SlashSkillCommandResolution(

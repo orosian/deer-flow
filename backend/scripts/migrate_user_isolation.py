@@ -193,7 +193,9 @@ def main() -> None:
         default="default",
         metavar="USER_ID",
         help=(
-            "User ID to claim un-owned legacy data (global memory.json and legacy custom agents). Defaults to 'default'. In multi-user installs, set this to the operator account that should inherit those legacy artifacts."
+            "User ID to claim un-owned legacy data (global memory.json and legacy custom agents). "
+            "Defaults to 'default'. In multi-user installs, set this to the operator account that "
+            "should inherit those legacy artifacts."
         ),
     )
     args = parser.parse_args()
@@ -234,7 +236,9 @@ def main() -> None:
 
     if agent_report:
         logger.warning(
-            "%d legacy agent(s) were assigned to '%s'. If those agents belonged to other users, move them manually under {base_dir}/users/<user_id>/agents/.",
+            "%d legacy agent(s) were assigned to '%s'. "
+            "If those agents belonged to other users, move them manually under "
+            "{base_dir}/users/<user_id>/agents/.",
             len(agent_report),
             args.user_id,
         )

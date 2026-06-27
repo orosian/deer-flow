@@ -232,7 +232,10 @@ class AioSandbox(Sandbox):
         with self._lock:
             try:
                 result = self._client.shell.exec_command(
-                    command=f"find {shlex.quote(path)} -maxdepth {max_depth} -type f -o -type d 2>/dev/null | head -500",
+                    command=(
+                        f"find {shlex.quote(path)} -maxdepth {max_depth} -type f -o -type d "
+                        "2>/dev/null | head -500"
+                    ),
                     no_change_timeout=self._DEFAULT_NO_CHANGE_TIMEOUT,
                 )
                 output = result.data.output if result.data else ""

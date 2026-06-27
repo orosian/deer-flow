@@ -230,7 +230,10 @@ class TestCountTokens:
         """
         monkeypatch.setattr("deerflow.agents.memory.prompt.TIKTOKEN_AVAILABLE", False)
         # "User prefers concise answers" rendered in CJK (Chinese) characters.
-        text = "\u7528\u6237\u504f\u597d\u7b80\u6d01\u7684\u4e2d\u6587\u56de\u7b54\u5e76\u5173\u6ce8\u91d1\u878d\u9886\u57df"
+        text = (
+            "\u7528\u6237\u504f\u597d\u7b80\u6d01\u7684"
+            "\u4e2d\u6587\u56de\u7b54\u5e76\u5173\u6ce8\u91d1\u878d\u9886\u57df"
+        )
         result = _count_tokens(text)
         # Each CJK char counts as ~1/2 token (vs 1/4 for the plain heuristic).
         assert result == len(text) // 2

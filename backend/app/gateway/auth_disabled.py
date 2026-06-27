@@ -39,7 +39,8 @@ def warn_if_auth_disabled_enabled() -> None:
         return
 
     logger.warning(
-        "%s=1 is active: authentication is bypassed and anonymous requests run as synthetic admin user %r. Do not enable this in shared or production deployments.",
+        "%s=1 is active: authentication is bypassed and anonymous requests run as "
+        "synthetic admin user %r. Do not enable this in shared or production deployments.",
         AUTH_DISABLED_ENV_VAR,
         AUTH_DISABLED_USER_ID,
     )

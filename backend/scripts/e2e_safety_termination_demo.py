@@ -168,7 +168,8 @@ def main() -> int:
         if last_ai is None:
             print("  *** no AIMessage in final state ***")
             print(
-                f"      message types seen: {[m.get('type') if isinstance(m, dict) else type(m).__name__ for m in final_messages]}"
+                f"      message types seen: "
+                f"{[m.get('type') if isinstance(m, dict) else type(m).__name__ for m in final_messages]}"
             )
             return 1
 

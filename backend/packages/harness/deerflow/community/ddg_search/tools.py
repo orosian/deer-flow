@@ -135,7 +135,8 @@ def web_search_tool(
     query: str,
     max_results: int = 5,
 ) -> str:
-    """Search the web for information. Use this tool to find current information, news, articles, and facts from the internet.
+    """Search the web for information. Use this tool to find current information, news,
+    articles, and facts from the internet.
 
     Args:
         query: Search keywords describing what you want to find. Be specific for better results.

@@ -95,7 +95,10 @@ class AppConfig(BaseModel):
         default="info",
         description=format_field_description(
             "log_level",
-            field_doc="Logging level for deerflow and app modules (debug/info/warning/error); third-party libraries are not affected.",
+            field_doc=(
+                "Logging level for deerflow and app modules (debug/info/warning/error); "
+                "third-party libraries are not affected."
+            ),
         ),
     )
     token_usage: TokenUsageConfig = Field(
@@ -172,7 +175,10 @@ class AppConfig(BaseModel):
         default_factory=RunEventsConfig,
         description=format_field_description(
             "run_events",
-            field_doc="Run-event store backend (memory for dev, db for production queries, jsonl for lightweight single-node persistence).",
+            field_doc=(
+                "Run-event store backend (memory for dev, db for production queries, "
+                "jsonl for lightweight single-node persistence)."
+            ),
         ),
     )
     checkpointer: CheckpointerConfig | None = Field(
@@ -272,7 +278,9 @@ class AppConfig(BaseModel):
         result = cls.model_validate(config_data)
         if not result.models:
             logger.warning(
-                "No models are configured in %s. Add at least one entry under `models:` (see the commented examples in config.example.yaml) or run `make setup`.",
+                "No models are configured in %s. "
+                "Add at least one entry under `models:` (see the commented examples in config.example.yaml) "
+                "or run `make setup`.",
                 resolved_path,
             )
         acp_agents = cls._validate_acp_agents(config_data.get("acp_agents", {}))
@@ -370,7 +378,8 @@ class AppConfig(BaseModel):
 
         if user_version < example_version:
             logger.warning(
-                "Your config.yaml (version %d) is outdated — the latest version is %d. Run `make config-upgrade` to merge new fields into your config.",
+                "Your config.yaml (version %d) is outdated — the latest version is %d. "
+                "Run `make config-upgrade` to merge new fields into your config.",
                 user_version,
                 example_version,
             )

@@ -176,7 +176,8 @@ class ChannelService:
             if not channel_config.get("enabled", False):
                 if _channel_has_credentials(name, channel_config):
                     logger.warning(
-                        "A configured channel has credentials configured but is disabled. Set enabled: true under its channels entry in config.yaml to activate it.",
+                        "A configured channel has credentials configured but is disabled. "
+                        "Set enabled: true under its channels entry in config.yaml to activate it.",
                     )
                 else:
                     logger.info("A configured channel is disabled, skipping")

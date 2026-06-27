@@ -114,7 +114,8 @@ def test_appconfig_schema_marks_registered_fields_with_prefix():
             continue
         description = schema_fields[field_path].description or ""
         assert description.startswith(STARTUP_ONLY_PREFIX), (
-            f"AppConfig.{field_path} should have Field(description=) starting with {STARTUP_ONLY_PREFIX!r}, got {description!r}"
+            f"AppConfig.{field_path} should have Field(description=) starting with "
+            f"{STARTUP_ONLY_PREFIX!r}, got {description!r}"
         )
 
 
@@ -131,7 +132,9 @@ def test_no_appconfig_field_uses_prefix_without_registration():
         if not description.startswith(STARTUP_ONLY_PREFIX):
             continue
         assert name in STARTUP_ONLY_FIELDS, (
-            f"AppConfig.{name} schema description starts with {STARTUP_ONLY_PREFIX!r} but the field is not listed in reload_boundary.STARTUP_ONLY_FIELDS — update the registry."
+            f"AppConfig.{name} schema description starts with {STARTUP_ONLY_PREFIX!r} "
+            "but the field is not listed in reload_boundary.STARTUP_ONLY_FIELDS "
+            "— update the registry."
         )
 
 

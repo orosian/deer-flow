@@ -125,7 +125,8 @@ class ExtensionsConfig(BaseModel):
             path = Path(os.getenv("DEER_FLOW_EXTENSIONS_CONFIG_PATH"))
             if not path.exists():
                 raise FileNotFoundError(
-                    f"Extensions config file specified by environment variable `DEER_FLOW_EXTENSIONS_CONFIG_PATH` not found at {path}"
+                    f"Extensions config file specified by environment variable "
+                    f"`DEER_FLOW_EXTENSIONS_CONFIG_PATH` not found at {path}"
                 )
             return path
         else:

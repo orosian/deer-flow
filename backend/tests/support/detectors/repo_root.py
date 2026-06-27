@@ -29,5 +29,6 @@ def resolve_repo_root(start: Path) -> Path:
         if (candidate / REPO_ROOT_MARKER).exists():
             return candidate
     raise RuntimeError(
-        f"could not resolve the repository root: no '{REPO_ROOT_MARKER}' marker found above {resolved}; refusing to guess scan paths"
+        f"could not resolve the repository root: no '{REPO_ROOT_MARKER}' marker "
+        f"found above {resolved}; refusing to guess scan paths"
     )

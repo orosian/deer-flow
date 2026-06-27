@@ -157,7 +157,8 @@ async def run_agent(
     # Track whether "events" was requested but skipped
     if "events" in requested_modes:
         logger.info(
-            "Run %s: 'events' stream_mode not supported in gateway (requires astream_events + checkpoint callbacks). Skipping.",
+            "Run %s: 'events' stream_mode not supported in gateway "
+            "(requires astream_events + checkpoint callbacks). Skipping.",
             run_id,
         )
 

@@ -65,7 +65,10 @@ def _get_runtime_config(config: RunnableConfig) -> dict:
 
 
 def _resolve_model_name(requested_model_name: str | None = None, *, app_config: AppConfig | None = None) -> str:
-    """Resolve a runtime model name safely, falling back to default if invalid. Returns None if no models are configured."""
+    """Resolve a runtime model name safely, falling back to default if invalid.
+
+    Returns None if no models are configured.
+    """
     app_config = app_config or get_app_config()
     default_model_name = app_config.models[0].name if app_config.models else None
     if default_model_name is None:
@@ -258,7 +261,8 @@ If blocked, keep the task as `in_progress` and create a new task describing what
 
 Being proactive with task management demonstrates thoroughness and ensures all requirements are completed successfully.
 
-**Remember**: If you only need a few tool calls to complete a task and it's clear what to do, it's better to just do the task directly and NOT use this tool at all.
+**Remember**: If you only need a few tool calls to complete a task and it's clear what to do, it's better to just do
+the task directly and NOT use this tool at all.
 """
 
     return TodoMiddleware(system_prompt=system_prompt, tool_description=tool_description)
@@ -443,7 +447,8 @@ def _make_lead_agent(config: RunnableConfig, *, app_config: AppConfig):
 
     if model_config is None:
         raise ValueError(
-            "No chat model could be resolved. Please configure at least one model in config.yaml or provide a valid 'model_name'/'model' in the request."
+            "No chat model could be resolved. Please configure at least one model in config.yaml or "
+            "provide a valid 'model_name'/'model' in the request."
         )
     if thinking_enabled and not model_config.supports_thinking:
         logger.warning(
@@ -452,7 +457,8 @@ def _make_lead_agent(config: RunnableConfig, *, app_config: AppConfig):
         thinking_enabled = False
 
     logger.info(
-        "Create Agent(%s) -> thinking_enabled: %s, reasoning_effort: %s, model_name: %s, is_plan_mode: %s, subagent_enabled: %s, max_concurrent_subagents: %s",
+        "Create Agent(%s) -> thinking_enabled: %s, reasoning_effort: %s, model_name: %s, "
+        "is_plan_mode: %s, subagent_enabled: %s, max_concurrent_subagents: %s",
         agent_name or "default",
         thinking_enabled,
         reasoning_effort,

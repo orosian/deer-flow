@@ -51,7 +51,8 @@ def _missing_key_error(query: str, tool_name: str) -> str:
     if tool_name not in _api_key_warned:
         _api_key_warned.add(tool_name)
         logger.warning(
-            "Serper API key is not set for '%s'. Set SERPER_API_KEY in your environment or provide api_key in config.yaml. Sign up at https://serper.dev",
+            "Serper API key is not set for '%s'. Set SERPER_API_KEY in your environment or "
+            "provide api_key in config.yaml. Sign up at https://serper.dev",
             tool_name,
         )
     return json.dumps(
@@ -260,12 +261,15 @@ def web_search_tool(query: str, max_results: int = 5) -> str:
 
 @tool("image_search", parse_docstring=True)
 def image_search_tool(query: str, max_results: int = 5) -> str:
-    """Search for images online using Google Images via Serper. Use this tool BEFORE image generation to find reference images for characters, portraits, objects, scenes, or any content requiring visual accuracy.
+    """Search for images online using Google Images via Serper. Use this tool BEFORE image
+    generation to find reference images for characters, portraits, objects, scenes, or any
+    content requiring visual accuracy.
 
     The returned image URLs can be used as reference images in image generation to significantly improve quality.
 
     Args:
-        query: Search keywords describing the images you want to find. Be specific for better results (e.g., "Japanese woman street photography 1990s" instead of just "woman").
+        query: Search keywords describing the images you want to find. Be specific for
+        better results (e.g., "Japanese woman street photography 1990s" instead of just "woman").
         max_results: Maximum number of images to return. Default is 5, capped at 10.
     """
     config = get_app_config().get_tool_config("image_search")
@@ -321,6 +325,9 @@ def image_search_tool(query: str, max_results: int = 5) -> str:
         "query": query,
         "total_results": len(normalized_results),
         "results": normalized_results,
-        "usage_hint": "Use the 'image_url' values as reference images in image generation. Download them first if needed.",
+        "usage_hint": (
+            "Use the 'image_url' values as reference images in image generation. "
+            "Download them first if needed."
+        ),
     }
     return json.dumps(output, indent=2, ensure_ascii=False)

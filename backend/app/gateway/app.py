@@ -203,11 +203,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
                 logger.info("tiktoken encoding cache warmed successfully")
             else:
                 logger.warning(
-                    "tiktoken encoding cache warm-up failed; token counting will use character-based fallback until tiktoken loads successfully"
+                    "tiktoken encoding cache warm-up failed; "
+                    "token counting will use character-based fallback until tiktoken loads successfully"
                 )
         except TimeoutError:
             logger.warning(
-                "tiktoken encoding cache warm-up timed out; token counting will use character-based fallback until tiktoken loads successfully"
+                "tiktoken encoding cache warm-up timed out; "
+                "token counting will use character-based fallback until tiktoken loads successfully"
             )
         except (ImportError, OSError, RuntimeError, ValueError, AttributeError):
             logger.warning("tiktoken warm-up skipped", exc_info=True)
@@ -280,7 +282,8 @@ API Gateway for DeerFlow - A LangGraph-based AI agent backend with sandbox execu
 ### Architecture
 
 LangGraph-compatible requests are routed through nginx to this gateway.
-This gateway provides runtime endpoints for agent runs plus custom endpoints for models, MCP configuration, skills, and artifacts.
+This gateway provides runtime endpoints for agent runs plus custom endpoints
+for models, MCP configuration, skills, and artifacts.
         """,
         version="0.1.0",
         lifespan=lifespan,

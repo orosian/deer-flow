@@ -351,7 +351,11 @@ def test_preset_load_failure_not_allowed_counter_increments() -> None:
 
 
 def test_preset_load_failure_unknown_counter_on_load_exception(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Non-ValueError exceptions from ``load_preset`` are counted as ``unknown`` and rewrapped as ``GraphHarnessPresetAccessError(code=500)`` with the original exception preserved on ``__cause__`` (P1-5)."""
+    """Non-ValueError exceptions from ``load_preset`` are counted as ``unknown`` and rewrapped.
+
+    The rewrap is ``GraphHarnessPresetAccessError(code=500)`` with the original
+    exception preserved on ``__cause__`` (P1-5).
+    """
     # Stub harness.host so the adapter can import it for this test.
     import sys
     import types

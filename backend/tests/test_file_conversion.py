@@ -376,7 +376,12 @@ class TestExtractOutline:
         """Address lines and short cover boilerplate must NOT appear in outline."""
         md = tmp_path / "8k.md"
         md.write_text(
-            "## **UNITED STATES SECURITIES AND EXCHANGE COMMISSION**\n\n**WASHINGTON, DC 20549**\n\n**CURRENT REPORT**\n\n**SIGNATURES**\n\n**TESLA, INC.**\n\n**ITEM 2.02. RESULTS OF OPERATIONS**\n",
+            "## **UNITED STATES SECURITIES AND EXCHANGE COMMISSION**\n"
+            "\n**WASHINGTON, DC 20549**\n"
+            "\n**CURRENT REPORT**\n"
+            "\n**SIGNATURES**\n"
+            "\n**TESLA, INC.**\n"
+            "\n**ITEM 2.02. RESULTS OF OPERATIONS**\n",
             encoding="utf-8",
         )
         outline = extract_outline(md)
@@ -444,7 +449,12 @@ class TestExtractOutline:
         """**<num>** **<title>** lines from academic papers are recognised (Style 3)."""
         md = tmp_path / "paper.md"
         md.write_text(
-            "## **Attention Is All You Need**\n\n**1** **Introduction**\n\nBody text.\n\n**2** **Background**\n\nMore text.\n\n**3.1** **Encoder and Decoder Stacks**\n",
+            "## **Attention Is All You Need**\n"
+            "\n**1** **Introduction**\n"
+            "\nBody text.\n"
+            "\n**2** **Background**\n"
+            "\nMore text.\n"
+            "\n**3.1** **Encoder and Decoder Stacks**\n",
             encoding="utf-8",
         )
         outline = extract_outline(md)

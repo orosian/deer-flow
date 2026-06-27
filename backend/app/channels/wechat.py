@@ -108,7 +108,11 @@ def _safe_media_filename(prefix: str, extension: str, message_id: str | None = N
 
 
 def _build_cdn_upload_url(cdn_base_url: str, upload_param: str, filekey: str) -> str:
-    return f"{cdn_base_url.rstrip('/')}/upload?encrypted_query_param={quote(upload_param, safe='')}&filekey={quote(filekey, safe='')}"
+    return (
+        f"{cdn_base_url.rstrip('/')}/upload"
+        f"?encrypted_query_param={quote(upload_param, safe='')}"
+        f"&filekey={quote(filekey, safe='')}"
+    )
 
 
 def _encode_outbound_media_aes_key(aes_key: bytes) -> str:

@@ -89,7 +89,8 @@ def test_tool_args_schema_does_not_emit_pydantic_context_warning(tool_obj, extra
 
     pydantic_warnings = [w for w in caught if "PydanticSerializationUnexpectedValue" in str(w.message)]
     assert not pydantic_warnings, (
-        f"{tool_obj.name} args_schema.model_dump() emitted Pydantic context serialization warnings: {[str(w.message) for w in pydantic_warnings]}"
+        f"{tool_obj.name} args_schema.model_dump() emitted Pydantic context "
+        f"serialization warnings: {[str(w.message) for w in pydantic_warnings]}"
     )
 
 
@@ -110,5 +111,7 @@ def test_model_facing_tool_parameters_have_descriptions(tool_obj) -> None:
         field_name for field_name, field in tool_obj.tool_call_schema.model_fields.items() if not field.description
     ]
     assert missing_descriptions == [], (
-        f"{tool_obj.name} has model-facing parameters without descriptions: {missing_descriptions}. Add an Args: section to the tool's docstring and ensure @tool(parse_docstring=True) is set."
+        f"{tool_obj.name} has model-facing parameters without descriptions: "
+        f"{missing_descriptions}. Add an Args: section to the tool's docstring "
+        "and ensure @tool(parse_docstring=True) is set."
     )

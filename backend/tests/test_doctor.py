@@ -109,7 +109,10 @@ class TestCheckModelsConfigured:
     def test_one_model(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nmodels:\n  - name: default\n    use: langchain_openai:ChatOpenAI\n    model: gpt-4o\n    api_key: $OPENAI_API_KEY\n"
+            "config_version: 5\nmodels:\n  - name: default\n"
+            "    use: langchain_openai:ChatOpenAI\n"
+            "    model: gpt-4o\n"
+            "    api_key: $OPENAI_API_KEY\n"
         )
         result = doctor.check_models_configured(cfg)
         assert result.status == "ok"
@@ -128,7 +131,10 @@ class TestCheckLLMApiKey:
     def test_key_set(self, tmp_path, monkeypatch):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nmodels:\n  - name: default\n    use: langchain_openai:ChatOpenAI\n    model: gpt-4o\n    api_key: $OPENAI_API_KEY\n"
+            "config_version: 5\nmodels:\n  - name: default\n"
+            "    use: langchain_openai:ChatOpenAI\n"
+            "    model: gpt-4o\n"
+            "    api_key: $OPENAI_API_KEY\n"
         )
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
         results = doctor.check_llm_api_key(cfg)
@@ -138,7 +144,10 @@ class TestCheckLLMApiKey:
     def test_key_missing(self, tmp_path, monkeypatch):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nmodels:\n  - name: default\n    use: langchain_openai:ChatOpenAI\n    model: gpt-4o\n    api_key: $OPENAI_API_KEY\n"
+            "config_version: 5\nmodels:\n  - name: default\n"
+            "    use: langchain_openai:ChatOpenAI\n"
+            "    model: gpt-4o\n"
+            "    api_key: $OPENAI_API_KEY\n"
         )
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         results = doctor.check_llm_api_key(cfg)
@@ -161,7 +170,9 @@ class TestCheckLLMAuth:
     def test_codex_auth_file_missing_fails(self, tmp_path, monkeypatch):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nmodels:\n  - name: codex\n    use: deerflow.models.openai_codex_provider:CodexChatModel\n    model: gpt-5.4\n"
+            "config_version: 5\nmodels:\n  - name: codex\n"
+            "    use: deerflow.models.openai_codex_provider:CodexChatModel\n"
+            "    model: gpt-5.4\n"
         )
         monkeypatch.setenv("CODEX_AUTH_PATH", str(tmp_path / "missing-auth.json"))
         results = doctor.check_llm_auth(cfg)
@@ -170,7 +181,9 @@ class TestCheckLLMAuth:
     def test_claude_oauth_env_passes(self, tmp_path, monkeypatch):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nmodels:\n  - name: claude\n    use: deerflow.models.claude_provider:ClaudeChatModel\n    model: claude-sonnet-4-6\n"
+            "config_version: 5\nmodels:\n  - name: claude\n"
+            "    use: deerflow.models.claude_provider:ClaudeChatModel\n"
+            "    model: claude-sonnet-4-6\n"
         )
         monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "token")
         results = doctor.check_llm_auth(cfg)
@@ -186,7 +199,12 @@ class TestCheckWebSearch:
     def test_ddg_always_ok(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nmodels:\n  - name: default\n    use: langchain_openai:ChatOpenAI\n    model: gpt-4o\n    api_key: $OPENAI_API_KEY\ntools:\n  - name: web_search\n    use: deerflow.community.ddg_search.tools:web_search_tool\n"
+            "config_version: 5\nmodels:\n  - name: default\n"
+            "    use: langchain_openai:ChatOpenAI\n"
+            "    model: gpt-4o\n"
+            "    api_key: $OPENAI_API_KEY\n"
+            "tools:\n  - name: web_search\n"
+            "    use: deerflow.community.ddg_search.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -196,7 +214,8 @@ class TestCheckWebSearch:
         monkeypatch.setenv("TAVILY_API_KEY", "tvly-test")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.tavily.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.tavily.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -205,7 +224,8 @@ class TestCheckWebSearch:
         monkeypatch.delenv("TAVILY_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.tavily.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.tavily.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "warn"
@@ -216,7 +236,8 @@ class TestCheckWebSearch:
         monkeypatch.setenv("BRAVE_SEARCH_API_KEY", "bsa-test")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.brave.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.brave.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -225,7 +246,8 @@ class TestCheckWebSearch:
         monkeypatch.delenv("BRAVE_SEARCH_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.brave.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.brave.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "warn"
@@ -236,7 +258,9 @@ class TestCheckWebSearch:
         monkeypatch.delenv("BRAVE_SEARCH_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            'config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.brave.tools:web_search_tool\n    api_key: "inline-key"\n'
+            'config_version: 5\ntools:\n  - name: web_search\n'
+            '    use: deerflow.community.brave.tools:web_search_tool\n'
+            '    api_key: "inline-key"\n'
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "warn"
@@ -247,7 +271,9 @@ class TestCheckWebSearch:
         monkeypatch.setenv("BRAVE_SEARCH_API_KEY", "bsa-test")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.brave.tools:web_search_tool\n    api_key: $BRAVE_SEARCH_API_KEY\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.brave.tools:web_search_tool\n"
+            "    api_key: $BRAVE_SEARCH_API_KEY\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -257,7 +283,8 @@ class TestCheckWebSearch:
         monkeypatch.setenv("SERPER_API_KEY", "test-key")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.serper.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.serper.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -267,7 +294,8 @@ class TestCheckWebSearch:
         monkeypatch.delenv("SERPER_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.serper.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.serper.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "warn"
@@ -277,7 +305,9 @@ class TestCheckWebSearch:
         monkeypatch.delenv("SERPER_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.serper.tools:web_search_tool\n    api_key: inline-key\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.serper.tools:web_search_tool\n"
+            "    api_key: inline-key\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "warn"
@@ -288,7 +318,9 @@ class TestCheckWebSearch:
         monkeypatch.setenv("SERPER_API_KEY", "test-key")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.serper.tools:web_search_tool\n    api_key: $SERPER_API_KEY\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.serper.tools:web_search_tool\n"
+            "    api_key: $SERPER_API_KEY\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -301,7 +333,9 @@ class TestCheckWebSearch:
         monkeypatch.setenv("SERPER_API_KEY", "test-key")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.serper.tools:web_search_tool\n    api_key: $MY_CUSTOM_SERPER_KEY\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.serper.tools:web_search_tool\n"
+            "    api_key: $MY_CUSTOM_SERPER_KEY\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "ok"
@@ -313,7 +347,9 @@ class TestCheckWebSearch:
         monkeypatch.delenv("SERPER_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.serper.tools:web_search_tool\n    api_key: $MY_CUSTOM_SERPER_KEY\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.serper.tools:web_search_tool\n"
+            "    api_key: $MY_CUSTOM_SERPER_KEY\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "warn"
@@ -334,7 +370,8 @@ class TestCheckWebSearch:
     def test_invalid_provider_use_fails(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_search\n    use: deerflow.community.not_real.tools:web_search_tool\n"
+            "config_version: 5\ntools:\n  - name: web_search\n"
+            "    use: deerflow.community.not_real.tools:web_search_tool\n"
         )
         result = doctor.check_web_search(cfg)
         assert result.status == "fail"
@@ -349,7 +386,8 @@ class TestCheckWebFetch:
     def test_jina_always_ok(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_fetch\n    use: deerflow.community.jina_ai.tools:web_fetch_tool\n"
+            "config_version: 5\ntools:\n  - name: web_fetch\n"
+            "    use: deerflow.community.jina_ai.tools:web_fetch_tool\n"
         )
         result = doctor.check_web_fetch(cfg)
         assert result.status == "ok"
@@ -359,7 +397,8 @@ class TestCheckWebFetch:
         monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_fetch\n    use: deerflow.community.firecrawl.tools:web_fetch_tool\n"
+            "config_version: 5\ntools:\n  - name: web_fetch\n"
+            "    use: deerflow.community.firecrawl.tools:web_fetch_tool\n"
         )
         result = doctor.check_web_fetch(cfg)
         assert result.status == "warn"
@@ -375,7 +414,8 @@ class TestCheckWebFetch:
     def test_invalid_provider_use_fails(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: web_fetch\n    use: deerflow.community.not_real.tools:web_fetch_tool\n"
+            "config_version: 5\ntools:\n  - name: web_fetch\n"
+            "    use: deerflow.community.not_real.tools:web_fetch_tool\n"
         )
         result = doctor.check_web_fetch(cfg)
         assert result.status == "fail"
@@ -390,7 +430,8 @@ class TestCheckImageSearch:
     def test_ddg_always_ok(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.image_search.tools:image_search_tool\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.image_search.tools:image_search_tool\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "ok"
@@ -400,7 +441,8 @@ class TestCheckImageSearch:
         monkeypatch.setenv("SERPER_API_KEY", "test-key")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.serper.tools:image_search_tool\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.serper.tools:image_search_tool\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "ok"
@@ -410,7 +452,8 @@ class TestCheckImageSearch:
         monkeypatch.delenv("SERPER_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.serper.tools:image_search_tool\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.serper.tools:image_search_tool\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "warn"
@@ -420,7 +463,9 @@ class TestCheckImageSearch:
         monkeypatch.delenv("SERPER_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.serper.tools:image_search_tool\n    api_key: inline-key\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.serper.tools:image_search_tool\n"
+            "    api_key: inline-key\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "warn"
@@ -431,7 +476,9 @@ class TestCheckImageSearch:
         monkeypatch.delenv("SERPER_API_KEY", raising=False)
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.serper.tools:image_search_tool\n    api_key: $SERPER_API_KEY\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.serper.tools:image_search_tool\n"
+            "    api_key: $SERPER_API_KEY\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "warn"
@@ -441,7 +488,8 @@ class TestCheckImageSearch:
         monkeypatch.setenv("INFOQUEST_API_KEY", "test-key")
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.infoquest.tools:image_search_tool\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.infoquest.tools:image_search_tool\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "ok"
@@ -457,7 +505,8 @@ class TestCheckImageSearch:
     def test_invalid_provider_use_fails(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\ntools:\n  - name: image_search\n    use: deerflow.community.not_real.tools:image_search_tool\n"
+            "config_version: 5\ntools:\n  - name: image_search\n"
+            "    use: deerflow.community.not_real.tools:image_search_tool\n"
         )
         result = doctor.check_image_search(cfg)
         assert result.status == "fail"
@@ -512,7 +561,11 @@ class TestCheckSandbox:
     def test_local_sandbox_with_disabled_host_bash_warns(self, tmp_path):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nsandbox:\n  use: deerflow.sandbox.local:LocalSandboxProvider\n  allow_host_bash: false\ntools:\n  - name: bash\n    use: deerflow.sandbox.tools:bash_tool\n"
+            "config_version: 5\nsandbox:\n"
+            "  use: deerflow.sandbox.local:LocalSandboxProvider\n"
+            "  allow_host_bash: false\n"
+            "tools:\n  - name: bash\n"
+            "    use: deerflow.sandbox.tools:bash_tool\n"
         )
         results = doctor.check_sandbox(cfg)
         assert any(result.status == "warn" for result in results)
@@ -520,7 +573,9 @@ class TestCheckSandbox:
     def test_container_sandbox_without_runtime_warns(self, tmp_path, monkeypatch):
         cfg = tmp_path / "config.yaml"
         cfg.write_text(
-            "config_version: 5\nsandbox:\n  use: deerflow.community.aio_sandbox:AioSandboxProvider\ntools: []\n"
+            "config_version: 5\nsandbox:\n"
+            "  use: deerflow.community.aio_sandbox:AioSandboxProvider\n"
+            "tools: []\n"
         )
         monkeypatch.setattr(doctor.shutil, "which", lambda _name: None)
         results = doctor.check_sandbox(cfg)

@@ -268,7 +268,9 @@ def build_run_config(
         if "context" in request_config:
             if "configurable" in request_config:
                 logger.warning(
-                    "build_run_config: client sent both 'context' and 'configurable'; preferring 'context' (LangGraph >= 0.6.0). thread_id=%s, caller_configurable keys=%s",
+                    "build_run_config: client sent both 'context' and 'configurable'; "
+                    "preferring 'context' (LangGraph >= 0.6.0). thread_id=%s, "
+                    "caller_configurable keys=%s",
                     thread_id,
                     list(request_config.get("configurable", {}).keys()),
                 )
@@ -296,7 +298,8 @@ def build_run_config(
         normalized = assistant_id.strip().lower().replace("_", "-")
         if not normalized or not re.fullmatch(r"[a-z0-9-]+", normalized):
             raise ValueError(
-                f"Invalid assistant_id {assistant_id!r}: must contain only letters, digits, and hyphens after normalization."
+                f"Invalid assistant_id {assistant_id!r}: "
+                "must contain only letters, digits, and hyphens after normalization."
             )
         configurable = config.setdefault("configurable", {})
         runtime_context = config.setdefault("context", {})

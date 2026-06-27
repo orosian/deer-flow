@@ -131,7 +131,11 @@ def _format_invocation_error(agent: str, cmd: str, exc: Exception) -> str:
 
     message = f"Error invoking ACP agent '{agent}': Command '{cmd}' was not found on PATH."
     if cmd == "codex-acp" and shutil.which("codex"):
-        return f"{message} The installed `codex` CLI does not speak ACP directly. Install a Codex ACP adapter (for example `npx @zed-industries/codex-acp`) or update `acp_agents.codex.command` and `args` in config.yaml."
+        return (
+                f"{message} The installed `codex` CLI does not speak ACP directly. "
+                "Install a Codex ACP adapter (for example `npx @zed-industries/codex-acp`) "
+                "or update `acp_agents.codex.command` and `args` in config.yaml."
+            )
 
     return f"{message} Install the agent binary or update `acp_agents.{agent}.command` in config.yaml."
 
@@ -210,7 +214,8 @@ def build_invoke_acp_agent_tool(agents: dict) -> BaseTool:
                     )
                 else:
                     logger.warning(
-                        "ACP permission denied for tool call %s in session %s (set auto_approve_permissions: true in config.yaml to enable)",
+                        "ACP permission denied for tool call %s in session %s "
+                        "(set auto_approve_permissions: true in config.yaml to enable)",
                         tool_call.tool_call_id,
                         session_id,
                     )

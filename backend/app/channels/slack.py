@@ -27,7 +27,8 @@ def _normalize_allowed_users(allowed_users: Any) -> set[str]:
         values = allowed_users
     else:
         logger.warning(
-            "Slack allowed_users should be a list of Slack user IDs or a single Slack user ID string; treating %s as one string value",
+            "Slack allowed_users should be a list of Slack user IDs or a single Slack user ID string; "
+            "treating %s as one string value",
             type(allowed_users).__name__,
         )
         values = [allowed_users]

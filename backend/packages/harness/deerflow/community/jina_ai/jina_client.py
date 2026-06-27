@@ -23,7 +23,8 @@ class JinaClient:
         elif not _api_key_warned:
             _api_key_warned = True
             logger.warning(
-                "Jina API key is not set. Provide your own key to access a higher rate limit. See https://jina.ai/reader for more information."
+                "Jina API key is not set. Provide your own key to access a higher rate limit. "
+                "See https://jina.ai/reader for more information."
             )
         data = {"url": url}
         try:

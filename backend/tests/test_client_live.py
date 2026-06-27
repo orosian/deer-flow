@@ -154,7 +154,10 @@ class TestLiveMultiToolChain:
         """Agent writes a file, then reads it back."""
         events = list(
             client.stream(
-                "Step 1: Use write_file to write 'integration_test_content' to /mnt/user-data/outputs/live_test.txt. Step 2: Use read_file to read that file back. Step 3: Tell me the content you read."
+                "Step 1: Use write_file to write 'integration_test_content' to "
+                "/mnt/user-data/outputs/live_test.txt. "
+                "Step 2: Use read_file to read that file back. "
+                "Step 3: Tell me the content you read."
             )
         )
 
@@ -291,7 +294,8 @@ class TestLiveArtifact:
         # Ask agent to write a file
         events = list(
             client.stream(
-                'Use write_file to create /mnt/user-data/outputs/artifact_test.json with content: {"status": "ok", "source": "live_test"}',
+                'Use write_file to create /mnt/user-data/outputs/artifact_test.json '
+                'with content: {"status": "ok", "source": "live_test"}',
                 thread_id=thread_id,
             )
         )

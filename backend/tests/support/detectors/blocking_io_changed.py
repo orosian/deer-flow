@@ -192,7 +192,9 @@ def format_report(findings: Sequence[dict[str, object]], base: str) -> str:
         location = finding["location"]  # type: ignore[index]
         call = finding["blocking_call"]  # type: ignore[index]
         lines.append(
-            f"{finding['priority']} {call['category']}/{call['operation']} {location['path']}:{location['line']} in {location['function']} exposure={finding['event_loop_exposure']}"
+            f"{finding['priority']} {call['category']}/{call['operation']} "
+            f"{location['path']}:{location['line']} in {location['function']} "
+            f"exposure={finding['event_loop_exposure']}"
         )
         lines.append(f"  symbol: {call['symbol']}")
         if finding.get("code"):
@@ -202,7 +204,10 @@ def format_report(findings: Sequence[dict[str, object]], base: str) -> str:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="List blocking-IO candidates this change introduces: findings on added lines plus findings new versus the merge base (diff against --base)."
+        description=(
+            "List blocking-IO candidates this change introduces: findings on added lines plus "
+            "findings new versus the merge base (diff against --base)."
+        )
     )
     parser.add_argument("--base", default="origin/main", help="Base ref to diff against (default: origin/main).")
     parser.add_argument("--format", choices=("text", "json"), default="text", help="Output format.")

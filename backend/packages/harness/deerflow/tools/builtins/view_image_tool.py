@@ -64,7 +64,8 @@ def view_image_tool(
     - For multiple files at once (use present_files instead)
 
     Args:
-        image_path: Absolute /mnt/user-data virtual path to the image file. Common formats supported: jpg, jpeg, png, webp.
+        image_path: Absolute /mnt/user-data virtual path to the image file.
+            Common formats supported: jpg, jpeg, png, webp.
     """
     from deerflow.sandbox.exceptions import SandboxRuntimeError
     from deerflow.sandbox.tools import (
@@ -116,7 +117,10 @@ def view_image_tool(
             update={
                 "messages": [
                     ToolMessage(
-                        f"Error: Unsupported image format: {path.suffix}. Supported formats: {', '.join(_EXTENSION_TO_MIME)}",
+                        (
+                            f"Error: Unsupported image format: {path.suffix}. "
+                            f"Supported formats: {', '.join(_EXTENSION_TO_MIME)}"
+                        ),
                         tool_call_id=tool_call_id,
                     )
                 ]
@@ -146,7 +150,10 @@ def view_image_tool(
             update={
                 "messages": [
                     ToolMessage(
-                        f"Error: Image file is too large: {image_size} bytes. Maximum supported size is {_MAX_IMAGE_BYTES} bytes",
+                        (
+                            f"Error: Image file is too large: {image_size} bytes. "
+                            f"Maximum supported size is {_MAX_IMAGE_BYTES} bytes"
+                        ),
                         tool_call_id=tool_call_id,
                     )
                 ]
@@ -182,7 +189,10 @@ def view_image_tool(
             update={
                 "messages": [
                     ToolMessage(
-                        f"Error: Image contents are {detected_mime_type}, but file extension indicates {expected_mime_type}",
+                        (
+                            f"Error: Image contents are {detected_mime_type}, "
+                            f"but file extension indicates {expected_mime_type}"
+                        ),
                         tool_call_id=tool_call_id,
                     )
                 ]

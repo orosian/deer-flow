@@ -229,8 +229,10 @@ async def task_tool(
     - Tasks requiring user interaction or clarification
 
     Args:
-        description: A short (3-5 word) description of the task for logging/display. ALWAYS PROVIDE THIS PARAMETER FIRST.
-        prompt: The task description for the subagent. Be specific and clear about what needs to be done. ALWAYS PROVIDE THIS PARAMETER SECOND.
+        description: A short (3-5 word) description of the task for logging/display.
+            ALWAYS PROVIDE THIS PARAMETER FIRST.
+        prompt: The task description for the subagent. Be specific and clear about what needs to be done.
+            ALWAYS PROVIDE THIS PARAMETER SECOND.
         subagent_type: The type of subagent to use. ALWAYS PROVIDE THIS PARAMETER THIRD.
     """
     runtime_app_config = _get_runtime_app_config(runtime)
@@ -345,7 +347,9 @@ async def task_tool(
     max_poll_count = (config.timeout_seconds + 60) // 5
 
     logger.info(
-        f"[trace={trace_id}] Started background task {task_id} (subagent={subagent_type}, timeout={config.timeout_seconds}s, polling_limit={max_poll_count} polls)"
+        f"[trace={trace_id}] Started background task {task_id} "
+        f"(subagent={subagent_type}, timeout={config.timeout_seconds}s, "
+        f"polling_limit={max_poll_count} polls)"
     )
 
     writer = get_stream_writer()
@@ -427,7 +431,8 @@ async def task_tool(
             if poll_count > max_poll_count:
                 timeout_minutes = config.timeout_seconds // 60
                 logger.error(
-                    f"[trace={trace_id}] Task {task_id} polling timed out after {poll_count} polls (should have been caught by thread pool timeout)"
+                    f"[trace={trace_id}] Task {task_id} polling timed out after {poll_count} polls "
+                    "(should have been caught by thread pool timeout)"
                 )
                 _report_subagent_usage(runtime, result)
                 usage = _summarize_usage(getattr(result, "token_usage_records", None))
@@ -438,7 +443,11 @@ async def task_tool(
                 # _background_tasks once the background thread reaches a terminal state.
                 request_cancel_background_task(task_id)
                 _schedule_deferred_subagent_cleanup(task_id, trace_id, max_poll_count)
-                return f"Task polling timed out after {timeout_minutes} minutes. This may indicate the background task is stuck. Status: {result.status.value}"
+                status_value = result.status.value
+                return (
+                    f"Task polling timed out after {timeout_minutes} minutes. "
+                    f"This may indicate the background task is stuck. Status: {status_value}"
+                )
     except asyncio.CancelledError:
         # Signal the background subagent thread to stop cooperatively.
         request_cancel_background_task(task_id)

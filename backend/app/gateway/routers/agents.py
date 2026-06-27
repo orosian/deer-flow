@@ -85,7 +85,8 @@ def _require_agents_api_enabled() -> None:
         raise HTTPException(
             status_code=403,
             detail=(
-                "Custom-agent management API is disabled. Set agents_api.enabled=true to expose agent and user-profile routes over HTTP."
+                "Custom-agent management API is disabled. "
+                "Set agents_api.enabled=true to expose agent and user-profile routes over HTTP."
             ),
         )
 
@@ -311,7 +312,9 @@ async def update_agent(name: str, request: AgentUpdateRequest) -> AgentResponse:
         raise HTTPException(
             status_code=409,
             detail=(
-                f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating."
+                f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. "
+                "Run scripts/migrate_user_isolation.py to move legacy agents into "
+                "the per-user layout before updating."
             ),
         )
 
@@ -472,7 +475,9 @@ async def delete_agent(name: str) -> None:
         raise HTTPException(
             status_code=409,
             detail=(
-                f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before deleting."
+                f"Agent '{name}' only exists in the legacy shared layout and is not scoped to a user. "
+                "Run scripts/migrate_user_isolation.py to move legacy agents into "
+                "the per-user layout before deleting."
             ),
         )
     if outcome == "missing":

@@ -147,7 +147,8 @@ class DeerFlowClient:
             subagent_enabled: Enable subagent delegation.
             plan_mode: Enable TodoList middleware for plan mode.
             agent_name: Name of the agent to use.
-            available_skills: Optional set of skill names to make available. If None (default), all scanned skills are available.
+            available_skills: Optional set of skill names to make available.
+                If None (default), all scanned skills are available.
             middlewares: Optional list of custom middlewares to inject into the agent.
             environment: Deployment environment label that ends up in
                 ``langfuse_tags`` (e.g. ``"production"`` / ``"staging"``).
@@ -995,7 +996,8 @@ class DeerFlowClient:
         config_path = ExtensionsConfig.resolve_config_path()
         if config_path is None:
             raise FileNotFoundError(
-                "Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH or ensure it exists in the project root."
+                "Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH "
+                "or ensure it exists in the project root."
             )
 
         current_config = get_extensions_config()
@@ -1062,7 +1064,8 @@ class DeerFlowClient:
         config_path = ExtensionsConfig.resolve_config_path()
         if config_path is None:
             raise FileNotFoundError(
-                "Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH or ensure it exists in the project root."
+                "Cannot locate extensions_config.json. Set DEER_FLOW_EXTENSIONS_CONFIG_PATH "
+                "or ensure it exists in the project root."
             )
 
         extensions_config = get_extensions_config()

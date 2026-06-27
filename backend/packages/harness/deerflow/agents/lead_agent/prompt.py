@@ -191,11 +191,16 @@ def _build_available_subagents_description(
     """
     # Built-in descriptions (kept for backward compatibility with existing prompt quality)
     builtin_descriptions = {
-        "general-purpose": "For ANY non-trivial task - web research, code exploration, file operations, analysis, etc.",
+        "general-purpose": (
+            "For ANY non-trivial task - web research, code exploration, file operations, analysis, etc."
+        ),
         "bash": (
             "For command execution (git, build, test, deploy operations)"
             if bash_available
-            else "Not available in the current sandbox configuration. Use direct file/web tools or switch to AioSandboxProvider for isolated shell access."
+            else (
+                "Not available in the current sandbox configuration. Use direct file/web tools or "
+                "switch to AioSandboxProvider for isolated shell access."
+            )
         ),
     }
 
@@ -234,14 +239,24 @@ def _build_subagent_section(max_concurrent: int, *, app_config: AppConfig | None
 
     # Dynamically build subagent type descriptions from registry (aligned with Codex's
     # agent_type_description pattern where all registered roles are listed in the tool spec).
-    available_subagents = _build_available_subagents_description(available_names, bash_available, app_config=app_config)
+    available_subagents = _build_available_subagents_description(
+        available_names, bash_available, app_config=app_config
+    )
     direct_tool_examples = (
         "bash, ls, read_file, web_search, etc." if bash_available else "ls, read_file, web_search, etc."
     )
     direct_execution_example = (
-        '# User asks: "Run the tests"\n# Thinking: Cannot decompose into parallel sub-tasks\n# → Execute directly\n\nbash("npm test")  # Direct execution, not task()'
+        '# User asks: "Run the tests"\n'
+        "# Thinking: Cannot decompose into parallel sub-tasks\n"
+        "# → Execute directly\n"
+        '\n\nbash("npm test")  # Direct execution, not task()'
         if bash_available
-        else '# User asks: "Read the README"\n# Thinking: Single straightforward file read\n# → Execute directly\n\nread_file("/mnt/user-data/workspace/README.md")  # Direct execution, not task()'
+        else (
+            '# User asks: "Read the README"\n'
+            "# Thinking: Single straightforward file read\n"
+            "# → Execute directly\n"
+            '\n\nread_file("/mnt/user-data/workspace/README.md")  # Direct execution, not task()'
+        )
     )
     return f"""<subagent_system>
 **🚀 SUBAGENT MODE ACTIVE - DECOMPOSE, DELEGATE, SYNTHESIZE**
@@ -254,16 +269,19 @@ You are running with subagent capabilities enabled. Your role is to be a **task 
 **CORE PRINCIPLE: Complex tasks should be decomposed and distributed across multiple subagents for parallel execution.**
 
 **⛔ HARD CONCURRENCY LIMIT: MAXIMUM {n} `task` CALLS PER RESPONSE. THIS IS NOT OPTIONAL.**
-- Each response, you may include **at most {n}** `task` tool calls. Any excess calls are **silently discarded** by the system — you will lose that work.
+- Each response, you may include **at most {n}** `task` tool calls. Any excess calls are **silently
+discarded** by the system — you will lose that work.
 - **Before launching subagents, you MUST count your sub-tasks in your thinking:**
   - If count ≤ {n}: Launch all in this response.
-  - If count > {n}: **Pick the {n} most important/foundational sub-tasks for this turn.** Save the rest for the next turn.
+  - If count > {n}: **Pick the {n} most important/foundational sub-tasks for this turn.** Save the rest
+    for the next turn.
 - **Multi-batch execution** (for >{n} sub-tasks):
   - Turn 1: Launch sub-tasks 1-{n} in parallel → wait for results
   - Turn 2: Launch next batch in parallel → wait for results
   - ... continue until all sub-tasks are complete
   - Final turn: Synthesize ALL results into a coherent answer
-- **Example thinking pattern**: "I identified 6 sub-tasks. Since the limit is {n} per turn, I will launch the first {n} now, and the rest in the next turn."
+- **Example thinking pattern**: "I identified 6 sub-tasks. Since the limit is {n} per turn, I will
+  launch the first {n} now, and the rest in the next turn."
 
 **Available Subagents:**
 {available_subagents}
@@ -316,7 +334,8 @@ For complex queries, break them down into focused sub-tasks and execute in paral
 5. **SYNTHESIZE**: After ALL batches are done, synthesize all results.
 6. **Cannot decompose** → Execute directly using available tools ({direct_tool_examples})
 
-**⛔ VIOLATION: Launching more than {n} `task` calls in a single response is a HARD ERROR. The system WILL discard excess calls and you WILL lose work. Always batch.**
+**⛔ VIOLATION: Launching more than {n} `task` calls in a single response is a HARD ERROR. The system
+WILL discard excess calls and you WILL lose work. Always batch.**
 
 **Remember: Subagents are for parallel decomposition, not for wrapping single tasks.**
 
@@ -381,9 +400,11 @@ You are {agent_name}, an open-source super agent.
 <thinking_style>
 - Think concisely and strategically about the user's request BEFORE taking action
 - Break down the task: What is clear? What is ambiguous? What is missing?
-- **PRIORITY CHECK: If anything is unclear, missing, or has multiple interpretations, you MUST ask for clarification FIRST - do NOT proceed with work**
+- **PRIORITY CHECK**: If anything is unclear, missing, or has multiple interpretations, you MUST ask
+  for clarification FIRST - do NOT proceed with work**
 {subagent_thinking}- Never write down your full final answer or report in thinking process, but only outline
-- CRITICAL: After thinking, you MUST provide your actual response to the user. Thinking is for planning, the response is for delivery.
+- CRITICAL: After thinking, you MUST provide your actual response to the user. Thinking is for
+  planning, the response is for delivery.
 - Your response must contain the actual answer, not just a reference to what you thought about
 </thinking_style>
 
@@ -473,7 +494,8 @@ You: "Deploying to staging..." [proceed]
 - For PDF, PPT, Excel, and Word files, converted Markdown versions (*.md) are available alongside originals
 - All temporary work happens in `/mnt/user-data/workspace`
 - Treat `/mnt/user-data/workspace` as your default current working directory for coding and file-editing tasks
-- When writing scripts or commands that create/read files from the workspace, prefer relative paths such as `hello.txt`, `../uploads/data.csv`, and `../outputs/report.md`
+- When writing scripts or commands that create/read files from the workspace, prefer relative paths
+  such as `hello.txt`, `../uploads/data.csv`, and `../outputs/report.md`
 - Avoid hardcoding `/mnt/user-data/...` inside generated scripts when a relative path from the workspace is enough
 - Final deliverables must be copied to `/mnt/user-data/outputs` and presented using `present_files` tool
 {acp_section}
@@ -549,7 +571,8 @@ combined with a FastAPI gateway for REST API access [citation:FastAPI](https://f
 </citations>
 
 <critical_reminders>
-- **Clarification First**: ALWAYS clarify unclear/missing/ambiguous requirements BEFORE starting work - never assume or guess
+- **Clarification First**: ALWAYS clarify unclear/missing/ambiguous requirements BEFORE starting work
+  - never assume or guess
 {subagent_reminder}- Skill First: Always load the relevant skill before starting **complex** tasks.
 - Progressive Loading: Load resources incrementally as referenced in skills
 - Output Files: Final deliverables must be in `/mnt/user-data/outputs`
@@ -562,7 +585,9 @@ combined with a FastAPI gateway for REST API access [citation:FastAPI](https://f
   keeps each tool call small and avoids mid-stream chunk-gap timeouts
   on oversized single-shot writes. (See issue #3189.)  
 - Clarity: Be direct and helpful, avoid unnecessary meta-commentary
-- Including Images and Mermaid: Images and Mermaid diagrams are always welcomed in the Markdown format, and you're encouraged to use `![Image Description](image_path)\n\n` or "```mermaid" to display images in response or Markdown files
+- Including Images and Mermaid: Images and Mermaid diagrams are always welcomed in the Markdown format,
+  and you're encouraged to use `![Image Description](image_path)\n\n` or "```mermaid" to display images
+  in response or Markdown files
 - Multi-task: Better utilize parallel tool calling to call multiple tools at one time for better performance
 - Language Consistency: Keep using the same language as user's
 - Always Respond: Your thinking is internal. You MUST always provide a visible response to the user after thinking.
@@ -629,15 +654,23 @@ def _get_cached_skills_prompt_section(
     skills_list = ""
     if filtered:
         skill_items = "\n".join(
-            f"    <skill>\n        <name>{name}</name>\n        <description>{description} {_skill_mutability_label(category)}</description>\n        <location>{location}</location>\n    </skill>"
+            (
+                "    <skill>\n"
+                f"        <name>{name}</name>\n"
+                f"        <description>{description} {_skill_mutability_label(category)}</description>\n"
+                f"        <location>{location}</location>\n"
+                "    </skill>"
+            )
             for name, description, category, location in filtered
         )
         skills_list = f"<available_skills>\n{skill_items}\n</available_skills>"
     return f"""<skill_system>
-You have access to skills that provide optimized workflows for specific tasks. Each skill contains best practices, frameworks, and references to additional resources.
+You have access to skills that provide optimized workflows for specific tasks. Each skill contains
+best practices, frameworks, and references to additional resources.
 
 **Progressive Loading Pattern:**
-1. When a user query matches a skill's use case, immediately call `read_file` on the skill's main file using the path attribute provided in the skill tag below
+1. When a user query matches a skill's use case, immediately call `read_file` on the skill's main file
+   using the path attribute provided in the skill tag below
 2. Read and understand the skill's workflow and instructions
 3. The skill file contains references to external resources under the same folder
 4. Load referenced resources only when needed during execution
@@ -646,7 +679,8 @@ You have access to skills that provide optimized workflows for specific tasks. E
 **Explicit Slash Skill Activation:**
 - If the user starts a request with `/<skill-name>`, that skill was explicitly requested for the current turn.
 - Follow the activated skill before choosing a general workflow.
-- The runtime injects the activated skill content for explicit slash activations; do not call `read_file` for that SKILL.md again unless the injected skill references supporting resources you need.
+- The runtime injects the activated skill content for explicit slash activations; do not call
+  `read_file` for that SKILL.md again unless the injected skill references supporting resources you need.
 
 **Skills are located at:** {container_base_path}
 {skill_evolution_section}
@@ -710,14 +744,17 @@ You are running as the custom agent **{agent_name}** with a persisted SOUL.md an
 
 When the user asks you to update your own description, personality, behaviour, skill set, tool groups, or default model,
 you MUST persist the change with the `update_agent` tool. Do NOT use `bash`, `write_file`, or any sandbox tool to edit
-SOUL.md or config.yaml — those write into a temporary sandbox/tool workspace and the changes will be lost on the next turn.
+SOUL.md or config.yaml — those write into a temporary sandbox/tool workspace and the changes will
+be lost on the next turn.
 
 Rules:
-- Always pass the FULL replacement text for `soul` (no patch semantics). Start from your current SOUL above and apply the user's edits.
+- Always pass the FULL replacement text for `soul` (no patch semantics). Start from your current SOUL above
+  and apply the user's edits.
 - Only pass the fields that should change. Omit the others to preserve them.
 - Never pass literal strings like `"null"`, `"none"`, or `"undefined"` for unchanged fields.
 - Pass `skills=[]` to disable all skills, or omit `skills` to keep the existing whitelist.
-- After `update_agent` returns successfully, tell the user the change is persisted and will take effect on the next turn.
+- After `update_agent` returns successfully, tell the user the change is persisted and will take effect on
+  the next turn.
 </self_update>
 """
 
@@ -741,8 +778,10 @@ def _build_acp_section(*, app_config: AppConfig | None = None) -> str:
         "\n**ACP Agent Tasks (invoke_acp_agent):**\n"
         "- ACP agents (e.g. codex, claude_code) run in their own independent workspace — NOT in `/mnt/user-data/`\n"
         "- When writing prompts for ACP agents, describe the task only — do NOT reference `/mnt/user-data` paths\n"
-        "- ACP agent results are accessible at `/mnt/acp-workspace/` (read-only) — use `ls`, `read_file`, or `bash cp` to retrieve output files\n"
-        "- To deliver ACP output to the user: copy from `/mnt/acp-workspace/<file>` to `/mnt/user-data/outputs/<file>`, then use `present_files`"
+        "- ACP agent results are accessible at `/mnt/acp-workspace/` (read-only) — use `ls`, `read_file`, "
+        "or `bash cp` to retrieve output files\n"
+        "- To deliver ACP output to the user: copy from `/mnt/acp-workspace/<file>` to "
+        "`/mnt/user-data/outputs/<file>`, then use `present_files`"
     )
 
 
@@ -770,7 +809,11 @@ def _build_custom_mounts_section(*, app_config: AppConfig | None = None) -> str:
         lines.append(f"- Custom mount: `{mount.container_path}` - Host directory mapped into the sandbox ({access})")
 
     mounts_list = "\n".join(lines)
-    return f"\n**Custom Mounted Directories:**\n{mounts_list}\n- If the user needs files outside `/mnt/user-data`, use these absolute container paths directly when they match the requested directory"
+    return (
+        f"\n**Custom Mounted Directories:**\n{mounts_list}\n"
+        f"- If the user needs files outside `/mnt/user-data`, use these absolute container paths "
+        f"directly when they match the requested directory"
+    )
 
 
 def apply_prompt_template(

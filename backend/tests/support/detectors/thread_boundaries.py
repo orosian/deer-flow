@@ -465,7 +465,9 @@ def format_text(findings: Sequence[BoundaryFinding]) -> str:
     lines: list[str] = []
     for finding in findings:
         lines.append(
-            f"{finding.severity} {finding.category} {finding.path}:{finding.line}:{finding.column + 1} in {finding.function} async={str(finding.async_context).lower()}"
+            f"{finding.severity} {finding.category} "
+            f"{finding.path}:{finding.line}:{finding.column + 1} "
+            f"in {finding.function} async={str(finding.async_context).lower()}"
         )
         lines.append(f"  symbol: {finding.symbol}")
         lines.append(f"  note: {finding.message}")
@@ -477,7 +479,8 @@ def format_text(findings: Sequence[BoundaryFinding]) -> str:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Detect async/thread boundary points for developer review. Findings are an inventory, not automatic bug decisions."
+            "Detect async/thread boundary points for developer review. "
+            "Findings are an inventory, not automatic bug decisions."
         )
     )
     parser.add_argument(

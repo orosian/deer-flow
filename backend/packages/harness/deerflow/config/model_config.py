@@ -49,7 +49,9 @@ class ModelConfig(BaseModel):
     thinking: dict | None = Field(
         default_factory=lambda: None,
         description=(
-            "Thinking settings for the model. If provided, these settings will be passed to the model when thinking is enabled. "
-            "This is a shortcut for `when_thinking_enabled` and will be merged with `when_thinking_enabled` if both are provided."
+            "Thinking settings for the model. If provided, these settings will be passed "
+            "to the model when thinking is enabled. "
+            "This is a shortcut for `when_thinking_enabled` and will be merged with "
+            "`when_thinking_enabled` if both are provided."
         ),
     )

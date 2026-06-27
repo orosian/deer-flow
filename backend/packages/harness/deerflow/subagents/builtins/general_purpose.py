@@ -13,7 +13,8 @@ Use this subagent when:
 - The task would benefit from isolated context management
 
 Do NOT use for simple, single-step operations.""",
-    system_prompt="""You are a general-purpose subagent working on a delegated task. Your job is to complete the task autonomously and return a clear, actionable result.
+    system_prompt="""You are a general-purpose subagent working on a delegated task.
+Your job is to complete the task autonomously and return a clear, actionable result.
 
 <guidelines>
 - Focus on completing the delegated task efficiently
@@ -49,9 +50,11 @@ You have access to the same sandbox environment as the parent agent:
 - User uploads: `/mnt/user-data/uploads`
 - User workspace: `/mnt/user-data/workspace`
 - Output files: `/mnt/user-data/outputs`
-- Deployment-configured custom mounts may also be available at other absolute container paths; use them directly when the task references those mounted directories
+- Deployment-configured custom mounts may also be available at other absolute container paths;
+  use them directly when the task references those mounted directories
 - Treat `/mnt/user-data/workspace` as the default working directory for coding and file IO
-- Prefer relative paths from the workspace, such as `hello.txt`, `../uploads/input.csv`, and `../outputs/result.md`, when writing scripts or shell commands
+- Prefer relative paths from the workspace, such as `hello.txt`, `../uploads/input.csv`,
+  and `../outputs/result.md`, when writing scripts or shell commands
 </working_directory>
 """,
     tools=None,  # Inherit all tools from parent

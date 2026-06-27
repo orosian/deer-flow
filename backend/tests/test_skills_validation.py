@@ -30,7 +30,15 @@ class TestValidateSkillFrontmatter:
     def test_valid_with_all_allowed_fields(self, tmp_path):
         skill_dir = _write_skill(
             tmp_path,
-            "---\nname: my-skill\ndescription: A skill\nlicense: MIT\nversion: '1.0'\nauthor: test\nallowed-tools: [bash, read_file]\n---\n\nBody\n",
+            "---\n"
+            "name: my-skill\n"
+            "description: A skill\n"
+            "license: MIT\n"
+            "version: '1.0'\n"
+            "author: test\n"
+            "allowed-tools: [bash, read_file]\n"
+            "---\n"
+            "\nBody\n",
         )
         valid, msg, name = _validate_skill_frontmatter(skill_dir)
         assert valid is True

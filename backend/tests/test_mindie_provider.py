@@ -195,14 +195,22 @@ class TestParseXmlToolCalls:
         assert calls[0]["id"].startswith("call_")
 
     def test_multiple_tool_calls_parsed(self):
-        content = "<tool_call><function=a><parameter=x>1</parameter></function></tool_call><tool_call><function=b><parameter=y>2</parameter></function></tool_call>"
+        content = (
+            "tool_call<function=a><parameter=x>1</parameter></function>"
+            "tool_call<function=b><parameter=y>2</parameter></function>"
+            "tool_call"
+        )
         _, calls = _parse_xml_tool_call_to_dict(content)
         assert len(calls) == 2
         assert calls[0]["name"] == "a"
         assert calls[1]["name"] == "b"
 
     def test_nested_tool_call_blocks_do_not_break_parsing(self):
-        content = "<tool_call><function=outer><parameter=q>1</parameter><tool_call><function=inner><parameter=x>2</parameter></function></tool_call></function></tool_call>"
+        content = (
+            "tool_call<function=outer><parameter=q>1</parameter>"
+            "tool_call<function=inner><parameter=x>2</parameter></function>"
+            "tool_call</function>tool_call"
+        )
         clean, calls = _parse_xml_tool_call_to_dict(content)
         assert clean == ""
         assert len(calls) == 1
@@ -252,7 +260,11 @@ class TestParseXmlToolCalls:
         assert c1[0]["id"] != c2[0]["id"]
 
     def test_escaped_entities_are_unescaped(self):
-        content = "<tool_call><function=fn&lt;&amp;&gt;><parameter=k&lt;&amp;&gt;>v&lt;&amp;&gt;</parameter></function></tool_call>"
+        content = (
+            "tool_call<function=fn&lt;&amp;&gt;>"
+            "<parameter=k&lt;&amp;&gt;>v&lt;&amp;&gt;</parameter></function>"
+            "tool_call"
+        )
         _, calls = _parse_xml_tool_call_to_dict(content)
         assert calls[0]["name"] == "fn<&>"
         assert calls[0]["args"]["k<&>"] == "v<&>"

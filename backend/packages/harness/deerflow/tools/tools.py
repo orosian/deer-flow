@@ -79,7 +79,8 @@ def get_available_tools(
     for cfg, loaded in loaded_tools_raw:
         if cfg.name != loaded.name:
             logger.warning(
-                "Tool name mismatch: config name %r does not match tool .name %r (use: %s). The tool's own .name will be used for binding.",
+                "Tool name mismatch: config name %r does not match tool .name %r (use: %s). "
+                "The tool's own .name will be used for binding.",
                 cfg.name,
                 loaded.name,
                 cfg.use,
@@ -157,7 +158,8 @@ def get_available_tools(
         logger.warning(f"Failed to load ACP tool: {e}")
 
     logger.info(
-        f"Total tools loaded: {len(loaded_tools)}, built-in tools: {len(builtin_tools)}, MCP tools: {len(mcp_tools)}, ACP tools: {len(acp_tools)}"
+        f"Total tools loaded: {len(loaded_tools)}, built-in tools: {len(builtin_tools)}, "
+        f"MCP tools: {len(mcp_tools)}, ACP tools: {len(acp_tools)}"
     )
 
     # Deduplicate by tool name — config-loaded tools take priority, followed by
@@ -172,7 +174,8 @@ def get_available_tools(
             seen_names.add(t.name)
         else:
             logger.warning(
-                "Duplicate tool name %r detected and skipped — check your config.yaml and MCP server registrations (issue #1803).",
+                "Duplicate tool name %r detected and skipped — check your config.yaml and "
+                "MCP server registrations (issue #1803).",
                 t.name,
             )
     return unique_tools

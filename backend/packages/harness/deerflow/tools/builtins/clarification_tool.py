@@ -23,7 +23,8 @@ def ask_clarification_tool(
     - **Missing information**: Required details not provided (e.g., file paths, URLs, specific requirements)
     - **Ambiguous requirements**: Multiple valid interpretations exist
     - **Approach choices**: Several valid approaches exist and you need user preference
-    - **Risky operations**: Destructive actions that need explicit confirmation (e.g., deleting files, modifying production)
+    - **Risky operations**: Destructive actions that need explicit confirmation
+      (e.g., deleting files, modifying production)
     - **Suggestions**: You have a recommendation but want user approval before proceeding
 
     The execution will be interrupted and the question will be presented to the user.
@@ -45,9 +46,12 @@ def ask_clarification_tool(
 
     Args:
         question: The clarification question to ask the user. Be specific and clear.
-        clarification_type: The type of clarification needed (missing_info, ambiguous_requirement, approach_choice, risk_confirmation, suggestion).
-        context: Optional context explaining why clarification is needed. Helps the user understand the situation.
-        options: Optional list of choices (for approach_choice or suggestion types). Present clear options for the user to choose from.
+        clarification_type: The type of clarification needed
+            (missing_info, ambiguous_requirement, approach_choice, risk_confirmation, suggestion).
+        context: Optional context explaining why clarification is needed.
+            Helps the user understand the situation.
+        options: Optional list of choices (for approach_choice or suggestion types).
+            Present clear options for the user to choose from.
     """
     # This is a placeholder implementation
     # The actual logic is handled by ClarificationMiddleware which intercepts this tool call

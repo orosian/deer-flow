@@ -46,7 +46,9 @@ def _load_or_create_secret() -> str:
                 return secret
     except OSError as exc:
         raise RuntimeError(
-            f"Failed to read JWT secret from {secret_file}. Set AUTH_JWT_SECRET explicitly or fix DEER_FLOW_HOME/base directory permissions so DeerFlow can read its persisted auth secret."
+            f"Failed to read JWT secret from {secret_file}. "
+            "Set AUTH_JWT_SECRET explicitly or fix DEER_FLOW_HOME/base directory "
+            "permissions so DeerFlow can read its persisted auth secret."
         ) from exc
 
     secret = secrets.token_urlsafe(32)
@@ -57,7 +59,9 @@ def _load_or_create_secret() -> str:
             fh.write(secret)
     except OSError as exc:
         raise RuntimeError(
-            f"Failed to persist JWT secret to {secret_file}. Set AUTH_JWT_SECRET explicitly or fix DEER_FLOW_HOME/base directory permissions so DeerFlow can store a stable auth secret."
+            f"Failed to persist JWT secret to {secret_file}. "
+            "Set AUTH_JWT_SECRET explicitly or fix DEER_FLOW_HOME/base directory "
+            "permissions so DeerFlow can store a stable auth secret."
         ) from exc
     return secret
 

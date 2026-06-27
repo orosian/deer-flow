@@ -467,7 +467,7 @@ def test_task_tool_no_tool_groups_passes_none(monkeypatch):
 
 
 def test_task_tool_runtime_none_passes_groups_none(monkeypatch):
-    """Verify that when runtime is None, groups=None is passed (e.g., unknown subagent path exits early, but tools still load correctly)."""
+    """Verify runtime=None path: groups=None is passed (unknown subagent path exits early, but tools still load)."""
     config = _make_subagent_config()
     events = []
     get_available_tools = MagicMock(return_value=[])

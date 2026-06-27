@@ -50,7 +50,8 @@ class WeComChannel(Channel):
         send_reply = getattr(ws_manager, "send_reply", None)
         if not callable(send_reply):
             raise RuntimeError(
-                "Installed wecom-aibot-python-sdk does not expose the WebSocket media upload API expected by DeerFlow. Use wecom-aibot-python-sdk==0.1.6 or update the adapter."
+                "Installed wecom-aibot-python-sdk does not expose the WebSocket media upload API "
+                "expected by DeerFlow. Use wecom-aibot-python-sdk==0.1.6 or update the adapter."
             )
 
         send_reply_async = cast(Callable[[str, dict[str, Any], str], Awaitable[dict[str, Any]]], send_reply)
@@ -101,7 +102,9 @@ class WeComChannel(Channel):
         if exc is None:
             return
         logger.error(
-            "WeCom WebSocket connection task failed: %s. Check that the network/proxy allows wss://openws.work.weixin.qq.com and that bot_id/bot_secret are valid.",
+            "WeCom WebSocket connection task failed: %s. "
+            "Check that the network/proxy allows wss://openws.work.weixin.qq.com "
+            "and that bot_id/bot_secret are valid.",
             exc,
         )
 

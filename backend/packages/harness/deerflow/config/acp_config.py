@@ -15,7 +15,10 @@ class ACPAgentConfig(BaseModel):
     args: list[str] = Field(default_factory=list, description="Additional command arguments")
     env: dict[str, str] = Field(
         default_factory=dict,
-        description="Environment variables to inject into the agent subprocess. Values starting with $ are resolved from host environment variables.",
+        description=(
+            "Environment variables to inject into the agent subprocess. "
+            "Values starting with $ are resolved from host environment variables."
+        ),
     )
     description: str = Field(description="Description of the agent's capabilities (shown in tool description)")
     model: str | None = Field(default=None, description="Model hint passed to the agent (optional)")

@@ -265,7 +265,8 @@ class LocalContainerBackend(SandboxBackend):
         """Start a new container and return its connection info.
 
         Args:
-            thread_id: Thread ID for which the sandbox is being created. Useful for backends that want to organize sandboxes by thread.
+            thread_id: Thread ID for which the sandbox is being created.
+                Useful for backends that want to organize sandboxes by thread.
             sandbox_id: Deterministic sandbox identifier (used in container name).
             extra_mounts: Additional volume mounts as (host_path, container_path, read_only) tuples.
 
@@ -304,7 +305,8 @@ class LocalContainerBackend(SandboxBackend):
                 # discover and adopt the existing container instead of failing.
                 if "is already in use by container" in err_lower or "conflict. the container name" in err_lower:
                     logger.warning(
-                        f"Container name {container_name} already in use, attempting to discover existing sandbox instance"
+                        f"Container name {container_name} already in use, "
+                        "attempting to discover existing sandbox instance"
                     )
                     existing = self.discover(sandbox_id)
                     if existing is not None:

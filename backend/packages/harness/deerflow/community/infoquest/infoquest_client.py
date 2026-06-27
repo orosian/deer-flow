@@ -27,7 +27,9 @@ class InfoQuestClient:
         image_size: str = "i",
     ):
         logger.info(
-            "\n============================================\n🚀 BytePlus InfoQuest Client Initialization 🚀\n============================================"
+            "\n============================================\n"
+            "🚀 BytePlus InfoQuest Client Initialization 🚀\n"
+            "============================================"
         )
 
         self.fetch_time = fetch_time
@@ -38,15 +40,26 @@ class InfoQuestClient:
         self.image_size = image_size
         self.api_key_set = bool(os.getenv("INFOQUEST_API_KEY"))
         if logger.isEnabledFor(logging.DEBUG):
+            fetch_time_marker = "(Default: No fetch time)" if fetch_time == -1 else "(Custom)"
+            fetch_timeout_marker = "(Default: No fetch timeout)" if fetch_timeout == -1 else "(Custom)"
+            fetch_navigation_marker = (
+                "(Default: No Navigation Timeout)" if fetch_navigation_timeout == -1 else "(Custom)"
+            )
+            search_time_marker = "(Default: No Search Time Range)" if search_time_range == -1 else "(Custom)"
+            image_search_marker = (
+                "(Default: No Image Search Time Range)" if image_search_time_range == -1 else "(Custom)"
+            )
+            image_size_marker = "(Default: Medium)" if image_size == "m" else "(Custom)"
+            api_key_marker = "✅ Configured" if self.api_key_set else "❌ Not set"
             config_details = (
                 f"\n📋 Configuration Details:\n"
-                f"├── Fetch time: {fetch_time} {'(Default: No fetch time)' if fetch_time == -1 else '(Custom)'}\n"
-                f"├── Fetch Timeout: {fetch_timeout} {'(Default: No fetch timeout)' if fetch_timeout == -1 else '(Custom)'}\n"
-                f"├── Navigation Timeout: {fetch_navigation_timeout} {'(Default: No Navigation Timeout)' if fetch_navigation_timeout == -1 else '(Custom)'}\n"
-                f"├── Search Time Range: {search_time_range} {'(Default: No Search Time Range)' if search_time_range == -1 else '(Custom)'}\n"
-                f"├── Image Search Time Range: {image_search_time_range} {'(Default: No Image Search Time Range)' if image_search_time_range == -1 else '(Custom)'}\n"
-                f"├── Image Size: {image_size} {'(Default: Medium)' if image_size == 'm' else '(Custom)'}\n"
-                f"└── API Key: {'✅ Configured' if self.api_key_set else '❌ Not set'}"
+                f"├── Fetch time: {fetch_time} {fetch_time_marker}\n"
+                f"├── Fetch Timeout: {fetch_timeout} {fetch_timeout_marker}\n"
+                f"├── Navigation Timeout: {fetch_navigation_timeout} {fetch_navigation_marker}\n"
+                f"├── Search Time Range: {search_time_range} {search_time_marker}\n"
+                f"├── Image Search Time Range: {image_search_time_range} {image_search_marker}\n"
+                f"├── Image Size: {image_size} {image_size_marker}\n"
+                f"└── API Key: {api_key_marker}"
             )
 
             logger.debug(config_details)
@@ -55,13 +68,17 @@ class InfoQuestClient:
     def fetch(self, url: str, return_format: str = "html") -> str:
         if logger.isEnabledFor(logging.DEBUG):
             url_truncated = url[:50] + "..." if len(url) > 50 else url
+            has_timeout = self.fetch_timeout > 0
+            has_fetch_time = self.fetch_time > 0
+            has_navigation_timeout = self.fetch_navigation_timeout > 0
             logger.debug(
                 f"InfoQuest - Fetch API request initiated | "
                 f"operation=crawl url | "
                 f"url_truncated={url_truncated} | "
-                f"has_timeout_filter={self.fetch_timeout > 0} | timeout_filter={self.fetch_timeout} | "
-                f"has_fetch_time_filter={self.fetch_time > 0} | fetch_time_filter={self.fetch_time} | "
-                f"has_navigation_timeout_filter={self.fetch_navigation_timeout > 0} | navi_timeout_filter={self.fetch_navigation_timeout} | "
+                f"has_timeout_filter={has_timeout} | timeout_filter={self.fetch_timeout} | "
+                f"has_fetch_time_filter={has_fetch_time} | fetch_time_filter={self.fetch_time} | "
+                f"has_navigation_timeout_filter={has_navigation_timeout} | "
+                f"navi_timeout_filter={self.fetch_navigation_timeout} | "
                 f"request_type=sync"
             )
 
@@ -194,7 +211,8 @@ class InfoQuestClient:
         if logger.isEnabledFor(logging.DEBUG):
             response_sample = json.dumps(response_json)[:200] + ("..." if len(json.dumps(response_json)) > 200 else "")
             logger.debug(
-                f"Search API request completed successfully | service=InfoQuest | status=success | response_sample={response_sample}"
+                f"Search API request completed successfully | service=InfoQuest | status=success | "
+                f"response_sample={response_sample}"
             )
 
         return response_json
@@ -251,8 +269,13 @@ class InfoQuestClient:
                         seen_urls.add(url)
                         clean_results.append(clean_result)
                         counts["news"] += 1
+        total_results = len(clean_results)
+        pages_count = counts["pages"]
+        news_count = counts["news"]
+        unique_urls = len(seen_urls)
         logger.debug(
-            f"Results processing completed | total_results={len(clean_results)} | pages={counts['pages']} | news_items={counts['news']} | unique_urls={len(seen_urls)}"
+            f"Results processing completed | total_results={total_results} | "
+            f"pages={pages_count} | news_items={news_count} | unique_urls={unique_urls}"
         )
 
         return clean_results
@@ -265,12 +288,14 @@ class InfoQuestClient:
     ) -> str:
         if logger.isEnabledFor(logging.DEBUG):
             query_truncated = query[:50] + "..." if len(query) > 50 else query
+            has_time_filter = self.search_time_range > 0
+            has_site_filter = bool(site)
             logger.debug(
                 f"InfoQuest - Search API request initiated | "
                 f"operation=search webs | "
                 f"query_truncated={query_truncated} | "
-                f"has_time_filter={self.search_time_range > 0} | time_filter={self.search_time_range} | "
-                f"has_site_filter={bool(site)} | site={site} | "
+                f"has_time_filter={has_time_filter} | time_filter={self.search_time_range} | "
+                f"has_site_filter={has_site_filter} | site={site} | "
                 f"request_type=sync"
             )
 
@@ -290,8 +315,10 @@ class InfoQuestClient:
 
                 result_json = json.dumps(cleaned_results, indent=2, ensure_ascii=False)
 
+                results_count = len(cleaned_results)
                 logger.debug(
-                    f"InfoQuest Web-Search - Search tool execution completed | mode=synchronous | results_count={len(cleaned_results)}"
+                    f"InfoQuest Web-Search - Search tool execution completed | "
+                    f"mode=synchronous | results_count={results_count}"
                 )
                 return result_json
 
@@ -299,7 +326,8 @@ class InfoQuestClient:
                 # Fallback to content field if search_result is not available
                 error_message = "web search API return wrong format"
                 logger.error(
-                    "web search API return wrong format, no search_result nor content field found in JSON response, content: %s",
+                    "web search API return wrong format, "
+                    "no search_result nor content field found in JSON response, content: %s",
                     raw_results["content"],
                 )
                 return f"Error: {error_message}"
@@ -339,8 +367,12 @@ class InfoQuestClient:
                             counts["images"] += 1
                     if "title" in result:
                         clean_result["title"] = result["title"]
+        total_results = len(clean_results)
+        images_count = counts["images"]
+        unique_urls = len(seen_urls)
         logger.debug(
-            f"Results processing completed | total_results={len(clean_results)} | images={counts['images']} | unique_urls={len(seen_urls)}"
+            f"Results processing completed | total_results={total_results} | "
+            f"images={images_count} | unique_urls={unique_urls}"
         )
 
         return clean_results
@@ -380,7 +412,8 @@ class InfoQuestClient:
         if logger.isEnabledFor(logging.DEBUG):
             response_sample = json.dumps(response_json)[:200] + ("..." if len(json.dumps(response_json)) > 200 else "")
             logger.debug(
-                f"Image Search API request completed successfully | service=InfoQuest | status=success | response_sample={response_sample}"
+                f"Image Search API request completed successfully | service=InfoQuest | status=success | "
+                f"response_sample={response_sample}"
             )
 
         return response_json
@@ -393,12 +426,15 @@ class InfoQuestClient:
     ) -> str:
         if logger.isEnabledFor(logging.DEBUG):
             query_truncated = query[:50] + "..." if len(query) > 50 else query
+            has_site_filter = bool(site)
+            time_range_in_range = 1 <= self.image_search_time_range <= 365
+            time_range_marker = self.image_search_time_range if time_range_in_range else "default"
             logger.debug(
                 f"InfoQuest - Image Search API request initiated | "
                 f"operation=search images | "
                 f"query_truncated={query_truncated} | "
-                f"has_site_filter={bool(site)} | site={site} | "
-                f"image_search_time_range={self.image_search_time_range if self.image_search_time_range >= 1 and self.image_search_time_range <= 365 else 'default'} | "
+                f"has_site_filter={has_site_filter} | site={site} | "
+                f"image_search_time_range={time_range_marker} | "
                 f"image_size={self.image_size} |"
                 f"request_type=sync"
             )
@@ -420,8 +456,10 @@ class InfoQuestClient:
 
                 result_json = json.dumps(cleaned_results, indent=2, ensure_ascii=False)
 
+                results_count = len(cleaned_results)
                 logger.debug(
-                    f"InfoQuest Image Search - Image search tool execution completed | mode=synchronous | results_count={len(cleaned_results)}"
+                    f"InfoQuest Image Search - Image search tool execution completed | "
+                    f"mode=synchronous | results_count={results_count}"
                 )
                 return result_json
 
@@ -429,7 +467,8 @@ class InfoQuestClient:
                 # Fallback to content field if search_result is not available
                 error_message = "image search API return wrong format"
                 logger.error(
-                    "image search API return wrong format, no search_result nor content field found in JSON response, content: %s",
+                    "image search API return wrong format, "
+                    "no search_result nor content field found in JSON response, content: %s",
                     raw_results["content"],
                 )
                 return f"Error: {error_message}"

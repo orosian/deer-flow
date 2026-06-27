@@ -9,7 +9,9 @@ class AgentsApiConfig(BaseModel):
     enabled: bool = Field(
         default=False,
         description=(
-            "Whether to expose the custom-agent management API over HTTP. When disabled, the gateway rejects read/write access to custom agent SOUL.md, config, and USER.md prompt-management routes."
+            "Whether to expose the custom-agent management API over HTTP. When disabled, "
+            "the gateway rejects read/write access to custom agent SOUL.md, config, "
+            "and USER.md prompt-management routes."
         ),
     )
 

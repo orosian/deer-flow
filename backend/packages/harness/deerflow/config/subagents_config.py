@@ -74,7 +74,10 @@ class SubagentsAppConfig(BaseModel):
     timeout_seconds: int = Field(
         default=1800,
         ge=1,
-        description="Default timeout in seconds for built-in subagents (default: 1800 = 30 minutes); custom agents use their own timeout_seconds unless given a per-agent override",
+        description=(
+            "Default timeout in seconds for built-in subagents (default: 1800 = 30 minutes); "
+            "custom agents use their own timeout_seconds unless given a per-agent override"
+        ),
     )
     max_turns: int | None = Field(
         default=None,
@@ -173,7 +176,8 @@ def load_subagents_config_from_dict(config_dict: dict) -> None:
 
     if overrides_summary or custom_agents_names:
         logger.info(
-            "Subagents config loaded: default timeout=%ss, default max_turns=%s, per-agent overrides=%s, custom_agents=%s",
+            "Subagents config loaded: default timeout=%ss, default max_turns=%s, "
+            "per-agent overrides=%s, custom_agents=%s",
             _subagents_config.timeout_seconds,
             _subagents_config.max_turns,
             overrides_summary or "none",

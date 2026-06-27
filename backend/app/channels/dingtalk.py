@@ -708,12 +708,19 @@ class DingTalkChannel(Channel):
 
     def _make_card_source_key(self, inbound: InboundMessage) -> str:
         m = inbound.metadata
-        return f"{m.get('conversation_type', '')}:{m.get('sender_staff_id', '')}:{m.get('conversation_id', '')}:{m.get('message_id', '')}"
+        conv_type = m.get("conversation_type", "")
+        sender = m.get("sender_staff_id", "")
+        conv_id = m.get("conversation_id", "")
+        msg_id = m.get("message_id", "")
+        return f"{conv_type}:{sender}:{conv_id}:{msg_id}"
 
     def _make_card_source_key_from_outbound(self, msg: OutboundMessage) -> str:
         m = msg.metadata
+        conv_type = m.get("conversation_type", "")
+        sender = m.get("sender_staff_id", "")
+        conv_id = m.get("conversation_id", "")
         correlation_id = m.get("message_id") or msg.thread_ts or ""
-        return f"{m.get('conversation_type', '')}:{m.get('sender_staff_id', '')}:{m.get('conversation_id', '')}:{correlation_id}"
+        return f"{conv_type}:{sender}:{conv_id}:{correlation_id}"
 
     async def _create_and_deliver_card(
         self,

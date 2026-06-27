@@ -223,7 +223,10 @@ class LLMErrorHandlingMiddleware(AgentMiddleware[AgentState]):
         return f"LLM request retry {attempt}/{self.retry_max_attempts}: {reason_text}. Retrying in {seconds}s."
 
     def _build_circuit_breaker_message(self) -> str:
-        return "The configured LLM provider is currently unavailable due to continuous failures. Circuit breaker is engaged to protect the system. Please wait a moment before trying again."
+        return (
+            "The configured LLM provider is currently unavailable due to continuous failures. "
+            "Circuit breaker is engaged to protect the system. Please wait a moment before trying again."
+        )
 
     def _build_error_fallback_message(
         self,
@@ -246,9 +249,15 @@ class LLMErrorHandlingMiddleware(AgentMiddleware[AgentState]):
     def _build_user_message(self, exc: BaseException, reason: str) -> str:
         detail = _extract_error_detail(exc)
         if reason == "quota":
-            return "The configured LLM provider rejected the request because the account is out of quota, billing is unavailable, or usage is restricted. Please fix the provider account and try again."
+            return (
+                "The configured LLM provider rejected the request because the account is out of quota, "
+                "billing is unavailable, or usage is restricted. Please fix the provider account and try again."
+            )
         if reason == "auth":
-            return "The configured LLM provider rejected the request because authentication or access is invalid. Please check the provider credentials and try again."
+            return (
+                "The configured LLM provider rejected the request because authentication or access is invalid. "
+                "Please check the provider credentials and try again."
+            )
         if reason in {"busy", "transient"}:
             # Stream-drop failures (chunk-gap timeout, peer-closed connection,
             # raw read error) almost always point at a single oversized
@@ -264,7 +273,10 @@ class LLMErrorHandlingMiddleware(AgentMiddleware[AgentState]):
                     "is very large — please ask the assistant to split the work into "
                     "smaller steps, or shorten the requested output, and try again."
                 )
-            return "The configured LLM provider is temporarily unavailable after multiple retries. Please wait a moment and continue the conversation."
+            return (
+                "The configured LLM provider is temporarily unavailable after multiple retries. "
+                "Please wait a moment and continue the conversation."
+            )
         return f"LLM request failed: {detail}"
 
     def _build_user_fallback_message(self, exc: BaseException, reason: str) -> AIMessage:

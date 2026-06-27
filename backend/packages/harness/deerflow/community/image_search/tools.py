@@ -82,7 +82,8 @@ def image_search_tool(
     type_image: str | None = None,
     layout: str | None = None,
 ) -> str:
-    """Search for images online. Use this tool BEFORE image generation to find reference images for characters, portraits, objects, scenes, or any content requiring visual accuracy.
+    """Search for images online. Use this tool BEFORE image generation to find reference
+    images for characters, portraits, objects, scenes, or any content requiring visual accuracy.
 
     **When to use:**
     - Before generating character/portrait images: search for similar poses, expressions, styles
@@ -93,11 +94,13 @@ def image_search_tool(
     The returned image URLs can be used as reference images in image generation to significantly improve quality.
 
     Args:
-        query: Search keywords describing the images you want to find. Be specific for better results (e.g., "Japanese woman street photography 1990s" instead of just "woman").
-        max_results: Maximum number of images to return. Default is 5.
-        size: Image size filter. Options: "Small", "Medium", "Large", "Wallpaper". Use "Large" for reference images.
-        type_image: Image type filter. Options: "photo", "clipart", "gif", "transparent", "line". Use "photo" for realistic references.
-        layout: Layout filter. Options: "Square", "Tall", "Wide". Choose based on your generation needs.
+        query: Search keywords describing the images you want to find. Be specific for
+        better results (e.g., "Japanese woman street photography 1990s" instead of just "woman").
+    max_results: Maximum number of images to return. Default is 5.
+    size: Image size filter. Options: "Small", "Medium", "Large", "Wallpaper". Use "Large" for reference images.
+    type_image: Image type filter. Options: "photo", "clipart", "gif", "transparent", "line".
+        Use "photo" for realistic references.
+    layout: Layout filter. Options: "Square", "Tall", "Wide". Choose based on your generation needs.
     """
     config = get_app_config().get_tool_config("image_search")
 
@@ -129,7 +132,10 @@ def image_search_tool(
         "query": query,
         "total_results": len(normalized_results),
         "results": normalized_results,
-        "usage_hint": "Use the 'image_url' values as reference images in image generation. Download them first if needed.",
+        "usage_hint": (
+            "Use the 'image_url' values as reference images in image generation. "
+            "Download them first if needed."
+        ),
     }
 
     return json.dumps(output, indent=2, ensure_ascii=False)

@@ -1471,7 +1471,9 @@ class TestChannelManager:
 
             mock_client.runs.wait.assert_not_called()
             assert outbound_received[0].text == (
-                "Invalid channel session assistant_id 'bad agent!'. Use 'lead_agent' or a custom agent name containing only letters, digits, and hyphens."
+                "Invalid channel session assistant_id 'bad agent!'. "
+                "Use 'lead_agent' or a custom agent name containing only letters, "
+                "digits, and hyphens."
             )
 
         _run(go())
@@ -1751,10 +1753,14 @@ class TestChannelManager:
                 request = httpx.Request("POST", "http://127.0.0.1:2024/runs")
                 response = httpx.Response(409, request=request)
                 raise ConflictError(
-                    "Thread is already running a task. Wait for it to finish or choose a different multitask strategy.",
+                    "Thread is already running a task. "
+                    "Wait for it to finish or choose a different multitask strategy.",
                     response=response,
                     body={
-                        "message": "Thread is already running a task. Wait for it to finish or choose a different multitask strategy."
+                        "message": (
+                            "Thread is already running a task. "
+                            "Wait for it to finish or choose a different multitask strategy."
+                        )
                     },
                 )
                 yield  # pragma: no cover

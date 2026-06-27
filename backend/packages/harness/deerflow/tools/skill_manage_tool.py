@@ -174,7 +174,10 @@ async def _skill_manage_impl(
                 ),
             )
             await refresh_skills_system_prompt_cache_async()
-            return f"Patched custom skill '{name}' ({replacement_count} replacement(s) applied, {occurrences} match(es) found)."
+            return (
+                f"Patched custom skill '{name}' "
+                f"({replacement_count} replacement(s) applied, {occurrences} match(es) found)."
+            )
 
         if action == "delete":
             await _to_thread(
@@ -241,7 +244,8 @@ async def _skill_manage_impl(
 
         if await _to_thread(skill_storage.public_skill_exists, name):
             raise ValueError(
-                f"'{name}' is a built-in skill. To customise it, create a new skill with the same name under skills/custom/."
+                f"'{name}' is a built-in skill. To customise it, "
+                f"create a new skill with the same name under skills/custom/."
             )
         raise ValueError(f"Unsupported action '{action}'.")
 

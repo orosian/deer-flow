@@ -192,7 +192,8 @@ def _shutdown_isolated_subagent_loop() -> None:
             loop.close()
         else:
             logger.warning(
-                "Skipping close of isolated subagent loop because shutdown did not complete within timeout (thread_alive=%s, loop_running=%s)",
+                "Skipping close of isolated subagent loop because shutdown did not complete within timeout "
+                "(thread_alive=%s, loop_running=%s)",
                 thread is not None and thread.is_alive(),
                 loop.is_running(),
             )
@@ -577,7 +578,8 @@ class SubagentExecutor:
                 context["app_config"] = self.app_config
 
             logger.info(
-                f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution with max_turns={self.config.max_turns}"
+                f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution "
+                f"with max_turns={self.config.max_turns}"
             )
 
             # Use stream instead of invoke to get real-time updates
@@ -629,8 +631,10 @@ class SubagentExecutor:
 
                         if not is_duplicate:
                             ai_messages.append(message_dict)
+                            ai_count = len(ai_messages)
                             logger.info(
-                                f"[trace={self.trace_id}] Subagent {self.config.name} captured AI message #{len(ai_messages)}"
+                                f"[trace={self.trace_id}] Subagent {self.config.name} "
+                                f"captured AI message #{ai_count}"
                             )
 
             logger.info(f"[trace={self.trace_id}] Subagent {self.config.name} completed async execution")
@@ -684,7 +688,8 @@ class SubagentExecutor:
                     # Fallback: use the last message if no AIMessage found
                     last_message = messages[-1]
                     logger.warning(
-                        f"[trace={self.trace_id}] Subagent {self.config.name} no AIMessage found, using last message: {type(last_message)}"
+                        f"[trace={self.trace_id}] Subagent {self.config.name} no AIMessage found, "
+                        f"using last message: {type(last_message)}"
                     )
                     raw_content = last_message.content if hasattr(last_message, "content") else str(last_message)
                     if isinstance(raw_content, str):
@@ -761,7 +766,8 @@ class SubagentExecutor:
                 )
             else:
                 logger.debug(
-                    f"[trace={self.trace_id}] Subagent {self.config.name} failed while executing on the isolated event loop",
+                    f"[trace={self.trace_id}] Subagent {self.config.name} "
+                    "failed while executing on the isolated event loop",
                     exc_info=True,
                 )
             raise
@@ -792,7 +798,8 @@ class SubagentExecutor:
 
             if loop is not None and loop.is_running():
                 logger.debug(
-                    f"[trace={self.trace_id}] Subagent {self.config.name} detected running event loop, using isolated loop"
+                    f"[trace={self.trace_id}] Subagent {self.config.name} "
+                    "detected running event loop, using isolated loop"
                 )
                 return self._execute_in_isolated_loop(task, result_holder)
 
@@ -834,7 +841,8 @@ class SubagentExecutor:
         )
 
         logger.info(
-            f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution, task_id={task_id}, timeout={self.config.timeout_seconds}s"
+            f"[trace={self.trace_id}] Subagent {self.config.name} starting async execution, "
+            f"task_id={task_id}, timeout={self.config.timeout_seconds}s"
         )
 
         with _background_tasks_lock:
@@ -860,14 +868,16 @@ class SubagentExecutor:
                     # Wait for execution with timeout
                     execution_future.result(timeout=self.config.timeout_seconds)
                 except FuturesTimeoutError:
+                    timeout_seconds = self.config.timeout_seconds
                     logger.error(
-                        f"[trace={self.trace_id}] Subagent {self.config.name} execution timed out after {self.config.timeout_seconds}s"
+                        f"[trace={self.trace_id}] Subagent {self.config.name} "
+                        f"execution timed out after {timeout_seconds}s"
                     )
                     # Signal cooperative cancellation and cancel the future
                     result_holder.cancel_event.set()
                     result_holder.try_set_terminal(
                         SubagentStatus.TIMED_OUT,
-                        error=f"Execution timed out after {self.config.timeout_seconds} seconds",
+                        error=f"Execution timed out after {timeout_seconds} seconds",
                     )
                     execution_future.cancel()
             except Exception as e:

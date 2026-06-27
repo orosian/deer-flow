@@ -19,7 +19,8 @@ except ImportError:
     TIKTOKEN_AVAILABLE = False
 
 # Prompt template for updating memory based on conversation
-MEMORY_UPDATE_PROMPT = """You are a memory management system. Your task is to analyze a conversation and update the user's memory profile.
+MEMORY_UPDATE_PROMPT = (
+    """You are a memory management system. Your task is to analyze a conversation and update the user's memory profile.
 
 Current Memory State:
 <current_memory>
@@ -41,7 +42,8 @@ Before extracting facts, perform a structured reflection on the conversation:
    If yes, record the root cause and correct approach as a high-confidence fact with category "correction".
 2. User Correction Detection: Did the user correct the agent's direction, understanding, or output?
    If yes, record the correct interpretation or approach as a high-confidence fact with category "correction".
-   Include what went wrong in "sourceError" only when category is "correction" and the mistake is explicit in the conversation.
+   Include what went wrong in "sourceError" only when category is "correction" and the mistake is
+   explicit in the conversation.
 3. Project Constraint Discovery: Were any project-specific constraints discovered during the conversation?
    If yes, record them as facts with the most appropriate category and confidence.
 
@@ -120,11 +122,14 @@ Output Format (JSON):
 
 Important Rules:
 - Only set shouldUpdate=true if there's meaningful new information
-- Follow length guidelines: workContext/personalContext are concise (1-3 sentences), topOfMind and history sections are detailed (paragraphs)
+- Follow length guidelines: workContext/personalContext are concise (1-3 sentences), topOfMind and
+  history sections are detailed (paragraphs)
 - Include specific metrics, version numbers, and proper nouns in facts
 - Only add facts that are clearly stated (0.9+) or strongly implied (0.7+)
-- Use category "correction" for explicit agent mistakes or user corrections; assign confidence >= 0.95 when the correction is explicit
-- Include "sourceError" only for explicit correction facts when the prior mistake or wrong approach is clearly stated; omit it otherwise
+- Use category "correction" for explicit agent mistakes or user corrections; assign confidence >= 0.95
+  when the correction is explicit
+- Include "sourceError" only for explicit correction facts when the prior mistake or wrong approach is
+  clearly stated; omit it otherwise
 - Remove facts that are contradicted by new information
 - When updating topOfMind, integrate new focus areas while removing completed/abandoned ones
   Keep 3-5 concurrent focus themes that are still active and relevant
@@ -136,6 +141,7 @@ Important Rules:
   Recording upload events causes confusion in subsequent conversations.
 
 Return ONLY valid JSON, no explanation or markdown."""
+)
 
 
 # Prompt template for extracting facts from a single message

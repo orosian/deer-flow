@@ -20,7 +20,11 @@ class StreamBridgeConfig(BaseModel):
 
     type: StreamBridgeType = Field(
         default="memory",
-        description="Stream bridge backend type. 'memory' uses in-process asyncio.Queue (single-process only). The 'redis' backend is planned for Phase 2 and is not yet implemented.",
+        description=(
+            "Stream bridge backend type. 'memory' uses in-process asyncio.Queue "
+            "(single-process only). The 'redis' backend is planned for Phase 2 "
+            "and is not yet implemented."
+        ),
     )
     redis_url: str | None = Field(
         default=None,
@@ -50,7 +54,9 @@ class StreamBridgeConfig(BaseModel):
             # that is not yet implemented.
             if requested is not None and requested != "memory":
                 raise ValueError(
-                    f"stream_bridge.type={requested!r} is not implemented; only 'memory' is currently supported. The 'redis' backend is planned for Phase 2 — see runtime/stream_bridge/async_provider.py."
+                    f"stream_bridge.type={requested!r} is not implemented; only 'memory' "
+                    f"is currently supported. The 'redis' backend is planned for Phase 2 — "
+                    "see runtime/stream_bridge/async_provider.py."
                 )
         return data
 

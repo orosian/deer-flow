@@ -50,7 +50,10 @@ You have access to the `write_todos` tool to help you manage and track complex m
 </todo_list_system>
 """
 
-_TODO_TOOL_DESCRIPTION = "Use this tool to create and manage a structured task list for complex work sessions.  Only use for complex tasks (3+ steps)."
+_TODO_TOOL_DESCRIPTION = (
+    "Use this tool to create and manage a structured task list for complex work sessions."
+    "  Only use for complex tasks (3+ steps)."
+)
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +226,8 @@ def _assemble_from_features(
             chain.append(feat.summarization)
         else:
             raise ValueError(
-                "summarization=True requires a custom AgentMiddleware instance (SummarizationMiddleware needs a model argument)"
+                "summarization=True requires a custom AgentMiddleware instance "
+                "(SummarizationMiddleware needs a model argument)"
             )
 
     # --- [7] TodoMiddleware (plan_mode) ---
@@ -333,22 +337,28 @@ def _insert_extra(chain: list[AgentMiddleware], extras: list[AgentMiddleware]) -
         if next_anchor:
             if next_anchor in next_targets:
                 raise ValueError(
-                    f"Conflict: {type(mw).__name__} and {next_targets[next_anchor].__name__} both @Next({next_anchor.__name__})"
+                    f"Conflict: {type(mw).__name__} and {next_targets[next_anchor].__name__} "
+                    f"both @Next({next_anchor.__name__})"
                 )
             if next_anchor in prev_targets:
                 raise ValueError(
-                    f"Conflict: {type(mw).__name__} @Next({next_anchor.__name__}) and {prev_targets[next_anchor].__name__} @Prev({next_anchor.__name__}) — use cross-anchoring between extras instead"
+                    f"Conflict: {type(mw).__name__} @Next({next_anchor.__name__}) and "
+                    f"{prev_targets[next_anchor].__name__} @Prev({next_anchor.__name__}) — "
+                    f"use cross-anchoring between extras instead"
                 )
             next_targets[next_anchor] = type(mw)
             anchored.append((mw, "next", next_anchor))
         elif prev_anchor:
             if prev_anchor in prev_targets:
                 raise ValueError(
-                    f"Conflict: {type(mw).__name__} and {prev_targets[prev_anchor].__name__} both @Prev({prev_anchor.__name__})"
+                    f"Conflict: {type(mw).__name__} and {prev_targets[prev_anchor].__name__} "
+                    f"both @Prev({prev_anchor.__name__})"
                 )
             if prev_anchor in next_targets:
                 raise ValueError(
-                    f"Conflict: {type(mw).__name__} @Prev({prev_anchor.__name__}) and {next_targets[prev_anchor].__name__} @Next({prev_anchor.__name__}) — use cross-anchoring between extras instead"
+                    f"Conflict: {type(mw).__name__} @Prev({prev_anchor.__name__}) and "
+                    f"{next_targets[prev_anchor].__name__} @Next({prev_anchor.__name__}) — "
+                    f"use cross-anchoring between extras instead"
                 )
             prev_targets[prev_anchor] = type(mw)
             anchored.append((mw, "prev", prev_anchor))
@@ -390,6 +400,7 @@ def _insert_extra(chain: list[AgentMiddleware], extras: list[AgentMiddleware]) -
                     f"Circular dependency among extra middlewares: {', '.join(t.__name__ for t in circular)}"
                 )
             raise ValueError(
-                f"Cannot resolve positions for {', '.join(names)} — anchors {', '.join(a.__name__ for _, _, a in remaining)} not found in chain"
+                f"Cannot resolve positions for {', '.join(names)} — anchors "
+                f"{', '.join(a.__name__ for _, _, a in remaining)} not found in chain"
             )
         pending = remaining

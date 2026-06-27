@@ -322,13 +322,15 @@ def _drain_stream(response, *, timeout: float = 10.0, max_bytes: int = 1024 * 10
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise AssertionError(
-                f"SSE stream did not finish within {timeout}s; transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
+                f"SSE stream did not finish within {timeout}s; "
+                f"transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
             )
         try:
             chunk = chunks.get(timeout=remaining)
         except queue.Empty as exc:
             raise AssertionError(
-                f"SSE stream did not produce data within {timeout}s; transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
+                f"SSE stream did not produce data within {timeout}s; "
+                f"transcript tail={body[-4000:].decode('utf-8', errors='replace')}"
             ) from exc
         if chunk is sentinel:
             break
@@ -548,7 +550,9 @@ def test_stream_run_executes_real_lead_agent_setup_agent_business_path(isolated_
 
         expected_soul = isolated_deer_flow_home / "users" / auth_user_id / "agents" / agent_name / "SOUL.md"
         assert expected_soul.exists(), (
-            f"setup_agent did not write SOUL.md. tmp tree: {sorted(str(p.relative_to(isolated_deer_flow_home)) for p in isolated_deer_flow_home.rglob('SOUL.md'))}"
+            "setup_agent did not write SOUL.md. "
+            "tmp tree: "
+            f"{sorted(str(p.relative_to(isolated_deer_flow_home)) for p in isolated_deer_flow_home.rglob('SOUL.md'))}"
         )
         assert f"Agent name: {agent_name}" in expected_soul.read_text(encoding="utf-8")
         assert not (isolated_deer_flow_home / "users" / "default" / "agents" / agent_name).exists()

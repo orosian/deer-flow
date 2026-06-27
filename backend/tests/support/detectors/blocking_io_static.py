@@ -866,7 +866,9 @@ def format_text(findings: Sequence[BlockingIOStaticFinding]) -> str:
     lines: list[str] = []
     for finding in findings:
         lines.append(
-            f"{finding.priority} {finding.category}/{finding.operation} {finding.path}:{finding.line}:{finding.column + 1} in {finding.function} exposure={finding.exposure}"
+            f"{finding.priority} {finding.category}/{finding.operation} "
+            f"{finding.path}:{finding.line}:{finding.column + 1} "
+            f"in {finding.function} exposure={finding.exposure}"
         )
         lines.append(f"  symbol: {finding.symbol}")
         lines.append(f"  reason: {_finding_reason(finding.operation, finding.exposure)}")
@@ -878,7 +880,8 @@ def format_text(findings: Sequence[BlockingIOStaticFinding]) -> str:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Statically inventory blocking IO calls that may block the backend asyncio event loop. Findings are prioritized review candidates, not automatic bug decisions."
+            "Statically inventory blocking IO calls that may block the backend asyncio event "
+            "loop. Findings are prioritized review candidates, not automatic bug decisions."
         )
     )
     parser.add_argument(

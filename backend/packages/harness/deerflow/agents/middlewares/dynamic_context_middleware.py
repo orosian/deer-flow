@@ -187,7 +187,8 @@ class DynamicContextMiddleware(AgentMiddleware):
                 return None
             full_reminder = self._build_full_reminder()
             logger.info(
-                "DynamicContextMiddleware: injecting full reminder (len=%d, has_memory=%s) into first HumanMessage id=%r",
+                "DynamicContextMiddleware: injecting full reminder (len=%d, has_memory=%s) into "
+                "first HumanMessage id=%r",
                 len(full_reminder),
                 "<memory>" in full_reminder,
                 messages[first_idx].id,

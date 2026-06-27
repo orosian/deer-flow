@@ -21,7 +21,11 @@ class ToolOutputConfig(BaseModel):
     externalize_min_chars: int = Field(
         default=12_000,
         ge=0,
-        description="Character threshold to trigger disk externalization. Outputs below this pass through unchanged. Set to 0 to disable externalization (fallback truncation still applies when output exceeds fallback_max_chars).",
+        description=(
+            "Character threshold to trigger disk externalization. Outputs below this pass "
+            "through unchanged. Set to 0 to disable externalization (fallback truncation "
+            "still applies when output exceeds fallback_max_chars)."
+        ),
     )
     preview_head_chars: int = Field(
         default=2_000,
@@ -58,5 +62,8 @@ class ToolOutputConfig(BaseModel):
     )
     tool_overrides: dict[str, int] = Field(
         default_factory=dict,
-        description="Per-tool externalize_min_chars overrides. Keys are tool names, values are char thresholds. Use 0 to disable externalization for a specific tool.",
+        description=(
+            "Per-tool externalize_min_chars overrides. Keys are tool names, "
+            "values are char thresholds. Use 0 to disable externalization for a specific tool."
+        ),
     )

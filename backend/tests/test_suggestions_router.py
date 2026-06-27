@@ -69,7 +69,11 @@ def test_generate_suggestions_strips_inline_think_block(monkeypatch):
         n=3,
         model_name=None,
     )
-    content = '<think>\nThe user asked about deep learning. Options: maybe [1] frameworks, [2] math basics.\n</think>\n["深度学习和机器学习的区别？", "常用框架有哪些？", "需要什么数学基础？"]'
+    content = (
+        "think\nThe user asked about deep learning. Options: maybe [1] frameworks, "
+        "[2] math basics.\nthink\n"
+        '["深度学习和机器学习的区别？", "常用框架有哪些？", "需要什么数学基础？"]'
+    )
     fake_model = MagicMock()
     fake_model.ainvoke = AsyncMock(return_value=MagicMock(content=content))
     monkeypatch.setattr(suggestions, "create_chat_model", lambda **kwargs: fake_model)

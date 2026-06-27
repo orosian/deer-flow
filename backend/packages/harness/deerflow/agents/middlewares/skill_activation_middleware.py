@@ -107,7 +107,10 @@ class SkillActivationMiddleware(AgentMiddleware):
             return _ActivationResolution(failure_message=f"Skill `/{reference.name}` is not installed.")
         if not skill.enabled:
             return _ActivationResolution(
-                failure_message=f"Skill `/{reference.name}` is installed but disabled. Enable it before using slash activation."
+                failure_message=(
+                    f"Skill `/{reference.name}` is installed but disabled. "
+                    "Enable it before using slash activation."
+                )
             )
         if self._available_skills is not None and reference.name not in self._available_skills:
             return _ActivationResolution(failure_message=f"Skill `/{reference.name}` is not available for this agent.")
@@ -126,7 +129,10 @@ class SkillActivationMiddleware(AgentMiddleware):
         except (OSError, ValueError):
             logger.exception("Failed to read slash-activated skill %s", resolved.skill.name)
             return _ActivationResolution(
-                failure_message=f"Skill `/{reference.name}` could not be loaded safely. Please check the skill installation."
+                failure_message=(
+                    f"Skill `/{reference.name}` could not be loaded safely. "
+                    "Please check the skill installation."
+                )
             )
 
         content_hash = hashlib.sha256(skill_content.encode("utf-8")).hexdigest()
@@ -144,7 +150,8 @@ class SkillActivationMiddleware(AgentMiddleware):
     @staticmethod
     def _build_activation_reminder(activation: _Activation) -> str:
         user_request = activation.remaining_text or (
-            "No additional task text was provided after the slash skill command. Ask the user what they want to do with this skill if the next step is unclear."
+            "No additional task text was provided after the slash skill command. "
+            "Ask the user what they want to do with this skill if the next step is unclear."
         )
         escaped_user_request = html.escape(user_request, quote=False)
         escaped_skill_content = html.escape(activation.skill_content, quote=False)
@@ -159,7 +166,8 @@ Treat the task text as:
 {escaped_user_request}
 </user_request>
 
-Follow this skill before choosing a general workflow. Load supporting resources from the same skill directory only when needed.
+Follow this skill before choosing a general workflow. Load supporting resources from the same skill
+directory only when needed.
 
 <skill name="{escaped_skill_name}" category="{escaped_category}" path="{escaped_path}" sha256="{escaped_content_hash}">
 <skill_content encoding="xml-escaped">

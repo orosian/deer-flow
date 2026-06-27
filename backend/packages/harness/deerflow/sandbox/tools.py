@@ -703,7 +703,8 @@ def validate_local_tool_path(path: str, thread_data: ThreadDataState | None, *, 
         return
 
     raise PermissionError(
-        f"Only paths under {VIRTUAL_PATH_PREFIX}/, {_get_skills_container_path()}/, {_ACP_WORKSPACE_VIRTUAL_PATH}/, or configured mount paths are allowed"
+        f"Only paths under {VIRTUAL_PATH_PREFIX}/, {_get_skills_container_path()}/, "
+        f"{_ACP_WORKSPACE_VIRTUAL_PATH}/, or configured mount paths are allowed"
     )
 
 
@@ -863,21 +864,25 @@ def _next_cd_target(tokens: list[str], start_index: int) -> tuple[str | None, in
 def _validate_local_bash_cwd_target(command_name: str, target: str | None, allowed_paths: list[str]) -> None:
     if target is None or target == "-":
         raise PermissionError(
-            f"Unsafe working directory change in command: {command_name}. Use paths under {VIRTUAL_PATH_PREFIX}"
+            f"Unsafe working directory change in command: {command_name}. "
+            f"Use paths under {VIRTUAL_PATH_PREFIX}"
         )
     if target.startswith(("$", "`")):
         raise PermissionError(
-            f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}"
+            f"Unsafe working directory change in command: {command_name} {target}. "
+            f"Use paths under {VIRTUAL_PATH_PREFIX}"
         )
     if target.startswith("~"):
         raise PermissionError(
-            f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}"
+            f"Unsafe working directory change in command: {command_name} {target}. "
+            f"Use paths under {VIRTUAL_PATH_PREFIX}"
         )
     if target.startswith("/"):
         _reject_path_traversal(target)
         if not _is_allowed_local_bash_absolute_path(target, allowed_paths, allow_system_paths=False):
             raise PermissionError(
-                f"Unsafe working directory change in command: {command_name} {target}. Use paths under {VIRTUAL_PATH_PREFIX}"
+                f"Unsafe working directory change in command: {command_name} {target}. "
+                f"Use paths under {VIRTUAL_PATH_PREFIX}"
             )
 
 
@@ -1393,12 +1398,16 @@ def _truncate_read_file_output(output: str, max_chars: int) -> str:
     # Compute the exact worst-case marker length: both numeric fields are at
     # their maximum (total chars), so this is a tight upper bound.
     marker_max_len = len(
-        f"\n... [truncated: showing first {total} of {total} chars. Use start_line/end_line to read a specific range] ..."
+        f"\n... [truncated: showing first {total} of {total} chars. "
+        f"Use start_line/end_line to read a specific range] ..."
     )
     kept = max(0, max_chars - marker_max_len)
     if kept == 0:
         return output[:max_chars]
-    marker = f"\n... [truncated: showing first {kept} of {total} chars. Use start_line/end_line to read a specific range] ..."
+    marker = (
+        f"\n... [truncated: showing first {kept} of {total} chars. "
+        f"Use start_line/end_line to read a specific range] ..."
+    )
     return f"{output[:kept]}{marker}"
 
 
@@ -1715,7 +1724,8 @@ def read_file_tool(
     start_line: int | None = None,
     end_line: int | None = None,
 ) -> str:
-    """Read the contents of a text file. Use this to examine source code, configuration files, logs, or any text-based file.
+    """Read the contents of a text file. Use this to examine source code,
+    configuration files, logs, or any text-based file.
 
     Args:
         description: Explain why you are reading this file in short words. ALWAYS PROVIDE THIS PARAMETER FIRST.
@@ -1808,7 +1818,8 @@ def write_file_tool(
     content: str,
     append: bool = False,
 ) -> str:
-    """Write text content to a file. By default this overwrites the target file; set append=True to add content to the end without replacing existing content.
+    """Write text content to a file. By default this overwrites the target
+    file; set append=True to add content to the end without replacing existing content.
 
     SIZE POLICY (issue #3189):
     A single non-append write_file call must not exceed 80 KB of UTF-8 content.
@@ -1912,7 +1923,8 @@ def str_replace_tool(
         path: The **absolute** path to the file to replace the substring in. ALWAYS PROVIDE THIS PARAMETER SECOND.
         old_str: The substring to replace. ALWAYS PROVIDE THIS PARAMETER THIRD.
         new_str: The new substring. ALWAYS PROVIDE THIS PARAMETER FOURTH.
-        replace_all: Whether to replace all occurrences of the substring. If False, only the first occurrence will be replaced. Default is False.
+        replace_all: Whether to replace all occurrences of the substring. If False,
+        only the first occurrence will be replaced. Default is False.
     """
     try:
         sandbox = ensure_sandbox_initialized(runtime)

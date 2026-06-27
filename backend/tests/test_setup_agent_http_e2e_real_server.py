@@ -317,7 +317,8 @@ def test_real_http_create_agent_lands_in_authenticated_user_dir(
         assert _wait_for_file(expected_dir / "SOUL.md", timeout=15.0), (
             "SOUL.md did not appear under users/<auth_uid>/agents/. "
             f"Expected: {expected_dir / 'SOUL.md'}. "
-            f"tmp tree: {sorted(str(p.relative_to(isolated_deer_flow_home)) for p in isolated_deer_flow_home.rglob('SOUL.md'))}. "
+            "tmp tree: "
+            f"{sorted(str(p.relative_to(isolated_deer_flow_home)) for p in isolated_deer_flow_home.rglob('SOUL.md'))}. "
             f"SSE transcript tail: {transcript[-1000:]!r}"
         )
 
@@ -326,5 +327,7 @@ def test_real_http_create_agent_lands_in_authenticated_user_dir(
 
         # The smoking-gun assertion: the agent must NOT have landed in default/
         assert not default_dir.exists(), (
-            f"REGRESSION: agent landed under users/default/{agent_name} instead of the authenticated user. Default-dir contents: {list(default_dir.rglob('*')) if default_dir.exists() else 'n/a'}"
+            f"REGRESSION: agent landed under users/default/{agent_name} instead of "
+            "the authenticated user. "
+            f"Default-dir contents: {list(default_dir.rglob('*')) if default_dir.exists() else 'n/a'}"
         )

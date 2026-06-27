@@ -44,8 +44,12 @@ class GuardrailMiddleware(AgentMiddleware[AgentState]):
         tool_call_id = str(request.tool_call.get("id", "missing_id"))
         reason_text = decision.reasons[0].message if decision.reasons else "blocked by guardrail policy"
         reason_code = decision.reasons[0].code if decision.reasons else "oap.denied"
+        denied_content = (
+            f"Guardrail denied: tool '{tool_name}' was blocked ({reason_code}). "
+            f"Reason: {reason_text}. Choose an alternative approach."
+        )
         return ToolMessage(
-            content=f"Guardrail denied: tool '{tool_name}' was blocked ({reason_code}). Reason: {reason_text}. Choose an alternative approach.",
+            content=denied_content,
             tool_call_id=tool_call_id,
             name=tool_name,
             status="error",

@@ -127,7 +127,8 @@ def update_agent(
 
     if soul is None and description is None and skills is None and tool_groups is None and model is None:
         return _err(
-            'No fields provided. Pass at least one of: soul, description, skills, tool_groups, model. Omit unchanged fields instead of passing null-like strings such as "null", "none", or "undefined".'
+            'No fields provided. Pass at least one of: soul, description, skills, tool_groups, model. '
+            'Omit unchanged fields instead of passing null-like strings such as "null", "none", or "undefined".'
         )
 
     try:
@@ -137,7 +138,9 @@ def update_agent(
 
     if not agent_name:
         return _err(
-            "update_agent is only available inside a custom agent's chat. There is no agent_name in the current runtime context, so there is nothing to update. If you are inside the bootstrap flow, use setup_agent instead."
+            "update_agent is only available inside a custom agent's chat. There is no agent_name "
+            "in the current runtime context, so there is nothing to update. If you are inside the "
+            "bootstrap flow, use setup_agent instead."
         )
 
     # Resolve the active user so that updates only affect this user's agent.
@@ -159,7 +162,8 @@ def update_agent(
     agent_dir = paths.user_agent_dir(user_id, agent_name)
     if not agent_dir.exists() and paths.agent_dir(agent_name).exists():
         return _err(
-            f"Agent '{agent_name}' only exists in the legacy shared layout and is not scoped to a user. Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating."
+            f"Agent '{agent_name}' only exists in the legacy shared layout and is not scoped to a user. "
+            f"Run scripts/migrate_user_isolation.py to move legacy agents into the per-user layout before updating."
         )
 
     try:
@@ -248,8 +252,10 @@ def update_agent(
                     e,
                     exc_info=True,
                 )
+                committed_names = [p.name for p in committed]
                 return _err(
-                    f"Partial update for agent '{agent_name}': {[p.name for p in committed]} were updated, but the rest failed ({e}). Re-run update_agent to retry the remaining fields."
+                    f"Partial update for agent '{agent_name}': {committed_names} were updated, "
+                    f"but the rest failed ({e}). Re-run update_agent to retry the remaining fields."
                 )
             raise
 
@@ -263,7 +269,10 @@ def update_agent(
             update={
                 "messages": [
                     ToolMessage(
-                        content=f"No changes applied to agent '{agent_name}'. The provided values matched the existing config.",
+                        content=(
+                        f"No changes applied to agent '{agent_name}'. "
+                        "The provided values matched the existing config."
+                    ),
                         tool_call_id=tool_call_id,
                     )
                 ]
@@ -276,7 +285,9 @@ def update_agent(
             "messages": [
                 ToolMessage(
                     content=(
-                        f"Agent '{agent_name}' updated successfully. Changed: {', '.join(updated_fields)}. The new configuration takes effect on the next user turn."
+                        f"Agent '{agent_name}' updated successfully. "
+                        f"Changed: {', '.join(updated_fields)}. "
+                        "The new configuration takes effect on the next user turn."
                     ),
                     tool_call_id=tool_call_id,
                 )

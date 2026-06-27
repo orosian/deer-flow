@@ -142,7 +142,8 @@ def _allowed_presets() -> frozenset[str]:
         logger = logging.getLogger(__name__)
         if valid:
             logger.warning(
-                "DEERFLOW_GRAPH_HARNESS_PRESETS: dropping invalid entries %s (do not match _PRESET_NAME_PATTERN); keeping %s",
+                "DEERFLOW_GRAPH_HARNESS_PRESETS: dropping invalid entries %s "
+                "(do not match _PRESET_NAME_PATTERN); keeping %s",
                 sorted(invalid),
                 sorted(valid),
             )
@@ -150,7 +151,8 @@ def _allowed_presets() -> frozenset[str]:
         # All entries invalid: treat the override as wholly untrustworthy
         # and fall back to defaults rather than locking everyone out.
         logger.warning(
-            "DEERFLOW_GRAPH_HARNESS_PRESETS: every entry %s failed _PRESET_NAME_PATTERN; falling back to default whitelist",
+            "DEERFLOW_GRAPH_HARNESS_PRESETS: every entry %s failed _PRESET_NAME_PATTERN; "
+            "falling back to default whitelist",
             sorted(invalid),
         )
         return _DEFAULT_ALLOWED_PRESETS
@@ -304,7 +306,8 @@ class _MetricsAccumulator:
         # rather than a silent schema drift.
         if reason not in _KNOWN_PRESET_FAILURE_REASONS:
             raise ValueError(
-                f"unknown preset_load_failure reason: {reason!r}; known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}"
+                f"unknown preset_load_failure reason: {reason!r}; "
+                f"known reasons: {sorted(_KNOWN_PRESET_FAILURE_REASONS)}"
             )
         with self._lock:
             self.preset_load_failure_total[reason] = self.preset_load_failure_total.get(reason, 0) + 1
@@ -389,7 +392,9 @@ def _load_graph_harness():
         # consumers that want to distinguish a major mismatch from a
         # missing-package failure.
         raise ImportError(
-            f"graph-harness host API major version mismatch: installed={exc.actual!r}, this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; upgrade the adapter or downgrade the graph-harness package."
+            f"graph-harness host API major version mismatch: installed={exc.actual!r}, "
+            f"this adapter requires major {_MIN_HOST_API_MAJOR.split('.')[0]!r}; "
+            "upgrade the adapter or downgrade the graph-harness package."
         ) from exc
     return compile_workflow, load_preset
 

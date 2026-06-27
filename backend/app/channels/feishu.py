@@ -577,7 +577,8 @@ class FeishuChannel(Channel):
             logger.info("[Feishu] running card created: source=%s card=%s", source_message_id, running_card_id)
         else:
             logger.warning(
-                "[Feishu] running card creation returned no message_id for source=%s, subsequent updates will fall back to new replies",
+                "[Feishu] running card creation returned no message_id for source=%s, "
+                "subsequent updates will fall back to new replies",
                 source_message_id,
             )
         return running_card_id
@@ -660,7 +661,8 @@ class FeishuChannel(Channel):
                 self._remember_pending_clarification(msg, final_card_id)
             elif awaited_running_card_task:
                 logger.warning(
-                    "[Feishu] running card task finished without message_id for source=%s, skipping duplicate non-final creation",
+                    "[Feishu] running card task finished without message_id for source=%s, "
+                    "skipping duplicate non-final creation",
                     source_message_id,
                 )
             else:
@@ -930,7 +932,8 @@ class FeishuChannel(Channel):
             text = text.strip()
 
             logger.info(
-                "[Feishu] parsed message: chat_id=%s, msg_id=%s, root_id=%s, parent_id=%s, thread_id=%s, sender=%s, text_len=%d",
+                "[Feishu] parsed message: chat_id=%s, msg_id=%s, root_id=%s, "
+                "parent_id=%s, thread_id=%s, sender=%s, text_len=%d",
                 chat_id,
                 msg_id,
                 root_id,

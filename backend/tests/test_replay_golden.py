@@ -83,7 +83,9 @@ def test_replay_write_read_file_ultra_matches_golden(tmp_path: Path, monkeypatch
 
     misses = replay_provider.replay_misses()
     assert not misses, (
-        f"replay miss ({len(misses)}): the fixture is stale vs the current system prompt or agent graph. Re-record it (see backend/docs/REPLAY_E2E.md). Missed hashes: {misses}"
+        f"replay miss ({len(misses)}): the fixture is stale vs the current system prompt "
+        f"or agent graph. Re-record it (see backend/docs/REPLAY_E2E.md). "
+        f"Missed hashes: {misses}"
     )
 
     # Regenerate the committed golden after re-recording the fixture:
@@ -100,5 +102,7 @@ def test_replay_write_read_file_ultra_matches_golden(tmp_path: Path, monkeypatch
     # must match the committed golden. (Replay divergence is caught by the miss
     # assertion above, not here — a swallowed miss keeps the shapes identical.)
     assert events == golden, (
-        f"SSE event-shape sequence drifted from the golden.\ngot  ({len(events)}): {[e['event'] for e in events]}\nwant ({len(golden)}): {[e['event'] for e in golden]}"
+        f"SSE event-shape sequence drifted from the golden.\n"
+        f"got  ({len(events)}): {[e['event'] for e in events]}\n"
+        f"want ({len(golden)}): {[e['event'] for e in golden]}"
     )

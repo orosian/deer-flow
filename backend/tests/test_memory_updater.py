@@ -642,7 +642,12 @@ class TestUpdateMemoryStructuredResponse:
 
     def test_wrapped_json_responses_parse(self):
         """Memory update should tolerate provider wrappers around valid JSON."""
-        valid_json = '{"user": {}, "history": {}, "newFacts": [{"content": "User prefers concise updates", "category": "preference", "confidence": 0.9}], "factsToRemove": []}'
+        valid_json = (
+            '{"user": {}, "history": {}, '
+            '"newFacts": [{"content": "User prefers concise updates", '
+            '"category": "preference", "confidence": 0.9}], '
+            '"factsToRemove": []}'
+        )
         response_variants = [
             f"<think>Analyze the conversation first.</think>\n{valid_json}",
             f"<think>Analyze the conversation first.\n{valid_json}",
@@ -660,7 +665,12 @@ class TestUpdateMemoryStructuredResponse:
 
     def test_ignores_unrelated_json_before_memory_update(self):
         """Parser should not select unrelated JSON objects before the memory update."""
-        valid_json = '{"user": {}, "history": {}, "newFacts": [{"content": "Remember the actual update", "category": "context", "confidence": 0.9}], "factsToRemove": []}'
+        valid_json = (
+            '{"user": {}, "history": {}, '
+            '"newFacts": [{"content": "Remember the actual update", '
+            '"category": "context", "confidence": 0.9}], '
+            '"factsToRemove": []}'
+        )
         response = f'Example object: {{"user": "alice"}}\nActual memory update:\n{valid_json}'
 
         result, mock_storage = self._run_update_with_response(response)
@@ -678,7 +688,12 @@ class TestUpdateMemoryStructuredResponse:
 
     def test_schema_guard_ignores_invalid_update_fields(self):
         """Parsed JSON with bad field types should not break the memory update."""
-        response = '{"user": "bad", "history": [], "newFacts": ["bad", {"content": "User works on DeerFlow", "category": "context", "confidence": 0.91}], "factsToRemove": "bad"}'
+        response = (
+            '{"user": "bad", "history": [], '
+            '"newFacts": ["bad", {"content": "User works on DeerFlow", '
+            '"category": "context", "confidence": 0.91}], '
+            '"factsToRemove": "bad"}'
+        )
 
         result, mock_storage = self._run_update_with_response(response)
 
@@ -690,8 +705,10 @@ class TestUpdateMemoryStructuredResponse:
         """Malformed fact entries should be normalized per fact, not fail the whole update."""
         response = (
             '{"user": {}, "history": {}, "newFacts": ['
-            '{"content": "  User likes async updates  ", "category": 9, "confidence": "0.91", "sourceError": "  parse issue  "}, '
-            '{"content": "skip invalid confidence", "category": "context", "confidence": "high"}, '
+            '{"content": "  User likes async updates  ", "category": 9, '
+            '"confidence": "0.91", "sourceError": "  parse issue  "}, '
+            '{"content": "skip invalid confidence", "category": "context", '
+            '"confidence": "high"}, '
             '{"content": 12, "category": "context", "confidence": 0.9}, '
             '{"content": " ", "category": "context", "confidence": 0.9}'
             '], "factsToRemove": []}'
@@ -709,7 +726,12 @@ class TestUpdateMemoryStructuredResponse:
 
     def test_malformed_replacement_update_fails_closed(self):
         """Malformed replacement facts should not turn remove+add into delete-only."""
-        response = '{"user": {}, "history": {}, "newFacts": [{"content": "replacement fact", "category": "context", "confidence": "bad"}], "factsToRemove": ["fact_old"]}'
+        response = (
+            '{"user": {}, "history": {}, '
+            '"newFacts": [{"content": "replacement fact", "category": "context", '
+            '"confidence": "bad"}], '
+            '"factsToRemove": ["fact_old"]}'
+        )
 
         result, mock_storage = self._run_update_with_response(response)
 
